@@ -174,8 +174,8 @@ begin
     body := jsonb_build_object(
       'event', 'guide',
       'event_key', 'guide:' || to_char(door.day, 'YYYY-MM-DD'),
-      'title', 'door ' || door.n || ' is open',
-      'body', door.title,
+      'title', 'a new door is open',
+      'body', 'come unwrap it',
       'url', './#advent',
       'tag', 'guide-' || to_char(door.day, 'YYYY-MM-DD')
     ),

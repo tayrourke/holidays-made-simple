@@ -113,8 +113,16 @@ section.view[hidden]{display:none}
 .whobtn:hover{background:#fff}
 
 .doors{display:grid;gap:14px;margin-top:30px}
-@media(min-width:760px){.doors{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:1100px){.doors{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:760px){
+  .doors{grid-template-columns:repeat(2,1fr)}
+  .doors .door:last-child:nth-child(odd){grid-column:1 / -1}
+}
+@media(min-width:1100px){
+  .doors{grid-template-columns:repeat(6,1fr)}
+  .doors .door{grid-column:span 2}
+  .doors .door:nth-child(n+4){grid-column:span 3}
+  .doors .door:last-child:nth-child(odd){grid-column:span 3}
+}
 .door{position:relative;text-decoration:none;display:grid;grid-template-columns:1fr 92px;align-items:center;gap:10px;padding:16px 14px 16px 16px;min-width:0}
 .door h3{margin:6px 0 4px;font-family:var(--bubble);font-weight:400;text-transform:uppercase;font-size:22px;line-height:1.05;letter-spacing:.02em}
 .door p{margin:0;font-size:13px;color:var(--muted)}
@@ -145,7 +153,7 @@ section.view[hidden]{display:none}
 .extra:hover{background:#fff}
 
 /* ---------- shop ---------- */
-.filters{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:15;background:var(--paper);padding:10px 0 8px;border-bottom:1.5px solid var(--ink);display:grid;gap:8px}
+.filters{position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:15;background:var(--paper);padding:10px 0 8px;border-bottom:1.5px solid var(--ink);display:grid;gap:8px;box-shadow:0 8px 0 var(--paper)}
 .search{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--ink);padding:9px 12px}
 .search input{border:0;background:transparent;font:inherit;flex:1;min-width:0;outline:none;color:var(--ink)}
 .rowlabel{display:flex;align-items:center;gap:8px;min-width:0}
@@ -429,7 +437,10 @@ section.view[hidden]{display:none}
 .chipsum button{flex:none;border:0;background:var(--berry);color:#fff;font-family:var(--label);font-weight:700;font-size:13px;padding:5px 10px;text-transform:lowercase}
 .fpanel{display:grid;gap:8px}
 .fhead,.fdone,.fscrim{display:none}
-@media(min-width:820px){.filterbtn,.chipsum{display:none!important}}
+@media(min-width:820px){
+  .filterbtn,.chipsum{display:none!important}
+  .filters .scroller{flex-wrap:wrap;overflow:visible;padding-right:0;row-gap:6px}
+}
 @media(max-width:819px){
   .fpanel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:46;background:var(--paper);border-top:3px solid var(--berry);max-height:82vh;overflow-y:auto;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 40px rgba(20,16,16,.25);gap:14px}
   body.fopen .filters{z-index:50}
@@ -547,7 +558,8 @@ section.view[hidden]{display:none}
 .advstrip em{font-style:normal;font-family:var(--label);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 .advhead{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
 .advhead>span{font-family:var(--label);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.doors16{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:640px;margin:16px auto 0}
+.doors16{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:720px;margin:18px auto 0}
+@media(min-width:1100px){.doors16{grid-template-columns:repeat(6,minmax(0,1fr));max-width:none;gap:12px}}
 .dr{position:relative;aspect-ratio:auto;height:0;padding-bottom:112%;border:1.5px solid var(--ink);background:var(--taupe);cursor:pointer;overflow:hidden}
 .dr>div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px;text-align:center}
 .dr b{font-family:var(--bubble);font-weight:400;font-size:clamp(24px,7vw,40px);line-height:1;color:var(--berry)}
@@ -558,8 +570,9 @@ section.view[hidden]{display:none}
 .dr.today b,.dr.today small{color:#fff}
 @media (prefers-reduced-motion:no-preference){.dr.today{animation:glow 1.8s ease-in-out infinite}}
 .dr.ready{background:#fff}
-.dr.locked{opacity:.55;cursor:default}
-.dr.locked .rib,.dr.locked .ribh{display:none}
+.dr.locked{cursor:default}
+.dr.locked b{color:rgba(162,4,42,.55)}
+.dr.locked small{color:var(--muted)}
 .dr.open{background:var(--paper)}
 .dr.open img{width:62%;height:52%;object-fit:contain}
 .dr.open small{color:var(--muted)}
@@ -1554,7 +1567,7 @@ function renderAdvent(){
   document.getElementById('advGrid').innerHTML = ADVENT.map((a,i) => {
     const st = advState(a); const g = a.gift && byId[a.gift];
     if (st === 'open') return `<button class="dr open" data-adv="${i}" aria-label="day ${i+1}, opened"><div><span class="ck">✓</span>${g ? `<img src="${img(g.id)}" alt="">` : `<img src="art/${a.type==='magic'?'spiral':a.type==='gift'?'giftbox':'cone'}.webp" alt="">`}<small>${i+1} · ${fmtDay(a.d)}</small></div></button>`;
-    if (st === 'locked') return `<button class="dr locked" data-adv="${i}" aria-label="day ${i+1}, opens ${fmtDay(a.d)}"><div><b>${i+1}</b><small>${fmtDay(a.d)}</small></div></button>`;
+    if (st === 'locked') return `<button class="dr locked" data-adv="${i}" aria-label="day ${i+1}, opens ${fmtDay(a.d)}"><span class="rib"></span><span class="ribh"></span><div><b>${i+1}</b><small>${fmtDay(a.d)}</small></div></button>`;
     return `<button class="dr ${st}" data-adv="${i}" aria-label="day ${i+1}, ready to open"><span class="rib"></span><span class="ribh"></span><div><b>${i+1}</b><small>${st==='today'?'today!':fmtDay(a.d)}</small></div></button>`;
   }).join('');
   const opened = ADVENT.filter(a => advOpened.includes(a.d)).length;
@@ -1563,8 +1576,8 @@ function renderAdvent(){
   const pushOn = store.get('advPush', 0) && (typeof Notification === 'undefined' || Notification.permission === 'granted');
   const needsIcon = device() === 'ios' && !isStandalone();
   document.getElementById('advRemind').innerHTML = pushOn
-    ? `<div class="remind box"><h3>i'll tap you each morning ♥</h3><p style="margin:0 0 10px;font-size:14px">around 8am pacific, when a new door opens. no account, no email.</p><button class="btn ghost small" type="button" data-advpushoff>turn these off</button></div>`
-    : `<div class="remind box"><h3>a ping each morning</h3><p style="margin:0 0 10px;font-size:14px">${needsIcon ? 'add the guide to your home screen, open it from the icon, then I can tap you when each door opens.' : 'a tap on this phone around 8am pacific when each new door opens. no account, no email.'}</p>${needsIcon ? '<button class="btn small" type="button" data-welcome="2">add to home screen</button>' : '<button class="btn small" type="button" data-advpush>notify me each morning</button>'}<div class="err" id="advErr"></div></div>`;
+    ? `<div class="remind box"><h3>i'll tap you each morning ♥</h3><p style="margin:0 0 10px;font-size:14px">around 8am pacific, when a new door opens. the ping never says what is inside.</p><button class="btn ghost small" type="button" data-advpushoff>turn these off</button></div>`
+    : `<div class="remind box"><h3>a ping each morning</h3><p style="margin:0 0 10px;font-size:14px">${needsIcon ? 'add the guide to your home screen, open it from the icon, then I can tap you when a door opens. the ping never says what is inside.' : 'a tap around 8am pacific that a door is open. it never says what is inside. no account, no email.'}</p>${needsIcon ? '<button class="btn small" type="button" data-welcome="2">add to home screen</button>' : '<button class="btn small" type="button" data-advpush>notify me each morning</button>'}<div class="err" id="advErr"></div></div>`;
 }
 function vapidKeyBytes(b64){
   const pad = '='.repeat((4 - b64.length % 4) % 4);
