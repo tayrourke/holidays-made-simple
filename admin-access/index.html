@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#A2042A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dashboard">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<title>Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Montserrat:wght@400;600;700&display=swap">
+<style>
+  :root{--paper:#EBE6DE;--berry:#A2042A;--ink:#141010;--muted:#6F6259}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Montserrat,system-ui,sans-serif;padding:max(22px,env(safe-area-inset-top)) 16px 40px}
+  main{max-width:440px;margin:0 auto}
+  h1{font-family:'Titan One',system-ui,sans-serif;font-weight:400;letter-spacing:.02em;color:var(--berry);font-size:34px;margin:8px 0 6px;text-transform:uppercase}
+  h1 span{font-family:Montserrat,sans-serif;font-weight:300;letter-spacing:0;text-transform:none;color:var(--ink);font-size:28px}
+  p{line-height:1.45}
+  .card{background:#fff;border:1.5px solid var(--ink);padding:16px;display:grid;gap:10px}
+  label{display:grid;gap:4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  input{font:inherit;padding:12px;border:1.5px solid var(--ink);width:100%}
+  button{font:inherit;font-weight:700;background:var(--berry);color:#fff;border:0;padding:12px 16px;cursor:pointer}
+  .err{color:var(--berry);min-height:1.2em;font-size:14px;margin:0}
+  .fine{color:var(--muted);font-size:13px}
+  ol{padding:0;margin:8px 0 0;list-style:none;display:grid;gap:8px}
+  li{background:#fff;border:1.5px solid var(--ink);padding:10px 12px;font-size:14px}
+</style>
+<script>
+const DESK_HASH = '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258eea45';
+const deskOn = () => { try { return +localStorage.getItem('gg26:deskUntil') > Date.now(); } catch (e) { return false; } };
+const standalone = () => { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } };
+if (standalone() && deskOn()) location.replace('/#admin');
+</script>
+</head>
+<body>
+<main>
+  <h1><span>tay's </span>dashboard</h1>
+  <p>password first. then it opens your gifts, clicks, and advent doors.</p>
+  <form class="card" id="deskForm">
+    <label>name<input name="username" autocomplete="username" value="tay" aria-label="name"></label>
+    <label>password<input name="password" type="password" autocomplete="current-password" required aria-label="password"></label>
+    <p class="err" id="deskErr" role="status"></p>
+    <button type="submit">open the dashboard</button>
+  </form>
+  <p class="fine">this phone stays signed in for 30 days. add this page to your home screen and the icon opens right here.</p>
+  <div id="how"></div>
+</main>
+<script>
+const how = document.getElementById('how');
+if (!standalone()) {
+  const ua = navigator.userAgent || '';
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const android = /Android/.test(ua);
+  how.innerHTML = ios
+    ? '<ol><li>tap the share button at the bottom of Safari</li><li>scroll and tap <b>Add to Home Screen</b></li><li>tap <b>Add</b>. the icon is named Dashboard</li></ol>'
+    : android
+    ? '<ol><li>tap the menu in Chrome</li><li>tap <b>Add to Home screen</b> or <b>Install app</b></li><li>tap <b>Add</b></li></ol>'
+    : '<p class="fine">on your phone, open this same page and use Add to Home Screen. the icon is named Dashboard.</p>';
+}
+document.getElementById('deskForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('deskErr');
+  const pw = new FormData(e.target).get('password') || '';
+  if (!crypto.subtle) { err.textContent = 'open this from the https link so the password can be checked.'; return; }
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(pw)));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  if (hex !== DESK_HASH) { err.textContent = "that password didn't work."; return; }
+  try { localStorage.setItem('gg26:deskUntil', String(Date.now() + 30 * 864e5)); } catch (ex) {}
+  location.replace('/#admin');
+};
+</script>
+</body>
+</html>

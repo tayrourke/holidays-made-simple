@@ -1,0 +1,14 @@
+{
+  "id": "/admin-access/",
+  "name": "Tay's dashboard",
+  "short_name": "Dashboard",
+  "start_url": "/admin-access/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#EBE6DE",
+  "theme_color": "#A2042A",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
