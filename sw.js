@@ -1,6 +1,42 @@
-/* Holidays Made Simple — home-screen alerts for the advent doors. */
+/* Holidays Made Simple — home-screen alerts, and a fresh copy of the guide on every open. */
+const SHELL = 'gg-shell-v2';
+
+function isAppShell(url, req){
+  if (url.origin !== self.location.origin) return false;
+  if (req.mode === 'navigate' || req.destination === 'document') return true;
+  const path = url.pathname;
+  return path.endsWith('/') || path.endsWith('.html') || path.endsWith('.js') || path.endsWith('.webmanifest');
+}
+
 self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
-self.addEventListener('activate', event => { event.waitUntil(self.clients.claim()); });
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter(key => key !== SHELL).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (!isAppShell(url, req)) return;
+  event.respondWith((async () => {
+    try {
+      const fresh = await fetch(req, { cache: 'no-store' });
+      if (fresh && fresh.ok && (req.mode === 'navigate' || req.destination === 'document')){
+        const cache = await caches.open(SHELL);
+        await cache.put(req, fresh.clone()).catch(() => {});
+      }
+      return fresh;
+    } catch (err) {
+      const cached = await caches.match(req);
+      if (cached) return cached;
+      throw err;
+    }
+  })());
+});
 
 self.addEventListener('push', event => {
   event.waitUntil((async () => {
