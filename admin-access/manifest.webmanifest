@@ -3,7 +3,7 @@
   "name": "Tay's dashboard",
   "short_name": "Dashboard",
   "start_url": "/admin-access/",
-  "scope": "/",
+  "scope": "/admin-access/",
   "display": "standalone",
   "background_color": "#EBE6DE",
   "theme_color": "#A2042A",
