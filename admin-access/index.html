@@ -37,8 +37,8 @@
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--paper);z-index:2;padding:2px 0 8px}
   #app h1{font-size:28px;margin:0}
   .ghost{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
-  .tabs{display:flex;gap:8px;margin:4px 0 12px}
-  .tabs button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 8px}
+  .tabs{display:flex;gap:6px;margin:4px 0 12px}
+  .tabs button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 4px;font-size:13px}
   .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
   .tools{display:grid;gap:8px;margin-bottom:10px}
   #list{display:grid;gap:8px;padding-bottom:88px}
@@ -76,6 +76,9 @@
   .door .name{font-size:15px}
   .tag{color:var(--berry);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
   #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;font-size:14px;z-index:6;max-width:calc(100% - 32px)}
+  .linkhd{margin:18px 0 0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .linkrow{width:100%;display:flex;gap:10px;align-items:center;background:#fff;color:inherit;border:1.5px solid var(--ink);padding:8px;text-align:left;font-weight:400;margin-top:8px}
+  .linkrow img{width:52px;height:52px;object-fit:contain;background:#f6f1ea;flex:none}
 </style>
 <script>
 try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documentElement.classList.add('desk'); } catch (e) {}
@@ -101,6 +104,7 @@ try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documen
   </div>
   <div class="tabs" id="tabs" role="tablist">
     <button type="button" data-tab="gifts" aria-selected="true">gifts</button>
+    <button type="button" data-tab="links" aria-selected="false">links</button>
     <button type="button" data-tab="stats" aria-selected="false">stats</button>
     <button type="button" data-tab="advent" aria-selected="false">advent</button>
   </div>
@@ -113,7 +117,13 @@ const DESK_HASH = '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258ee
 const SECTIONS = ['My Top Picks','Gift Baskets','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['host','host'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const VIBES = [['self-care','bath, skincare + rituals'],['cozy','blankets, slippers, candles'],['wellness','tools for feeling good'],['kitchen','for the cook or baker'],['style','bags, jewelry, shoes'],['learning','building + learning'],['pretend play','dolls, play food, dress up'],['creative','art + craft'],['game night','games for the family'],['outdoors','bikes + adventures'],['little ones','rattles, lovies, bath toys'],['holiday magic','pajamas, ornaments, advent'],['treats','cocoa, chocolate, candy'],['funny','white elephant'],['stocking','small + sweet']];
-const state = { raw: null, items: [], base: new Set(), doors: [], tab: 'gifts', q: '', section: '', editing: null, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
+const state = { raw: null, items: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', section: '', editing: null, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
+const WRONG_LINK = {
+  p35_08: 'opens a Blackstone griddle',
+  p43_07: 'opens a hammock chair',
+  p28_06: 'opens a facial brush'
+};
+const TRACKED_HOSTS = new Set(['go.shopmy.us','amzn.to','a.co','link.amazon','collabs.shop','shrsl.com','glnk.io','bit.ly','pjtra.com','shareasale.com','just.crrnt.app','click.linksynergy.com','get.aspr.app']);
 let loading = false;
 let toastTimer = 0;
 
@@ -165,6 +175,28 @@ function parseItems(html){
   }
   throw new Error('missing');
 }
+function parseBroken(html){
+  const m = html.match(/const BROKEN = new Set\(\[([\s\S]*?)\]\)/);
+  if (!m) return new Set();
+  return new Set([...m[1].matchAll(/"([^"]+)"/g)].map(x => x[1]));
+}
+function hostOf(u){
+  try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { return ''; }
+}
+function linkJob(g){
+  const url = g.u || '';
+  const host = hostOf(url) || 'missing link';
+  if (state.broken.has(g.id)) return { host, why: "isn't opening" };
+  if (WRONG_LINK[g.id]) return { host, why: WRONG_LINK[g.id] };
+  if (!hostOf(url)) return { host, why: 'needs a shop link' };
+  if (host === 'go.shopmy.us' || host.endsWith('.shopmy.us')) return null;
+  if (host === 'taylor.ringana.us') return null;
+  if (host.endsWith('aizome-textiles.com') && /[?&]ref=/.test(url)) return null;
+  if (TRACKED_HOSTS.has(host) || host.endsWith('.n5ka.net')) return null;
+  if (host.includes('amazon.') && /[?&]tag=/.test(url)) return null;
+  if (/[?&](ref|rfsn|sca_ref|ssid|aff)=/i.test(url)) return null;
+  return { host, why: 'needs a ShopMy link' };
+}
 function parseDoors(html){
   const start = html.indexOf('const ADVENT = [');
   if (start < 0) return [];
@@ -194,6 +226,7 @@ async function loadCatalog(){
   if (!res.ok) throw new Error('load');
   const html = await res.text();
   state.raw = parseItems(html);
+  state.broken = parseBroken(html);
   state.base = new Set(state.raw.map(g => g.id));
   state.items = merge(state.raw);
   state.doors = parseDoors(html);
@@ -264,7 +297,7 @@ function editorHtml(){
   const secs = SECTIONS.map(s => `<option value="${esc(s)}"${s === sec ? ' selected' : ''}>${esc(s)}</option>`).join('');
   const vibes = VIBES.map(([k, label]) => `<option value="${esc(k)}"${k === vibe ? ' selected' : ''}>${esc(label)}</option>`).join('');
   const whos = WHO.map(([k, label]) => `<button type="button" data-who="${esc(k)}" class="${who.has(k) ? 'on' : ''}" aria-pressed="${who.has(k) ? 'true' : 'false'}">${esc(label)}</button>`).join('');
-  return `<button type="button" class="back" data-back>back to gifts</button>
+  return `<button type="button" class="back" data-back>back to ${state.tab === 'links' ? 'links' : 'gifts'}</button>
     <h1 style="font-size:26px;margin:0 0 12px">${g ? 'edit gift' : 'new gift'}</h1>
     ${g ? `<div style="margin-bottom:12px">${thumb(g).replace('<img', '<img class="now"')}</div>` : ''}
     <form class="card" id="giftForm" autocomplete="off">
@@ -325,6 +358,35 @@ function statsHtml(){
   const list = rows => rows.length ? rows.map(r => `<div class="stat"><b>${esc(lc(r.name))}</b><span>${r.n}</span></div>`).join('') : '<p class="fine">nothing in this range yet.</p>';
   return `<p class="fine">counted on this phone. older clicks are under all time.</p><div class="pills">${pills}</div><div class="kpis">${kpis.map(([label, n]) => `<div class="kpi"><b>${n}</b><span>${label}</span></div>`).join('')}</div><p class="fine" style="margin-top:14px">most shopped</p>${list(top)}<p class="fine" style="margin-top:14px">holiday sales</p>${list(sales)}`;
 }
+function linkRows(){
+  const q = state.q.trim().toLowerCase();
+  const jobs = [];
+  for (const g of state.items){
+    const job = linkJob(g);
+    if (!job) continue;
+    if (q && !lc(g.n + ' ' + job.host + ' ' + job.why + ' ' + g.s).includes(q)) continue;
+    jobs.push({ g, host: job.host, why: job.why });
+  }
+  return jobs;
+}
+function paintLinks(){
+  const box = document.getElementById('linklist');
+  const count = document.getElementById('lcount');
+  if (!box) { render(); return; }
+  const jobs = linkRows();
+  const all = state.items.filter(g => linkJob(g)).length;
+  if (count) count.textContent = jobs.length === all ? all + ' links to update' : jobs.length + ' of ' + all;
+  const by = new Map();
+  for (const job of jobs){
+    if (!by.has(job.host)) by.set(job.host, []);
+    by.get(job.host).push(job);
+  }
+  const hosts = [...by.keys()].sort((a, b) => by.get(b).length - by.get(a).length || a.localeCompare(b));
+  box.innerHTML = hosts.length ? hosts.map(host => `<p class="linkhd">${esc(host)} · ${by.get(host).length}</p>` + by.get(host).map(job => `<button type="button" class="linkrow" data-open="${esc(job.g.id)}">${thumb(job.g)}<span><div class="name">${esc(lc(job.g.n))}</div><div class="sub">${esc(job.why)}</div></span></button>`).join('')).join('') : '<p class="fine">nothing left in this search.</p>';
+}
+function linksHtml(){
+  return `<p class="fine">these still need a ShopMy link, or the link itself is broken or opens the wrong product. Amazon associate links and ShopMy links already earn, so they stay off this list. Tap one and paste the new link.</p><div class="tools"><input id="q" placeholder="search links" aria-label="search links" value="${esc(state.q)}"><p class="fine" id="lcount"></p></div><div id="linklist"></div>`;
+}
 function adventHtml(){
   const opened = new Set(read('advOpened', []));
   const counts = {};
@@ -346,6 +408,7 @@ function render(){
   if (state.loadErr) { panel.innerHTML = `<p class="err">${esc(state.loadErr)}</p>`; return; }
   if (!state.raw) { panel.innerHTML = '<p class="fine">loading gifts…</p>'; return; }
   if (editing) { panel.innerHTML = editorHtml(); panel.querySelector('input,textarea,select')?.focus(); return; }
+  if (state.tab === 'links') { panel.innerHTML = linksHtml(); paintLinks(); return; }
   if (state.tab === 'stats') { panel.innerHTML = statsHtml(); return; }
   if (state.tab === 'advent') { panel.innerHTML = adventHtml(); return; }
   panel.innerHTML = giftsHtml();
@@ -566,7 +629,7 @@ document.getElementById('app').addEventListener('change', (e) => {
     if (note) note.textContent = 'photo ready.';
   }).catch(() => { if (note) note.textContent = 'that file needs to be a png.'; });
 });
-document.getElementById('app').addEventListener('input', (e) => { if (e.target.id === 'q') { state.q = e.target.value; paintList(); } });
+document.getElementById('app').addEventListener('input', (e) => { if (e.target.id === 'q') { state.q = e.target.value; if (state.tab === 'links') paintLinks(); else paintList(); } });
 document.getElementById('app').addEventListener('change', (e) => {
   if (e.target.id === 'sec') { state.section = e.target.value; paintList(); }
   if (e.target.id === 'fSection') refreshGroups();
