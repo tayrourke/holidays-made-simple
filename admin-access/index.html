@@ -144,11 +144,7 @@ const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffe
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['host','host'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const VIBES = [['self-care','bath, skincare + rituals'],['cozy','blankets, slippers, candles'],['wellness','tools for feeling good'],['kitchen','for the cook or baker'],['style','bags, jewelry, shoes'],['learning','building + learning'],['pretend play','dolls, play food, dress up'],['creative','art + craft'],['game night','games for the family'],['outdoors','bikes + adventures'],['little ones','rattles, lovies, bath toys'],['holiday magic','pajamas, ornaments, advent'],['treats','cocoa, chocolate, candy'],['funny','white elephant'],['stocking','small + sweet']];
 const state = { raw: null, items: [], server: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
-const WRONG_LINK = {
-  p35_08: 'opens a Blackstone griddle',
-  p43_07: 'opens a hammock chair',
-  p28_06: 'opens a facial brush'
-};
+const WRONG_LINK = {};
 const TRACKED_HOSTS = new Set(['go.shopmy.us','amzn.to','a.co','link.amazon','collabs.shop','shrsl.com','glnk.io','bit.ly','pjtra.com','shareasale.com','just.crrnt.app','click.linksynergy.com','get.aspr.app']);
 let loading = false;
 let toastTimer = 0;
@@ -209,11 +205,16 @@ function parseBroken(html){
 function hostOf(u){
   try { return new URL(u).hostname.replace(/^www\./, '').toLowerCase(); } catch (e) { return ''; }
 }
+function rawUrl(id){
+  const raw = state.raw && state.raw.find(g => g.id === id);
+  return raw ? (raw.u || '') : '';
+}
 function linkJob(g){
   const url = g.u || '';
   const host = hostOf(url) || 'missing link';
-  if (state.broken.has(g.id)) return { host, why: "isn't opening", kind: 'broken' };
-  if (WRONG_LINK[g.id]) return { host, why: WRONG_LINK[g.id], kind: 'broken' };
+  const same = url === rawUrl(g.id);
+  if (same && state.broken.has(g.id)) return { host, why: "isn't opening", kind: 'broken' };
+  if (same && WRONG_LINK[g.id]) return { host, why: WRONG_LINK[g.id], kind: 'broken' };
   if (!hostOf(url)) return { host, why: 'no shop link', kind: 'broken' };
   if (host === 'go.shopmy.us' || host.endsWith('.shopmy.us')) return null;
   if (host === 'taylor.ringana.us') return null;
@@ -501,7 +502,7 @@ function paintLinks(){
 function linksHtml(){
   const view = state.lview || 'all';
   const pill = (id, label) => `<button type="button" data-lview="${id}" aria-pressed="${view === id ? 'true' : 'false'}">${label}</button>`;
-  return `<p class="fine">open a link to check the product. edit is only for pasting a new link. a save stays on this phone until the guide is published.</p><div class="tools"><input id="q" placeholder="search links" aria-label="search links" value="${esc(state.lq || '')}"></div><div class="pills">${pill('all', 'all')}${pill('broken', 'broken')}${pill('shopmy', 'needs ShopMy')}</div><div id="linklist"></div>`;
+  return `<p class="fine">open a link to check the product. paste a new link and it leaves the broken list, then updates the guide.</p><div class="tools"><input id="q" placeholder="search links" aria-label="search links" value="${esc(state.lq || '')}"></div><div class="pills">${pill('all', 'all')}${pill('broken', 'broken')}${pill('shopmy', 'needs ShopMy')}</div><div id="linklist"></div>`;
 }
 function linkEditorHtml(){
   const g = state.items.find(x => x.id === state.editing);
