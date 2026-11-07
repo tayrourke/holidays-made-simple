@@ -2879,8 +2879,51 @@ if ('serviceWorker' in navigator) {
 window.addEventListener('storage', (e) => {
   if (e.key === 'gg26:giftAdds' || e.key === 'gg26:giftEdits') location.reload();
 });
+function pendingGift(id){
+  try {
+    const edits = JSON.parse(localStorage.getItem('gg26:giftEdits') || '{}');
+    if (edits[id]) return edits[id];
+    const adds = JSON.parse(localStorage.getItem('gg26:giftAdds') || '[]');
+    return adds.find(g => g && g.id === id) || null;
+  } catch (e) { return null; }
+}
+function overlayGift(g, patch){
+  if (!patch) return;
+  for (const k of ['n','u','s','g','w','v','price','why','tn','remote']){
+    if (!Object.prototype.hasOwnProperty.call(patch, k)) continue;
+    if (patch[k] == null) delete g[k]; else g[k] = patch[k];
+  }
+}
+function placeGift(g){
+  const shop = !PREP_SECTIONS.includes(g.s) && !FRESH_HIDE.has(g.id);
+  const si = GIFTS.findIndex(x => x.id === g.id);
+  if (shop && si < 0) GIFTS.push(g); else if (!shop && si >= 0) GIFTS.splice(si, 1);
+  const prep = PREP_SECTIONS.includes(g.s);
+  const pi = PREP.findIndex(x => x.id === g.id);
+  if (prep && pi < 0) PREP.push(g); else if (!prep && pi >= 0) PREP.splice(pi, 1);
+}
+function applyPublishedGift(row){
+  if (!row || typeof row.id !== 'string' || !row.body || typeof row.body !== 'object') return;
+  let g = byId[row.id];
+  if (!g){
+    g = { id: row.id, src: 'o' };
+    ALL_ITEMS.push(g);
+    byId[row.id] = g;
+  }
+  overlayGift(g, row.body);
+  overlayGift(g, pendingGift(row.id));
+  placeGift(g);
+}
+async function loadPublishedGifts(){
+  try {
+    const rows = await pushRpc('guide_catalog_list', {});
+    if (!Array.isArray(rows)) return;
+    rows.forEach(applyPublishedGift);
+  } catch (e) {}
+}
 const firstHash = location.hash.slice(1);
-show(firstHash || 'home');
+const beginGuide = () => { show(firstHash || 'home'); };
+Promise.race([loadPublishedGifts(), new Promise(resolve => setTimeout(resolve, 3500))]).then(beginGuide);
 (function(){
   const boot = document.getElementById('boot');
   if (!boot) return;

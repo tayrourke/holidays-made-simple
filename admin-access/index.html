@@ -143,7 +143,7 @@ const DESK_HASH = '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258ee
 const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['host','host'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const VIBES = [['self-care','bath, skincare + rituals'],['cozy','blankets, slippers, candles'],['wellness','tools for feeling good'],['kitchen','for the cook or baker'],['style','bags, jewelry, shoes'],['learning','building + learning'],['pretend play','dolls, play food, dress up'],['creative','art + craft'],['game night','games for the family'],['outdoors','bikes + adventures'],['little ones','rattles, lovies, bath toys'],['holiday magic','pajamas, ornaments, advent'],['treats','cocoa, chocolate, candy'],['funny','white elephant'],['stocking','small + sweet']];
-const state = { raw: null, items: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
+const state = { raw: null, items: [], server: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
 const WRONG_LINK = {
   p35_08: 'opens a Blackstone griddle',
   p43_07: 'opens a hammock chair',
@@ -247,18 +247,42 @@ function parseDoors(html){
   while ((m = re.exec(chunk)) && doors.length < 24) doors.push({ d: m[1], title: m[2].replace(/\\'/g, "'") });
   return doors;
 }
+function applyPatch(g, e){
+  if (!e) return;
+  for (const [k, v] of Object.entries(e)){ if (v == null) delete g[k]; else g[k] = v; }
+}
 function merge(raw){
   const items = raw.map(g => ({ ...g, w: Array.isArray(g.w) ? g.w.slice() : [] }));
-  const edits = read('giftEdits', {});
-  for (const g of items){
-    const e = edits[g.id];
-    if (!e) continue;
-    for (const [k, v] of Object.entries(e)){ if (v == null) delete g[k]; else g[k] = v; }
+  const by = new Map(items.map(g => [g.id, g]));
+  for (const row of state.server || []){
+    if (!row || !row.id || !row.body) continue;
+    let g = by.get(row.id);
+    if (!g){ g = { id: row.id, src: 'o', w: [] }; items.push(g); by.set(row.id, g); }
+    applyPatch(g, row.body);
   }
+  const edits = read('giftEdits', {});
+  for (const g of items) applyPatch(g, edits[g.id]);
   for (const g of read('giftAdds', [])){
-    if (g && g.id && !items.some(x => x.id === g.id)) items.push({ ...g, w: Array.isArray(g.w) ? g.w.slice() : [] });
+    if (!g || !g.id) continue;
+    const have = by.get(g.id);
+    if (!have){ const copy = { ...g, w: Array.isArray(g.w) ? g.w.slice() : [] }; items.push(copy); by.set(g.id, copy); }
+    else applyPatch(have, g);
   }
   return items;
+}
+async function loadServer(){
+  state.server = [];
+  try {
+    const cfg = await pushConf();
+    const res = await fetch(cfg.url + '/rest/v1/rpc/guide_catalog_list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+      body: '{}'
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (Array.isArray(rows)) state.server = rows;
+  } catch (e) {}
 }
 async function loadCatalog(){
   const res = await fetch('/index.html', { cache: 'no-store' });
@@ -267,6 +291,7 @@ async function loadCatalog(){
   state.raw = parseItems(html);
   state.broken = parseBroken(html);
   state.base = new Set(state.raw.map(g => g.id));
+  await loadServer();
   state.items = merge(state.raw);
   state.doors = parseDoors(html);
 }
@@ -280,6 +305,9 @@ async function showDesk(){
     catch (e) { state.loadErr = "couldn't load the gifts. check your connection and open this again."; }
     loading = false;
   }
+  const pending = Object.keys(read('giftEdits', {})).length + read('giftAdds', []).length;
+  try { await flushPending(); }
+  catch (e) { if (pending) toast('edits on this phone have not reached the guide yet.'); }
   render();
 }
 function lockDesk(){
@@ -539,20 +567,80 @@ function adventHtml(){
   }).join('');
   return `<p class="fine">counted on this phone. ${opened.size} door${opened.size === 1 ? '' : 's'} opened here.</p>${body}`;
 }
+function deskSecret(){
+  try { return sessionStorage.getItem('gg26:deskSecret') || ''; } catch (e) { return ''; }
+}
+async function rememberSecret(pw){
+  if (!crypto.subtle) return false;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(pw)));
+  const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  if (hex !== DESK_HASH) return false;
+  try { sessionStorage.setItem('gg26:deskSecret', String(pw)); } catch (e) {}
+  return true;
+}
+function reachHtml(){
+  if (deskSecret()) return '';
+  return `<form class="card" id="reachForm" autocomplete="off"><p class="fine">type the dashboard password once. after that, a save here updates the guide everyone sees.</p><label>password<input id="reachPass" type="password" autocomplete="current-password" required></label><p class="err" id="reachErr" role="status"></p><button type="submit">update the guide from this phone</button></form>`;
+}
+function catalogBody(item){
+  return {
+    n: item.n, u: item.u, s: item.s, g: item.g, w: item.w || [], v: item.v,
+    price: item.price == null ? null : item.price,
+    why: item.why || null, tn: item.tn || null, remote: item.remote || null
+  };
+}
+function rememberServer(item){
+  const body = catalogBody(item);
+  const i = state.server.findIndex(r => r.id === item.id);
+  if (i >= 0) state.server[i] = { id: item.id, body };
+  else state.server.push({ id: item.id, body });
+}
+function dropPending(id){
+  const edits = read('giftEdits', {});
+  if (edits[id]){ delete edits[id]; write('giftEdits', edits); }
+  write('giftAdds', read('giftAdds', []).filter(a => a.id !== id));
+}
+async function publishGift(item){
+  const secret = deskSecret();
+  if (!secret) throw new Error('need-password');
+  const cfg = await pushConf();
+  const res = await fetch(cfg.url + '/rest/v1/rpc/guide_catalog_save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+    body: JSON.stringify({ p_pass: secret, p_id: item.id, p_body: catalogBody(item) })
+  });
+  if (!res.ok) throw new Error('rpc');
+}
+async function flushPending(){
+  if (!deskSecret() || !state.raw) return 0;
+  const ids = new Set([...Object.keys(read('giftEdits', {})), ...read('giftAdds', []).map(a => a && a.id).filter(Boolean)]);
+  let n = 0;
+  for (const id of ids){
+    const item = (state.items || []).find(g => g.id === id);
+    if (!item) continue;
+    await publishGift(item);
+    rememberServer(item);
+    dropPending(id);
+    n += 1;
+  }
+  if (n) state.items = merge(state.raw);
+  return n;
+}
 function render(){
   const editing = !!state.editing;
   document.getElementById('tabs').hidden = editing;
   document.getElementById('plus').hidden = state.tab !== 'gifts' || editing || !state.raw;
   document.querySelectorAll('[data-tab]').forEach(b => b.setAttribute('aria-selected', !editing && b.dataset.tab === state.tab ? 'true' : 'false'));
   const panel = document.getElementById('panel');
+  const reach = reachHtml();
   if (state.loadErr) { panel.innerHTML = `<p class="err">${esc(state.loadErr)}</p>`; return; }
   if (!state.raw) { panel.innerHTML = '<p class="fine">loading gifts…</p>'; return; }
-  if (editing) { panel.innerHTML = state.editKind === 'link' ? linkEditorHtml() : editorHtml(); window.scrollTo(0, 0); return; }
-  if (state.tab === 'links') { panel.innerHTML = linksHtml(); paintLinks(); return; }
-  if (state.tab === 'stats') { panel.innerHTML = statsHtml(); return; }
-  if (state.tab === 'advent') { panel.innerHTML = adventHtml(); return; }
-  if (state.tab === 'requests') { panel.innerHTML = requestsHtml(); loadRequests(); return; }
-  panel.innerHTML = giftsHtml();
+  if (editing) { panel.innerHTML = reach + (state.editKind === 'link' ? linkEditorHtml() : editorHtml()); window.scrollTo(0, 0); return; }
+  if (state.tab === 'links') { panel.innerHTML = reach + linksHtml(); paintLinks(); return; }
+  if (state.tab === 'stats') { panel.innerHTML = reach + statsHtml(); return; }
+  if (state.tab === 'advent') { panel.innerHTML = reach + adventHtml(); return; }
+  if (state.tab === 'requests') { panel.innerHTML = reach + requestsHtml(); loadRequests(); return; }
+  panel.innerHTML = reach + giftsHtml();
   paintList();
 }
 function nextId(){
@@ -560,26 +648,31 @@ function nextId(){
   for (const g of state.items){ const m = /^p57_(\d+)$/.exec(g.id || ''); if (m) n = Math.max(n, +m[1]); }
   return 'p57_' + String(n + 1).padStart(2, '0');
 }
-function toggleFav(id){
+async function toggleFav(id){
   const g = state.items.find(x => x.id === id);
   if (!g) return;
   const on = !g.tn;
   const tn = on ? (g.why || 'one of my favorites') : null;
-  if (state.base.has(id)){
-    const edits = read('giftEdits', {});
-    edits[id] = Object.assign({}, edits[id] || {}, { tn });
-    write('giftEdits', edits);
-  } else {
-    const adds = read('giftAdds', []).map(a => {
-      if (a.id !== id) return a;
-      const next = { ...a };
-      if (on) next.tn = tn; else delete next.tn;
-      return next;
-    });
-    write('giftAdds', adds);
-  }
+  if (on) g.tn = tn; else delete g.tn;
+  try {
+    if (!state.base.has(id) && !(state.server || []).some(r => r.id === id)){
+      write('giftAdds', read('giftAdds', []).map(a => a.id === id ? catalogBody({ ...a, tn: g.tn || null, n: a.n, u: a.u, s: a.s, g: a.g, w: a.w, v: a.v, price: a.price, why: a.why, remote: a.remote }) : a));
+    } else {
+      const edits = read('giftEdits', {});
+      edits[id] = catalogBody(g);
+      write('giftEdits', edits);
+    }
+  } catch (e) { return; }
   state.items = merge(state.raw);
-  toast(on ? 'marked as a favorite' : 'removed from favorites');
+  try {
+    await publishGift(state.items.find(x => x.id === id) || g);
+    rememberServer(g);
+    dropPending(id);
+    state.items = merge(state.raw);
+    toast(on ? "marked as a favorite in the guide" : "removed from favorites in the guide");
+  } catch (err) {
+    toast(err.message === 'need-password' ? 'saved on this phone. type the password above so the guide gets it.' : "saved on this phone. the guide did not get it yet.");
+  }
   if (state.tab === 'gifts' && !state.editing) paintList();
 }
 function paintPics(){
@@ -651,7 +744,7 @@ function showPhoto(url){
   }
   img.src = url;
 }
-function saveGift(ev){
+async function saveGift(ev){
   ev.preventDefault();
   const fail = msg => { const el = document.getElementById('fErr'); if (el) el.textContent = msg; };
   const name = document.getElementById('fName').value.trim();
@@ -689,10 +782,11 @@ function saveGift(ev){
   if (why) item.why = why; else delete item.why;
   if (fav || note) item.tn = note || (prev && prev.tn) || why || 'one of my favorites';
   else delete item.tn;
+  const body = catalogBody(item);
   try {
-    if (state.base.has(item.id)){
+    if (state.base.has(item.id) || (state.server || []).some(r => r.id === item.id)){
       const edits = read('giftEdits', {});
-      edits[item.id] = { n: item.n, u: item.u, s: item.s, g: item.g, w: item.w, v: item.v, price: item.price == null ? null : item.price, why: item.why || null, tn: item.tn || null, remote: item.remote || null };
+      edits[item.id] = body;
       write('giftEdits', edits);
     } else {
       const adds = read('giftAdds', []).filter(a => a.id !== item.id);
@@ -703,16 +797,26 @@ function saveGift(ev){
     return fail('that photo is too big for this phone. try a smaller png.');
   }
   state.items = merge(state.raw);
+  try {
+    await publishGift(item);
+    rememberServer(item);
+    dropPending(item.id);
+    state.items = merge(state.raw);
+  } catch (err) {
+    return fail(err.message === 'need-password'
+      ? 'type the dashboard password in the box above, then save again. this copy stays on the phone until then.'
+      : 'this copy is on the phone. the guide did not get it yet.');
+  }
   state.flash = item.id;
   const y = state.returnScroll || 0;
   state.editing = null;
   state.editKind = '';
   if (isNew) { state.q = ''; state.section = ''; }
-  toast(isNew ? 'added on this phone' : 'saved on this phone');
+  toast(isNew ? 'added to the guide' : 'saved to the guide');
   render();
   if (!isNew && state.tab === 'links') requestAnimationFrame(() => window.scrollTo(0, y));
 }
-function saveLink(ev){
+async function saveLink(ev){
   ev.preventDefault();
   const fail = msg => { const el = document.getElementById('fErr'); if (el) el.textContent = msg; };
   const url = (document.getElementById('fUrl').value || '').trim();
@@ -720,13 +824,15 @@ function saveLink(ev){
   const id = state.editing;
   const prev = state.items.find(g => g.id === id);
   if (!prev) return fail("that gift isn't in the list.");
+  prev.u = url;
+  const body = catalogBody(prev);
   try {
-    if (state.base.has(id)){
+    if (state.base.has(id) || (state.server || []).some(r => r.id === id)){
       const edits = read('giftEdits', {});
-      edits[id] = Object.assign({}, edits[id] || {}, { u: url });
+      edits[id] = body;
       write('giftEdits', edits);
     } else {
-      const adds = read('giftAdds', []).map(a => a.id === id ? Object.assign({}, a, { u: url }) : a);
+      const adds = read('giftAdds', []).map(a => a.id === id ? Object.assign({}, a, body) : a);
       if (!adds.some(a => a.id === id)) return fail("that gift isn't in the list.");
       write('giftAdds', adds);
     }
@@ -734,10 +840,20 @@ function saveLink(ev){
     return fail("this phone couldn't save that.");
   }
   state.items = merge(state.raw);
+  try {
+    await publishGift(state.items.find(g => g.id === id) || prev);
+    rememberServer(prev);
+    dropPending(id);
+    state.items = merge(state.raw);
+  } catch (err) {
+    return fail(err.message === 'need-password'
+      ? 'type the dashboard password in the box above, then save again. this link stays on the phone until then.'
+      : 'this link is on the phone. the guide did not get it yet.');
+  }
   const y = state.returnScroll || 0;
   state.editing = null;
   state.editKind = '';
-  toast('link saved on this phone');
+  toast('link saved to the guide');
   render();
   requestAnimationFrame(() => window.scrollTo(0, y));
 }
@@ -845,6 +961,20 @@ document.getElementById('app').addEventListener('change', (e) => {
 document.getElementById('app').addEventListener('submit', async (e) => {
   if (e.target.id === 'giftForm') saveGift(e);
   if (e.target.id === 'linkForm') saveLink(e);
+  if (e.target.id === 'reachForm') {
+    e.preventDefault();
+    const err = document.getElementById('reachErr');
+    const ok = await rememberSecret(document.getElementById('reachPass').value || '');
+    if (!ok) { if (err) err.textContent = "that password didn't work."; return; }
+    try {
+      const n = await flushPending();
+      toast(n ? 'this phone now updates the guide. ' + n + ' saved edit' + (n === 1 ? '' : 's') + ' went up.' : 'this phone now updates the guide.');
+    } catch (ex) {
+      toast('password saved on this phone. the guide did not take the edits yet.');
+    }
+    render();
+    return;
+  }
   if (e.target.id === 'reqGate') {
     e.preventDefault();
     const err = document.getElementById('reqErr');
