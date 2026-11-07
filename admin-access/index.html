@@ -66,6 +66,7 @@
   #photoPreview{width:140px;height:140px;object-fit:contain;background:#f6f1ea;border:1.5px solid var(--ink)}
   .savebar{display:flex;gap:8px;padding-top:4px}
   .savebar button{flex:1}
+  .danger{display:block;width:100%;margin-top:10px;background:#fff;color:var(--berry);border:1.5px solid var(--berry)}
   .edithead{font-family:Montserrat,sans-serif;font-weight:700;font-size:22px;letter-spacing:0;text-transform:none;color:var(--ink);margin:0 0 12px}
   .editor-photo{margin:0 0 12px}
   .editor-photo img,.editor-top img{width:96px;height:96px;object-fit:contain;background:#f6f1ea;border:1.5px solid var(--ink)}
@@ -270,7 +271,7 @@ function merge(raw){
     if (!have){ const copy = { ...g, w: Array.isArray(g.w) ? g.w.slice() : [] }; items.push(copy); by.set(g.id, copy); }
     else applyPatch(have, g);
   }
-  return items;
+  return items.filter(g => !(g.n === '.' && /\/gone$/.test(g.u || '')));
 }
 async function loadServer(){
   state.server = [];
@@ -407,7 +408,8 @@ function editorHtml(){
       </details>
       <p class="err" id="fErr" role="status"></p>
       <div class="savebar"><button type="submit">${g ? 'save' : 'add to the guide'}</button></div>
-    </form>`;
+    </form>
+    ${g ? `<button class="danger" type="button" data-delgift="${esc(g.id)}">delete this gift</button>` : ''}`;
 }
 function sinceDay(days){
   const n = new Date();
@@ -941,6 +943,25 @@ async function saveGift(ev){
   render();
   if (!isNew && state.tab === 'links') requestAnimationFrame(() => window.scrollTo(0, y));
 }
+async function deleteGift(id){
+  const g = state.items.find(x => x.id === id);
+  if (!g) return;
+  if (!window.confirm('Delete ' + g.n + ' from the guide?')) return;
+  const stub = { ...g, n: '.', u: 'https://gifts.swapsmadesimple.com/gone', price: null };
+  delete stub.why; delete stub.tn; delete stub.remote; delete stub.code; delete stub.save; delete stub.linkSave;
+  try {
+    await publishGift(stub);
+    rememberServer(stub);
+    dropPending(id);
+    state.items = merge(state.raw);
+    state.editing = null;
+    state.editKind = '';
+    toast('deleted from the guide');
+    render();
+  } catch (err) {
+    toast(err.message === 'need-password' ? 'type the dashboard password above, then delete again.' : 'the guide did not delete that yet.');
+  }
+}
 async function saveLink(ev){
   ev.preventDefault();
   const fail = msg => { const el = document.getElementById('fErr'); if (el) el.textContent = msg; };
@@ -1052,6 +1073,8 @@ document.getElementById('app').addEventListener('click', (e) => {
   if (open) { openEditor(open.dataset.open, 'full'); return; }
   const fav = e.target.closest('[data-fav]');
   if (fav) { toggleFav(fav.dataset.fav); return; }
+  const del = e.target.closest('[data-delgift]');
+  if (del) { deleteGift(del.dataset.delgift); return; }
   if (e.target.closest('[data-back]')) { closeEditor(); return; }
   const who = e.target.closest('[data-who]');
   if (who) { who.classList.toggle('on'); who.setAttribute('aria-pressed', who.classList.contains('on') ? 'true' : 'false'); return; }
