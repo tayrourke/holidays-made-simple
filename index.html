@@ -240,23 +240,40 @@ section.view[hidden]{display:none}
 .morerow img{width:96px;height:96px;object-fit:contain;margin-bottom:4px;padding:4px}
 
 /* ---------- my list ---------- */
-.people{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px;align-items:center}
+#v-list .wrap{max-width:720px}
+.liststage{display:grid;gap:14px;margin-top:4px}
+.listempty{text-align:center;padding:22px 18px 20px;display:grid;gap:8px;justify-items:center}
+.listempty img{width:84px;height:84px;object-fit:contain}
+.listempty h3{margin:0;font-family:var(--bubble);font-weight:400;text-transform:uppercase;font-size:clamp(22px,6vw,28px);line-height:1.05;color:var(--berry)}
+.listempty p{margin:0;max-width:36ch;font-size:14.5px}
+.peoplecard{padding:12px;display:grid;gap:8px}
+.peoplecard .tab{justify-self:start}
+.people{display:flex;gap:6px;flex-wrap:wrap;margin:0;align-items:center}
 .addp{display:flex;gap:6px;flex-wrap:wrap}
-.addp input{border:1.5px solid var(--ink);background:#fff;padding:7px 10px;font:inherit;font-size:14px;width:150px}
-.person{margin-top:22px}
+.addp input{border:1.5px solid var(--ink);background:#fff;padding:8px 10px;font:inherit;font-size:16px;width:150px}
+.liststats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.liststats .box{padding:12px 8px;text-align:center}
+.liststats b{display:block;font-family:var(--bubble);font-weight:400;font-size:clamp(20px,5vw,26px);line-height:1;color:var(--berry);font-variant-numeric:tabular-nums}
+.liststats span{font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.listtools{margin-top:0}
+.person{margin-top:4px}
 .person .band{font-size:20px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .person .band small{font-family:var(--body);font-style:normal;text-transform:none;font-size:12px;letter-spacing:0;text-shadow:none;opacity:.9}
-.items{display:grid;gap:0;border:1.5px solid var(--ink);border-top:0;background:var(--paper)}
-.item{display:grid;grid-template-columns:auto 58px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-top:1px solid rgba(20,16,16,.25);min-width:0}
-.item:first-child{border-top:0}
-.item img{width:58px;height:58px;object-fit:contain}
-.item .nm{font-size:14px;font-weight:600;min-width:0}
+.items{display:grid;gap:10px;margin-top:10px}
+.item{display:grid;grid-template-columns:24px 72px minmax(0,1fr);grid-template-areas:"check pic name" "check pic meta" "for for for";gap:4px 12px;align-items:center;padding:12px;border:1.5px solid var(--ink);background:#fff;min-width:0}
+.item input[type=checkbox]{grid-area:check;width:20px;height:20px;accent-color:var(--berry)}
+.item img{grid-area:pic;width:72px;height:72px;object-fit:contain}
+.item .nm{grid-area:name;font-size:15px;font-weight:600;min-width:0}
 .item .nm small{display:block;font-weight:400;font-family:var(--label);font-size:12.5px;color:var(--muted)}
+.item .meta{grid-area:meta;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.item .priceedit{display:flex;align-items:center;gap:2px;font-weight:700}
+.item .pin{margin:0;width:76px;font-size:16px}
+.item .acts{margin-left:auto;display:flex;gap:8px;align-items:center}
+.item .forline{grid-area:for;margin-top:6px;padding-top:8px;border-top:1px solid rgba(20,16,16,.12)}
+.item.bought{background:var(--paper)}
+.item.bought img{opacity:.5}
 .item.bought .nm{text-decoration:line-through;color:var(--muted)}
-.item input[type=checkbox]{width:20px;height:20px;accent-color:var(--berry)}
-.item select{font:inherit;font-size:12px;border:1px solid var(--ink);background:#fff;padding:3px 4px;max-width:120px}
-.item .acts{display:grid;gap:6px;justify-items:end}
-.forline{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:6px}
+.forline{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .forline span{font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .forline .pill{padding:3px 8px;font-size:12px}
 .forline form{display:flex;gap:4px}
@@ -438,14 +455,22 @@ section.view[hidden]{display:none}
 .sale .note{margin:0;font-size:13.5px}
 .sale .ends{font-family:var(--label);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border:1.5px solid var(--ink);white-space:nowrap}
 .sale .ends.soon{background:var(--ink);color:var(--paper)}
-.sale .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+.sale .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .sale .row .btn{white-space:nowrap;font-size:14px;padding-inline:10px}
-.sale .row .cbtn{font-size:14px;padding:0 12px}
+.sale .salecode{display:grid;justify-items:center;align-content:center;gap:4px}
+.sale .row .cbtn{font-size:14px;padding:10px 12px}
+.sale .codesave{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.02em;color:var(--berry);text-align:center;line-height:1.15}
 .sale .pin{position:absolute;top:-10px;left:14px}
 .salesempty{text-align:center;padding:26px 18px;display:grid;gap:10px;justify-items:center;max-width:560px;margin:0 auto}
 .salesempty img{width:90px}
 .salesempty h3{margin:0;font-family:var(--bubble);font-weight:400;text-transform:uppercase;font-size:24px;color:var(--berry)}
 .salesempty p{margin:0;font-size:14px}
+.madelist{display:grid;gap:10px}
+.liststage .madelist{margin-top:0}
+.madecard{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;text-decoration:none}
+.madecard img{width:64px;height:64px;object-fit:contain}
+.madecard b{font-family:var(--label);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.madecard small{display:block;color:var(--muted);font-size:13px}
 /* admin */
 .adm{max-width:880px;margin:0 auto}
 .admhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
@@ -660,7 +685,7 @@ body.fopen .filterbtn .n{background:#fff;color:var(--berry)}
 .bsum{display:grid;gap:6px;padding:10px 12px;border:1.5px solid var(--ink);border-top:0;background:var(--taupe)}
 .bsum .brow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}
 .bsum label{display:flex;align-items:center;gap:6px;font-family:var(--label);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-.bsum input,.pin{border:1px solid var(--ink);background:#fff;font:inherit;font-size:13px;padding:3px 6px;width:84px}
+.bsum input,.pin{border:1px solid var(--ink);background:#fff;font:inherit;font-size:16px;padding:4px 6px;width:88px}
 .bbar{position:relative;height:8px;background:rgba(20,16,16,.12);overflow:hidden}
 .bbar i{position:absolute;left:0;top:0;bottom:0}
 .bbar .pl{background:var(--gold)}
@@ -1513,11 +1538,13 @@ function matchBanner(){
 function renderList(){
   const B = document.getElementById('listBody');
   const items = saved.map(id => byId[id]).filter(Boolean);
-  const pplRow = `<div class="people"><span class="tab" style="background:var(--ink)">my people</span>${people.map(p=>`<button class="pill" data-delp="${esc(p)}" title="remove ${esc(p)}">${esc(p)} ×</button>`).join('')}
-    <form class="addp" id="addP"><input id="pName" placeholder="add a person" aria-label="add a person" maxlength="24"><button class="btn small" type="submit">add</button></form></div>`;
-  const builtN = builds.filter(b => (b.items || []).some(id => byId[id])).length;
-  const shareAll = items.length || builtN ? `<button class="btn ghost small" data-sharewish="all">share everything</button>` : '';
-  if (!items.length && !people.length){ B.innerHTML = pplRow + `<p class="empty">nothing saved yet. tap the ♡ on any gift and it stays here, on this device. a stocking or basket stays on the build tab until you add it here.</p>${shareAll ? `<div class="toolbar">${shareAll}</div>` : ''}<div style="display:flex;justify-content:center"><a class="btn" href="#shop">browse the guide</a></div>`; bindAddP(); return; }
+  const pplRow = `<div class="peoplecard box"><span class="tab" style="background:var(--ink)">my people</span><div class="people">${people.map(p=>`<button class="pill" data-delp="${esc(p)}" title="remove ${esc(p)}">${esc(p)} ×</button>`).join('')}
+    <form class="addp" id="addP"><input id="pName" placeholder="add a person" aria-label="add a person" maxlength="24"><button class="btn small" type="submit">add</button></form></div></div>`;
+  const made = builds.filter(b => (b.items || []).some(id => byId[id]));
+  const shareAll = items.length || made.length ? `<button class="btn ghost small" data-sharewish="all">share everything</button>` : '';
+  const madeHTML = made.length ? `<div class="madelist"><div class="band">stockings + baskets</div>${made.map(b => { const n = b.items.filter(id => byId[id]).length; return `<a class="madecard box" href="#build" data-bpick="${esc(b.id)}"><img src="art/${b.mode==='stocking'?'stocking':'giftbox'}.webp" alt=""><div><b>${esc(buildTitle(b))}</b><small>${n} ${n===1?'gift':'gifts'}</small></div><span>open ↗</span></a>`; }).join('')}</div>` : '';
+  const emptyCard = `<div class="listempty box"><img src="art/giftbox.webp" alt=""><h3>nothing saved yet</h3><p>tap the heart on a gift. it stays on this phone, ready to sort by person.</p><a class="btn" href="#shop">browse the guide</a></div>`;
+  if (!items.length){ B.innerHTML = `<div class="liststage">${emptyCard}${pplRow}${madeHTML}${shareAll ? `<div class="toolbar listtools" style="justify-content:center">${shareAll}</div>` : ''}</div>`; bindAddP(); return; }
   const groups = {}; items.forEach(g => { const p = assign[g.id] && people.includes(assign[g.id]) ? assign[g.id] : 'not assigned yet'; (groups[p] ||= []).push(g); });
   people.forEach(p => { groups[p] ||= []; });
   const order = [...people, ...(groups['not assigned yet']?['not assigned yet']:[])];
@@ -1525,9 +1552,11 @@ function renderList(){
   const planned = sum(items), spent = sum(items.filter(g=>bought.includes(g.id)));
   const totalBudget = people.reduce((a,p)=>a+(+budgets[p]||0),0);
   const missing = items.filter(g => priceOf(g) == null).length;
-  B.innerHTML = pplRow + `<div class="toolbar">${items.length ? `<button class="btn small" data-sharewish="list">share wishlist link</button>` : ''}${shareAll}<span class="count">${items.length} saved · ${items.filter(g=>bought.includes(g.id)).length} bought</span></div>
-  <div class="grandsum"><span class="big">total <b>${money(planned)||'$0'}</b></span><span>bought <b>${money(spent)||'$0'}</b></span>${totalBudget?`<span>budget <b>${money(totalBudget)}</b></span>`:''}</div>
-  ${missing?`<p class="count" style="margin:6px 0 0">${missing===1?'one gift still needs a price':'a few gifts still need a price'}. type one in and the total updates.</p>`:''}` +
+  const boughtN = items.filter(g=>bought.includes(g.id)).length;
+  B.innerHTML = `<div class="liststage">${pplRow}
+  <div class="liststats"><div class="box"><b>${money(planned)||'$0'}</b><span>planned</span></div><div class="box"><b>${money(spent)||'$0'}</b><span>bought</span></div><div class="box"><b>${totalBudget?money(totalBudget):items.length}</b><span>${totalBudget?'budget':'saved'}</span></div></div>
+  <div class="toolbar listtools"><button class="btn small" data-sharewish="list">share wishlist link</button>${shareAll}<span class="count">${items.length} saved · ${boughtN} bought</span></div>
+  ${missing?`<p class="count" style="margin:0">${missing===1?'one gift still needs a price':'a few gifts still need a price'}. type one in and the total updates.</p>`:''}` +
   order.map(p => { const gs = groups[p]; const done = gs.filter(g=>bought.includes(g.id)).length;
     const pl = sum(gs), bo = sum(gs.filter(g=>bought.includes(g.id))), bud = +budgets[p] || 0;
     const scale = Math.max(bud, pl, 1);
@@ -1539,11 +1568,11 @@ function renderList(){
     return `<div class="person"><div class="band"><span>${esc(p)}</span><small>${done} of ${gs.length} bought</small></div>${bsum}<div class="items">${gs.map(g => `<div class="item ${bought.includes(g.id)?'bought':''}">
       <input type="checkbox" id="b-${g.id}" data-bought="${g.id}" ${bought.includes(g.id)?'checked':''} aria-label="mark ${esc(g.n)} bought">
       <img src="${img(g.id)}" alt="">
-      <div class="nm"><label for="b-${g.id}">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span> ':''}${esc(lc(g.n))}</label><small>${esc(lc(SECLABEL[g.s]||g.s))}</small><div class="meta"><label class="priceedit">$<input class="pin" type="number" inputmode="decimal" min="0" step="0.01" data-price="${g.id}" value="${priceOf(g) ?? ''}" placeholder="—" aria-label="price for ${esc(g.n)}"></label>${codeBtn(g)}</div>
-      <div class="forline"><span>for</span>${people.map(pp=>`<button type="button" class="pill" data-forgift="${g.id}" data-forperson="${esc(pp)}" aria-pressed="${assign[g.id]===pp}">${esc(pp)}</button>`).join('')}<form data-fornew="${g.id}"><input placeholder="a person" aria-label="add ${esc(g.n)} to a person" maxlength="24"><button class="btn small" type="submit">add</button></form></div></div>
-      <div class="acts"><a class="go" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${g.id}">shop ↗</a>
-      <button class="pill" style="padding:2px 8px;font-size:12px" data-heart="${g.id}" aria-pressed="false">remove</button></div>
-    </div>`).join('') || `<div class="rempty">nothing for ${esc(p)} yet. tap the ♡ on a gift, then pick ${esc(p)} here.</div>`}</div></div>`; }).join('');
+      <div class="nm"><label for="b-${g.id}">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span> ':''}${esc(lc(g.n))}</label><small>${esc(lc(SECLABEL[g.s]||g.s))}</small></div>
+      <div class="meta"><label class="priceedit">$<input class="pin" type="number" inputmode="decimal" min="0" step="0.01" data-price="${g.id}" value="${priceOf(g) ?? ''}" placeholder="—" aria-label="price for ${esc(g.n)}"></label>${codeBtn(g)}<div class="acts"><a class="go" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${g.id}">shop ↗</a>
+      <button class="pill" style="padding:2px 8px;font-size:12px" data-heart="${g.id}" aria-pressed="false">remove</button></div></div>
+      <div class="forline"><span>for</span>${people.map(pp=>`<button type="button" class="pill" data-forgift="${g.id}" data-forperson="${esc(pp)}" aria-pressed="${assign[g.id]===pp}">${esc(pp)}</button>`).join('')}<form data-fornew="${g.id}"><input placeholder="a person" aria-label="add ${esc(g.n)} to a person" maxlength="24"><button class="btn small" type="submit">add</button></form></div>
+    </div>`).join('') || `<div class="rempty box">nothing for ${esc(p)} yet. tap the heart on a gift, then pick ${esc(p)} here.</div>`}</div></div>`; }).join('') + madeHTML + `</div>`;
   bindAddP();
 }
 function bindAddP(){ const f = document.getElementById('addP'); if (!f) return; f.onsubmit = e => { e.preventDefault(); const v = document.getElementById('pName').value.trim().toLowerCase(); if (!v || people.includes(v)) return; people.push(v); store.set('people', people); renderList(); }; }
@@ -1826,7 +1855,7 @@ function renderCodes(){
 function saleCard(s){
   const end = endsLabel(s); const soon = /today|tomorrow|in [1-3] days/.test(end);
   const link = s.linkSave ? `<p class="linksaves">link saves ${esc(s.linkSave)}</p>` : '';
-  const code = s.code ? `<button class="cbtn" data-copy="${esc(s.code)}" data-salecode="${esc(s.id)}" aria-label="copy code ${esc(s.code)}">${esc(s.code)}</button>` : '';
+  const code = s.code ? `<div class="salecode"><button class="cbtn" data-copy="${esc(s.code)}" data-salecode="${esc(s.id)}" aria-label="copy code ${esc(s.code)}">${esc(s.code)}</button>${s.save ? `<span class="codesave">saves ${esc(s.save)}</span>` : ''}</div>` : '';
   return `<div class="sale box ${s.featured?'feat':''}">
     ${s.featured?'<span class="tab pin">tay\'s pick</span>':''}
     <div class="top"><span class="brand">${esc(s.brand)}</span>${end?`<span class="ends ${soon?'soon':''}">${esc(end)}</span>`:''}</div>
@@ -1837,7 +1866,6 @@ function saleCard(s){
       <a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a>
       ${code}
     </div>
-    ${s.code && s.save ? `<p class="note">code saves ${esc(s.save)}</p>` : ''}
   </div>`;
 }
 async function renderSales(){
@@ -3327,7 +3355,7 @@ document.addEventListener('click', e => {
   if (d.tobuild){ openBuildPicker(d.tobuild); return; }
   if (d.pickb){ const b = builds.find(x => x.id === d.pickb); if (b && !b.items.includes(d.gid)){ b.items.push(d.gid); track('build-add', d.gid); } activeB = d.pickb; saveBuilds(); closeLayer(); go('build'); toast('added to ' + buildTitle(b)); return; }
   if (d.picknew){ const g = byId[d.gid]; const kind = d.picknew==='stocking' ? (g.s==='Stocking Stuffers' ? g.g : 'Mom') : (BASKET_FOR.some(k=>k[0]===g.v) ? g.v : 'self-care'); const b = newBuild(d.picknew, kind); b.items.push(d.gid); saveBuilds(); closeLayer(); go('build'); toast('started ' + buildTitle(b)); return; }
-  if (d.bpick){ activeB = d.bpick; saveBuilds(); renderBuild(); return; }
+  if (d.bpick){ activeB = d.bpick; saveBuilds(); if (current !== 'build') go('build'); else renderBuild(); return; }
   if (d.bnew){ newBuild(d.bnew); renderBuild(); setTimeout(() => { const n = document.getElementById('bName'); if (n){ n.focus(); n.select(); } }, 50); return; }
   if (d.bkind){
     const b = curB();
