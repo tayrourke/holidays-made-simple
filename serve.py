@@ -25,7 +25,7 @@ ROOT = Path(__file__).resolve().parent
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
 SECTIONS = {
     'My Top Picks', 'Gift Baskets', 'Experiences', 'White Elephant', 'Stocking Stuffers',
-    'Women', 'Men', 'Littles', 'Home', 'Big Ticket', 'Holiday Fun', 'Holiday Treats', 'Holiday Scents',
+    'Women', 'Men', 'Littles', 'Home', 'Books', 'Big Ticket', 'Holiday Fun', 'Holiday Treats', 'Holiday Scents',
 }
 VIBES = {
     'self-care', 'cozy', 'wellness', 'kitchen', 'style', 'learning', 'pretend play', 'creative',

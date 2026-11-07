@@ -39,9 +39,9 @@
   .head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--paper);z-index:2;padding:2px 0 8px}
   #app h1{font-size:28px;margin:0}
   .ghost{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
-  .tabs{display:flex;gap:6px;margin:4px 0 12px}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
   .tabs[hidden]{display:none}
-  .tabs button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 2px;font-size:11px}
+  .tabs button{flex:1 1 auto;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 8px;font-size:12px}
   .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
   .tools{display:grid;gap:8px;margin-bottom:10px}
   #list{display:grid;gap:8px;padding-bottom:88px}
@@ -133,6 +133,7 @@ try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documen
     <button type="button" data-tab="stats" aria-selected="false">stats</button>
     <button type="button" data-tab="advent" aria-selected="false">advent</button>
     <button type="button" data-tab="requests" aria-selected="false">requests</button>
+    <button type="button" data-tab="sales" aria-selected="false">sales</button>
   </div>
   <div id="panel"><p class="fine">loading gifts…</p></div>
   <button id="plus" type="button" aria-label="add a gift" hidden>+</button>
@@ -140,10 +141,10 @@ try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documen
 <div id="toast" hidden role="status"></div>
 <script>
 const DESK_HASH = '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258eea45';
-const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
+const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Books','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['host','host'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const VIBES = [['self-care','bath, skincare + rituals'],['cozy','blankets, slippers, candles'],['wellness','tools for feeling good'],['kitchen','for the cook or baker'],['style','bags, jewelry, shoes'],['learning','building + learning'],['pretend play','dolls, play food, dress up'],['creative','art + craft'],['game night','games for the family'],['outdoors','bikes + adventures'],['little ones','rattles, lovies, bath toys'],['holiday magic','pajamas, ornaments, advent'],['treats','cocoa, chocolate, candy'],['funny','white elephant'],['stocking','small + sweet']];
-const state = { raw: null, items: [], server: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
+const state = { raw: null, items: [], server: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '', sales: [], salesLive: false, saleEdit: null };
 const WRONG_LINK = {};
 const TRACKED_HOSTS = new Set(['go.shopmy.us','amzn.to','a.co','link.amazon','collabs.shop','shrsl.com','glnk.io','bit.ly','pjtra.com','shareasale.com','just.crrnt.app','click.linksynergy.com','get.aspr.app']);
 let loading = false;
@@ -381,7 +382,11 @@ function editorHtml(){
       <datalist id="groupList">${groups}</datalist>
       <div><span class="fieldlabel">who it's for</span><div class="who">${whos}</div></div>
       <label>vibe<select id="fVibe">${vibes}</select></label>
-      <label>blurb<textarea id="fWhy" maxlength="500">${esc(g && g.why || '')}</textarea></label>
+      <label>description<textarea id="fWhy" maxlength="500">${esc(g && g.why || '')}</textarea></label>
+      <label>code<input id="fCode" maxlength="40" autocapitalize="characters" value="${esc(g && g.code || '')}" placeholder="TOXINFREETAY"></label>
+      <label>code saves<input id="fSave" maxlength="40" value="${esc(g && g.save || '')}" placeholder="15%"></label>
+      <label>link saves<input id="fLinkSave" maxlength="40" value="${esc(g && g.linkSave || '')}" placeholder="10%"></label>
+      <p class="fine">code saves shows next to the code. link saves shows under the shop button, as “link saves 10%”.</p>
       <details class="more"${photoOpen}>
         <summary>photo</summary>
         <div class="morebody">
@@ -556,6 +561,114 @@ async function loadRequests(){
     box.innerHTML = '<p class="err">those messages are not coming through yet.</p>';
   }
 }
+const STARTER_SALES = [
+  { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'through december 7. robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', active:true },
+  { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', active:true }
+];
+function saleBody(s){
+  return {
+    brand: s.brand, headline: s.headline, url: s.url,
+    code: s.code || null, save: s.save || null, linkSave: s.linkSave || null, note: s.note || null,
+    starts: s.starts || null, ends: s.ends || null, featured: !!s.featured, active: s.active !== false
+  };
+}
+async function loadSalesDesk(){
+  const box = document.getElementById('panel');
+  if (!box || state.tab !== 'sales') return;
+  let rows = STARTER_SALES.map(s => ({ ...s }));
+  state.salesLive = false;
+  try {
+    const cfg = await pushConf();
+    const res = await fetch(cfg.url + '/rest/v1/rpc/guide_sales_list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+      body: '{}'
+    });
+    if (res.ok){
+      const data = await res.json();
+      if (Array.isArray(data) && data.length){
+        rows = data.map(r => ({ ...(r.body || {}), id: r.id }));
+        state.salesLive = true;
+      }
+    }
+  } catch (e) {}
+  state.sales = rows;
+  paintSales();
+}
+function paintSales(){
+  const box = document.getElementById('panel');
+  if (!box || state.tab !== 'sales') return;
+  const reach = reachHtml();
+  const editing = state.saleEdit;
+  const current = editing && editing !== 'new' ? state.sales.find(s => s.id === editing) || {} : {};
+  const form = editing ? `<form class="card" id="saleForm" autocomplete="off">
+      <button type="button" class="back" data-saleback>back to sales</button>
+      <h2 class="edithead">${editing === 'new' ? 'new sale' : 'edit sale'}</h2>
+      <label>brand<input id="sBrand" required maxlength="80" value="${esc(current.brand || '')}"></label>
+      <label>description<textarea id="sHead" required maxlength="180">${esc(current.headline || '')}</textarea></label>
+      <label>shop link<input id="sUrl" required inputmode="url" autocapitalize="off" value="${esc(current.url || '')}" placeholder="https://"></label>
+      <label>code<input id="sCode" maxlength="40" autocapitalize="characters" value="${esc(current.code || '')}" placeholder="TOXINFREETAY"></label>
+      <label>code saves<input id="sSave" maxlength="40" value="${esc(current.save || '')}" placeholder="15%"></label>
+      <label>link saves<input id="sLink" maxlength="40" value="${esc(current.linkSave || '')}" placeholder="20%"></label>
+      <p class="fine">link saves shows on the card as “link saves 20%”. leave it blank when the code is the savings.</p>
+      <label>note<textarea id="sNote" maxlength="240">${esc(current.note || '')}</textarea></label>
+      <label>starts<input id="sStart" type="date" value="${esc(current.starts || '')}"></label>
+      <label>ends<input id="sEnd" type="date" value="${esc(current.ends || '')}"></label>
+      <label class="check"><input id="sOn" type="checkbox" ${current.active === false ? '' : 'checked'}> show it on the sales page</label>
+      <p class="err" id="sErr" role="status"></p>
+      <div class="savebar"><button type="submit">save sale</button></div>
+    </form>` : '';
+  const list = state.sales.map(s => `<div class="door"><div class="name">${esc(s.brand || '')}</div><div class="sub">${esc(s.headline || '')}${s.active === false ? ' · hidden' : ''}</div><button type="button" class="ghost" data-saleedit="${esc(s.id)}" style="margin-top:8px">edit</button></div>`).join('');
+  box.innerHTML = reach + (form || `<p class="fine">add a sale here, with the shop link, the code, what the code saves, and “link saves” when the link itself is the discount. gift shop links stay on the links tab.</p><button type="button" data-salenew>add a sale</button><div style="margin-top:12px">${list}</div>`);
+  const f = document.getElementById('saleForm');
+  if (f) f.onsubmit = saveSaleDesk;
+}
+async function saveSaleDesk(ev){
+  ev.preventDefault();
+  const fail = msg => { const el = document.getElementById('sErr'); if (el) el.textContent = msg; };
+  const val = id => (document.getElementById(id).value || '').trim();
+  const brand = val('sBrand');
+  const headline = val('sHead');
+  const url = val('sUrl');
+  const code = val('sCode');
+  const save = val('sSave');
+  const linkSave = val('sLink');
+  const note = val('sNote');
+  if (!brand || !headline) return fail('add the brand and the description');
+  if (!/^https:\/\//.test(url)) return fail('the link needs to start with https://');
+  if (/[<>]/.test(brand + headline + code + save + linkSave + note)) return fail('leave the < symbol out');
+  const id = state.saleEdit === 'new' ? ('s' + Date.now().toString(36)) : state.saleEdit;
+  const row = saleBody({
+    brand, headline, url, code, save, linkSave, note,
+    starts: val('sStart'), ends: val('sEnd'),
+    featured: false, active: document.getElementById('sOn').checked
+  });
+  const secret = deskSecret();
+  if (!secret) return fail('type the dashboard password above, then save again.');
+  try {
+    const cfg = await pushConf();
+    const send = async (saleId, body) => {
+      const res = await fetch(cfg.url + '/rest/v1/rpc/guide_sales_save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+        body: JSON.stringify({ p_pass: secret, p_id: saleId, p_body: body })
+      });
+      if (!res.ok) throw new Error('save');
+    };
+    await send(id, row);
+    if (!state.salesLive){
+      for (const other of state.sales){
+        if (other.id === id) continue;
+        await send(other.id, saleBody(other));
+      }
+    }
+    state.saleEdit = null;
+    toast('saved on the sales page');
+    loadSalesDesk();
+  } catch (e) {
+    fail('that needs the sales setup run once in supabase. the sales already on the page stay up until then.');
+  }
+}
 function adventHtml(){
   const opened = new Set(read('advOpened', []));
   const counts = {};
@@ -587,7 +700,8 @@ function catalogBody(item){
   return {
     n: item.n, u: item.u, s: item.s, g: item.g, w: item.w || [], v: item.v,
     price: item.price == null ? null : item.price,
-    why: item.why || null, tn: item.tn || null, remote: item.remote || null
+    why: item.why || null, tn: item.tn || null, remote: item.remote || null,
+    code: item.code || null, save: item.save || null, linkSave: item.linkSave || null
   };
 }
 function rememberServer(item){
@@ -641,6 +755,7 @@ function render(){
   if (state.tab === 'stats') { panel.innerHTML = reach + statsHtml(); return; }
   if (state.tab === 'advent') { panel.innerHTML = reach + adventHtml(); return; }
   if (state.tab === 'requests') { panel.innerHTML = reach + requestsHtml(); loadRequests(); return; }
+  if (state.tab === 'sales') { panel.innerHTML = reach + '<p class="fine">loading sales…</p>'; loadSalesDesk(); return; }
   panel.innerHTML = reach + giftsHtml();
   paintList();
 }
@@ -756,6 +871,9 @@ async function saveGift(ev){
   const group = document.getElementById('fGroup').value.trim();
   const vibe = document.getElementById('fVibe').value;
   const why = document.getElementById('fWhy').value.trim();
+  const code = document.getElementById('fCode').value.trim();
+  const save = document.getElementById('fSave').value.trim();
+  const linkSave = document.getElementById('fLinkSave').value.trim();
   const note = document.getElementById('fNote').value.trim();
   const fav = document.getElementById('fFav').checked;
   const who = [...document.querySelectorAll('[data-who].on')].map(b => b.dataset.who).filter(w => WHO.some(([k]) => k === w));
@@ -765,7 +883,8 @@ async function saveGift(ev){
   if (!group || /[<>]/.test(group)) return fail('add a group, like Mom or Jewelry');
   if (!who.length) return fail("pick who it's for");
   if (!VIBES.some(([k]) => k === vibe)) return fail('pick a vibe');
-  if (/[<>]/.test(why) || /[<>]/.test(note)) return fail('leave the < symbol out of the blurb and the note');
+  if (/[<>]/.test(why) || /[<>]/.test(note) || /[<>]/.test(code) || /[<>]/.test(save) || /[<>]/.test(linkSave)) return fail('leave the < symbol out of the description, the code, and the note');
+  if (code.length > 40 || save.length > 40 || linkSave.length > 40) return fail('keep the code and the savings short');
   const isNew = state.editing === 'new';
   if (photo && !isPhoto(photo)) return fail('upload a png');
   if (isNew && !photo) return fail('upload a png');
@@ -781,6 +900,9 @@ async function saveGift(ev){
   if (photo) item.remote = photo;
   if (price != null) item.price = price; else delete item.price;
   if (why) item.why = why; else delete item.why;
+  if (code) item.code = code; else delete item.code;
+  if (save) item.save = save; else delete item.save;
+  if (linkSave) item.linkSave = linkSave; else delete item.linkSave;
   if (fav || note) item.tn = note || (prev && prev.tn) || why || 'one of my favorites';
   else delete item.tn;
   const body = catalogBody(item);
@@ -910,7 +1032,11 @@ document.getElementById('lockBtn').onclick = lockDesk;
 document.getElementById('plus').onclick = () => openEditor('new', 'full');
 document.getElementById('app').addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
-  if (tab) { state.tab = tab.dataset.tab; state.editing = null; state.editKind = ''; render(); return; }
+  if (tab) { state.tab = tab.dataset.tab; state.editing = null; state.editKind = ''; if (state.tab !== 'sales') state.saleEdit = null; render(); return; }
+  if (e.target.closest('[data-salenew]')) { state.saleEdit = 'new'; paintSales(); return; }
+  const saleEdit = e.target.closest('[data-saleedit]');
+  if (saleEdit) { state.saleEdit = saleEdit.dataset.saleedit; paintSales(); return; }
+  if (e.target.closest('[data-saleback]')) { state.saleEdit = null; paintSales(); return; }
   const range = e.target.closest('[data-range]');
   if (range) { state.range = +range.dataset.range; render(); return; }
   const lview = e.target.closest('[data-lview]');

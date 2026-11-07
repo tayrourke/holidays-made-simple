@@ -45,6 +45,9 @@ declare
   why text := nullif(trim(coalesce(p_body->>'why', '')), '');
   tn text := nullif(trim(coalesce(p_body->>'tn', '')), '');
   remote text := nullif(trim(coalesce(p_body->>'remote', '')), '');
+  gift_code text := nullif(trim(coalesce(p_body->>'code', '')), '');
+  gift_save text := nullif(trim(coalesce(p_body->>'save', '')), '');
+  gift_link text := nullif(trim(coalesce(p_body->>'linkSave', '')), '');
   price numeric;
   who jsonb := p_body->'w';
   member text;
@@ -104,6 +107,15 @@ begin
   if tn is not null and (length(tn) > 500 or tn ~ '[<>]') then
     raise exception 'Invalid gift';
   end if;
+  if gift_code is not null and (length(gift_code) > 40 or gift_code ~ '[<>]') then
+    raise exception 'Invalid gift';
+  end if;
+  if gift_save is not null and (length(gift_save) > 40 or gift_save ~ '[<>]') then
+    raise exception 'Invalid gift';
+  end if;
+  if gift_link is not null and (length(gift_link) > 40 or gift_link ~ '[<>]') then
+    raise exception 'Invalid gift';
+  end if;
   if remote is not null and (
     length(remote) > 700000
     or remote ~ '[<>]'
@@ -121,7 +133,10 @@ begin
     'price', to_jsonb(price),
     'why', to_jsonb(why),
     'tn', to_jsonb(tn),
-    'remote', to_jsonb(remote)
+    'remote', to_jsonb(remote),
+    'code', to_jsonb(gift_code),
+    'save', to_jsonb(gift_save),
+    'linkSave', to_jsonb(gift_link)
   );
   insert into public.guide_catalog (id, body, updated_at)
   values (gift_id, clean, now())

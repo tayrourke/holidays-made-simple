@@ -53,11 +53,11 @@ revoke all on table public.guide_door_pings from public, anon, authenticated;
 grant all on table public.guide_door_pings to service_role;
 
 insert into public.guide_door_pings (day, n, title) values
-  ('2026-11-23', 1, 'all my codes, in one place'),
-  ('2026-11-24', 2, 'swap your nonstick before the feast'),
+  ('2026-11-23', 1, 'the thanksgiving recipes I make every year'),
+  ('2026-11-24', 2, 'all my codes, in one place'),
   ('2026-11-25', 3, 'thankful place cards'),
   ('2026-11-26', 4, 'pack the leftovers the simple way'),
-  ('2026-11-27', 5, 'the sales are live'),
+  ('2026-11-27', 5, 'it''s officially black friday'),
   ('2026-11-28', 6, 'swap your holiday candles'),
   ('2026-11-29', 7, 'set up a story advent'),
   ('2026-11-30', 8, 'a cyber monday gift from me'),
@@ -174,8 +174,8 @@ begin
     body := jsonb_build_object(
       'event', 'guide',
       'event_key', 'guide:' || to_char(door.day, 'YYYY-MM-DD'),
-      'title', 'a new door is open',
-      'body', 'come unwrap it',
+      'title', 'day ' || door.n,
+      'body', 'open the app to unwrap today''s advent',
       'url', './#advent',
       'tag', 'guide-' || to_char(door.day, 'YYYY-MM-DD')
     ),
