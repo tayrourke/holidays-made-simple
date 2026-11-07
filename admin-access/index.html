@@ -671,6 +671,8 @@ async function saveSaleDesk(ev){
 }
 function adventHtml(){
   const opened = new Set(read('advOpened', []));
+  const peek = !!read('advPeek', 0);
+  const preview = `<div class="card"><p class="fine" style="margin:0">preview the advent on this phone. visitors still see each door locked until its date.</p><div class="savebar"><button type="button" data-advpeek>${peek ? 'doors are unlocked here' : 'unlock all doors'}</button><a class="ghost" href="/#advent" style="display:grid;place-items:center;text-decoration:none;font-weight:700">open the advent</a></div><button type="button" class="ghost" data-advreset>reset opened doors</button></div>`;
   const counts = {};
   for (const r of tapRows('advent')) counts[r.id] = r.n;
   const doors = state.doors.length ? state.doors : Array.from({ length: 24 }, (_, i) => ({ d: '', title: 'door ' + (i + 1) }));
@@ -679,7 +681,7 @@ function adventHtml(){
     const did = opened.has(door.d);
     return `<div class="door"><div class="sub">${door.d ? pretty(door.d) : 'door ' + (i + 1)}${did ? ' · <span class="tag">opened</span>' : ''}${n ? ' · ' + n + (n === 1 ? ' open' : ' opens') : ''}</div><div class="name">${esc(lc(door.title))}</div></div>`;
   }).join('');
-  return `<p class="fine">counted on this phone. ${opened.size} door${opened.size === 1 ? '' : 's'} opened here.</p>${body}`;
+  return preview + `<p class="fine">counted on this phone. ${opened.size} door${opened.size === 1 ? '' : 's'} opened here.</p>${body}`;
 }
 function deskSecret(){
   try { return sessionStorage.getItem('gg26:deskSecret') || ''; } catch (e) { return ''; }
@@ -1033,6 +1035,8 @@ document.getElementById('plus').onclick = () => openEditor('new', 'full');
 document.getElementById('app').addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) { state.tab = tab.dataset.tab; state.editing = null; state.editKind = ''; if (state.tab !== 'sales') state.saleEdit = null; render(); return; }
+  if (e.target.closest('[data-advpeek]')) { write('advPeek', read('advPeek', 0) ? 0 : 1); render(); return; }
+  if (e.target.closest('[data-advreset]')) { write('advOpened', []); render(); return; }
   if (e.target.closest('[data-salenew]')) { state.saleEdit = 'new'; paintSales(); return; }
   const saleEdit = e.target.closest('[data-saleedit]');
   if (saleEdit) { state.saleEdit = saleEdit.dataset.saleedit; paintSales(); return; }
