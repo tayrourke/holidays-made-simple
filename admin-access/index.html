@@ -17,7 +17,8 @@
 <style>
   :root{--paper:#EBE6DE;--berry:#A2042A;--ink:#141010;--muted:#6F6259}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:Montserrat,system-ui,sans-serif;padding:max(18px,env(safe-area-inset-top)) 16px 28px}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:Montserrat,system-ui,sans-serif;padding:max(18px,env(safe-area-inset-top)) 16px 28px;overflow-x:hidden}
+  #app,#panel,.card,label,form,.editor-top{min-width:0;max-width:100%}
   h1{font-family:'Titan One',system-ui,sans-serif;font-weight:400;letter-spacing:.02em;color:var(--berry);font-size:34px;margin:8px 0 6px;text-transform:uppercase}
   h1 span{font-family:Montserrat,sans-serif;font-weight:300;letter-spacing:0;text-transform:none;color:var(--ink);font-size:28px}
   p{line-height:1.45}
@@ -40,7 +41,7 @@
   .ghost{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
   .tabs{display:flex;gap:6px;margin:4px 0 12px}
   .tabs[hidden]{display:none}
-  .tabs button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 4px;font-size:13px}
+  .tabs button{flex:1;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 2px;font-size:11px}
   .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
   .tools{display:grid;gap:8px;margin-bottom:10px}
   #list{display:grid;gap:8px;padding-bottom:88px}
@@ -131,6 +132,7 @@ try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documen
     <button type="button" data-tab="links" aria-selected="false">links</button>
     <button type="button" data-tab="stats" aria-selected="false">stats</button>
     <button type="button" data-tab="advent" aria-selected="false">advent</button>
+    <button type="button" data-tab="requests" aria-selected="false">requests</button>
   </div>
   <div id="panel"><p class="fine">loading gifts…</p></div>
   <button id="plus" type="button" aria-label="add a gift" hidden>+</button>
@@ -138,7 +140,7 @@ try { if (+localStorage.getItem('gg26:deskUntil') > Date.now()) document.documen
 <div id="toast" hidden role="status"></div>
 <script>
 const DESK_HASH = '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258eea45';
-const SECTIONS = ['My Top Picks','Gift Baskets','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
+const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Big Ticket','Holiday Fun','Holiday Treats','Holiday Scents'];
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['host','host'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const VIBES = [['self-care','bath, skincare + rituals'],['cozy','blankets, slippers, candles'],['wellness','tools for feeling good'],['kitchen','for the cook or baker'],['style','bags, jewelry, shoes'],['learning','building + learning'],['pretend play','dolls, play food, dress up'],['creative','art + craft'],['game night','games for the family'],['outdoors','bikes + adventures'],['little ones','rattles, lovies, bath toys'],['holiday magic','pajamas, ornaments, advent'],['treats','cocoa, chocolate, candy'],['funny','white elephant'],['stocking','small + sweet']];
 const state = { raw: null, items: [], base: new Set(), broken: new Set(), doors: [], tab: 'gifts', q: '', lq: '', lview: 'all', section: '', editing: null, editKind: '', returnScroll: 0, range: 0, pics: [], photo: '', flash: '', loadErr: '' };
@@ -281,7 +283,7 @@ async function showDesk(){
   render();
 }
 function lockDesk(){
-  try { localStorage.removeItem('gg26:deskUntil'); } catch (e) {}
+  try { localStorage.removeItem('gg26:deskUntil'); sessionStorage.removeItem('gg26:deskSecret'); } catch (e) {}
   state.editing = null;
   state.editKind = '';
   state.tab = 'gifts';
@@ -335,15 +337,15 @@ function editorHtml(){
   const secs = SECTIONS.map(s => `<option value="${esc(s)}"${s === sec ? ' selected' : ''}>${esc(s)}</option>`).join('');
   const vibes = VIBES.map(([k, label]) => `<option value="${esc(k)}"${k === vibe ? ' selected' : ''}>${esc(label)}</option>`).join('');
   const whos = WHO.map(([k, label]) => `<button type="button" data-who="${esc(k)}" class="${who.has(k) ? 'on' : ''}" aria-pressed="${who.has(k) ? 'true' : 'false'}">${esc(label)}</button>`).join('');
-  const visit = g && https(g.u) ? `<a id="visitLink" class="textlink" href="${esc(g.u)}" target="_blank" rel="noopener noreferrer">open this link</a>` : '<a id="visitLink" class="textlink">open this link</a>';
+  const visit = g && https(g.u) ? `<a id="visitLink" class="openlink" href="${esc(g.u)}" target="_blank" rel="noopener noreferrer">open this link</a>` : '';
   const photoOpen = state.photo || state.pics.length ? ' open' : '';
-  return `<button type="button" class="back" data-back>back to ${state.tab === 'links' ? 'links' : 'gifts'}</button>
+  return `<button type="button" class="back" data-back>back to ${state.tab === 'links' ? 'links' : state.tab === 'requests' ? 'requests' : 'gifts'}</button>
     <h2 class="edithead">${g ? 'edit gift' : 'new gift'}</h2>
     ${g ? `<div class="editor-photo">${thumb(g)}</div>` : ''}
+    ${visit}
     <form class="card" id="giftForm" autocomplete="off">
       <label>name<input id="fName" required value="${esc(g ? g.n : '')}" maxlength="160"></label>
       <label>shop link<input id="fUrl" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" required value="${esc(g ? g.u : '')}" placeholder="https://"></label>
-      ${visit}
       <label>price<input id="fPrice" inputmode="decimal" value="${g && g.price != null ? esc(g.price) : ''}" placeholder="24"></label>
       <label>section<select id="fSection">${secs}</select></label>
       <label>group<input id="fGroup" required value="${esc(g ? g.g : '')}" placeholder="Mom, Games 5+, Jewelry" list="groupList" maxlength="80"></label>
@@ -490,6 +492,41 @@ function linkEditorHtml(){
     </form>
     <button class="ghost" type="button" data-full style="margin-top:10px;width:100%">edit the whole gift</button>`;
 }
+function requestsHtml(){
+  const secret = (() => { try { return sessionStorage.getItem('gg26:deskSecret') || ''; } catch (e) { return ''; } })();
+  const gate = secret ? '' : `<form class="card" id="reqGate" autocomplete="off"><label>password<input id="reqPass" type="password" autocomplete="current-password" required></label><p class="err" id="reqErr" role="status"></p><button type="submit">show requests</button></form>`;
+  return `<p class="fine">messages from the looking-for box on the guide.</p>${gate}<div id="reqlist"><p class="fine">${secret ? 'loading…' : 'password first, then the messages show up here.'}</p></div>`;
+}
+async function pushConf(){
+  const res = await fetch('/index.html', { cache: 'no-store' });
+  if (!res.ok) throw new Error('load');
+  const html = await res.text();
+  const url = (html.match(/URL:\s*'(https:[^']+)'/) || [])[1] || '';
+  const anon = (html.match(/ANON:\s*'([^']+)'/) || [])[1] || '';
+  if (!url || !anon) throw new Error('push');
+  return { url, anon };
+}
+async function loadRequests(){
+  const box = document.getElementById('reqlist');
+  if (!box) return;
+  let secret = '';
+  try { secret = sessionStorage.getItem('gg26:deskSecret') || ''; } catch (e) {}
+  if (!secret) return;
+  try {
+    const cfg = await pushConf();
+    const res = await fetch(cfg.url + '/rest/v1/rpc/guide_requests_list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+      body: JSON.stringify({ p_pass: secret })
+    });
+    if (!res.ok) throw new Error('list');
+    const rows = await res.json();
+    const list = Array.isArray(rows) ? rows : [];
+    box.innerHTML = list.length ? list.map(r => `<div class="door"><div class="sub">${esc(r.contact)} · ${esc(pretty(String(r.created_at || '').slice(0, 10)))}</div><div class="name">${esc(r.name)}</div><p style="margin:6px 0 0;font-size:14px">${esc(r.message)}</p></div>`).join('') : '<p class="fine">no requests yet.</p>';
+  } catch (e) {
+    box.innerHTML = '<p class="err">those messages are not coming through yet.</p>';
+  }
+}
 function adventHtml(){
   const opened = new Set(read('advOpened', []));
   const counts = {};
@@ -514,6 +551,7 @@ function render(){
   if (state.tab === 'links') { panel.innerHTML = linksHtml(); paintLinks(); return; }
   if (state.tab === 'stats') { panel.innerHTML = statsHtml(); return; }
   if (state.tab === 'advent') { panel.innerHTML = adventHtml(); return; }
+  if (state.tab === 'requests') { panel.innerHTML = requestsHtml(); loadRequests(); return; }
   panel.innerHTML = giftsHtml();
   paintList();
 }
@@ -748,6 +786,7 @@ document.getElementById('deskForm').onsubmit = async (e) => {
   const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
   if (hex !== DESK_HASH) { err.textContent = "that password didn't work."; return; }
   try { localStorage.setItem('gg26:deskUntil', String(Date.now() + 30 * 864e5)); } catch (ex) {}
+  try { sessionStorage.setItem('gg26:deskSecret', String(pw)); } catch (ex) {}
   showDesk();
 };
 document.getElementById('lockBtn').onclick = lockDesk;
@@ -803,9 +842,19 @@ document.getElementById('app').addEventListener('change', (e) => {
   if (e.target.id === 'sec') { state.section = e.target.value; paintList(); }
   if (e.target.id === 'fSection') refreshGroups();
 });
-document.getElementById('app').addEventListener('submit', (e) => {
+document.getElementById('app').addEventListener('submit', async (e) => {
   if (e.target.id === 'giftForm') saveGift(e);
   if (e.target.id === 'linkForm') saveLink(e);
+  if (e.target.id === 'reqGate') {
+    e.preventDefault();
+    const err = document.getElementById('reqErr');
+    const pw = (document.getElementById('reqPass').value || '');
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(pw)));
+    const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+    if (hex !== DESK_HASH) { if (err) err.textContent = "that password didn't work."; return; }
+    try { sessionStorage.setItem('gg26:deskSecret', String(pw)); } catch (ex) {}
+    render();
+  }
 });
 if (document.documentElement.classList.contains('desk')) showDesk();
 </script>
