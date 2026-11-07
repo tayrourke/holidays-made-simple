@@ -510,6 +510,40 @@ section.view[hidden]{display:none}
 .snow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
 /* tay's notes */
 .tnote{position:absolute;left:-4px;top:4px;z-index:2;background:#FFFBF2;color:var(--berry);font-family:var(--hand);font-weight:700;font-size:16px;line-height:1;padding:4px 9px 3px;transform:rotate(-6deg);box-shadow:0 2px 5px rgba(20,16,16,.14);white-space:nowrap}
+.soonchip{position:absolute;left:6px;bottom:8px;z-index:3;background:var(--ink);color:var(--paper);font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:lowercase;padding:4px 8px;white-space:nowrap}
+.soonchip.static{position:static}
+.wishes{max-width:680px;margin:18px auto 0;display:grid;gap:12px}
+.wrow{display:grid;grid-template-columns:36px 96px minmax(0,1fr);grid-template-areas:"rank img body" "rank img shop";gap:8px 14px;align-items:start;padding:14px;border:1.5px solid var(--ink);background:#FFFBF2;box-shadow:0 7px 0 rgba(162,4,42,.1)}
+.wrank{grid-area:rank;width:36px;height:36px;margin-top:6px;border-radius:50%;background:var(--berry);color:#fff;display:grid;place-items:center;font-family:var(--bubble);font-size:16px;line-height:1}
+.wpic{grid-area:img;position:relative;width:96px;height:96px}
+.wpic .openpic{border:0;background:transparent;padding:0;width:96px;height:96px;cursor:pointer}
+.wpic img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(20,16,16,.12))}
+.wpic .heart{top:0;left:0;right:auto}
+.wbody{grid-area:body;min-width:0}
+.wbody b{display:block;font-size:16px;font-weight:600;line-height:1.25;text-wrap:balance}
+.wprice{display:block;margin-top:3px;font-weight:700;font-size:18px;color:var(--berry);font-variant-numeric:tabular-nums}
+.wcode{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+.wsaves{font-family:var(--label);font-size:13px;color:var(--muted)}
+.wnote{margin:8px 0 0;font-family:var(--hand);font-size:24px;line-height:1.1;color:var(--ink)}
+.wshop{grid-area:shop;justify-self:start}
+.wsum{max-width:680px;margin:14px auto 0}
+.wedit{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.wedit li{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:start;padding:10px;border:1.5px solid var(--ink);background:#FFFBF2}
+.wedit img{width:64px;height:64px;object-fit:contain}
+.wedit b{display:block;font-size:14px;line-height:1.25}
+.wmove{display:flex;gap:6px;margin-top:6px}
+.wmove button{border:1.5px solid var(--ink);background:var(--paper);font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;padding:5px 10px}
+.wmove button:disabled{opacity:.35}
+.wnotein{font-size:16px;padding:8px 10px;margin-top:8px}
+.wishedit{display:grid;gap:14px;padding-top:8px}
+.wishedit h2{margin:0;font-family:var(--bubble);font-weight:400;text-transform:uppercase;font-size:clamp(26px,5vw,34px);line-height:1}
+.wishedit p{margin:0;color:var(--muted)}
+@media(max-width:560px){
+  .wrow{grid-template-columns:32px 76px minmax(0,1fr);grid-template-areas:"rank img body" "shop shop shop";padding:12px}
+  .wpic,.wpic .openpic{width:76px;height:76px}
+  .wshop{justify-self:stretch}
+  .wshop .btn{width:100%}
+}
 .tnote::before{content:"";position:absolute;top:-6px;left:50%;width:28px;height:11px;background:rgba(185,139,62,.42);transform:translateX(-50%) rotate(4deg)}
 .notecard{position:relative;background:#FFFBF2;padding:14px 16px 12px;transform:rotate(-1.2deg);box-shadow:0 3px 10px rgba(20,16,16,.12);margin:4px 2px 2px}
 .notecard::before{content:"";position:absolute;top:-8px;left:22px;width:46px;height:14px;background:rgba(185,139,62,.42);transform:rotate(-4deg)}
@@ -899,6 +933,11 @@ footer .end{font-family:var(--band);font-style:italic;text-transform:uppercase;l
   <div class="wrap"><div class="match" id="matchBody"></div></div>
 </section>
 
+<!-- SHARED WISHLIST -->
+<section class="view" id="v-wish" hidden>
+  <div class="wrap" id="wishBody"></div>
+</section>
+
 <!-- BUILD -->
 <section class="view" id="v-build" hidden>
   <div class="wrap">
@@ -1145,8 +1184,9 @@ function giftCard(g, i, opts={}){
   const on = saved.includes(g.id);
   const tn = g.tn ? `<span class="tnote">tay's pick ♥</span>` : '';
   const add = opts.add ? `<button class="add" data-add="${g.id}" aria-pressed="${opts.inSet?'true':'false'}">${opts.inSet ? '✓ in' : '+ add'}</button>` : '';
+  const soon = g.soon ? `<span class="soonchip">coming soon</span>` : '';
   return `<div class="gift" data-open="${g.id}" role="button" tabindex="0" aria-label="${esc(g.n)}" style="--i:${Math.min(i||0,10)}">
-    <div class="im ${g.src==='c'?'c':''}">${tn}${warnBadge(g.id)}<img loading="lazy" src="${img(g.id)}" alt="${esc(g.n)}">${add}
+    <div class="im ${g.src==='c'?'c':''}">${tn}${soon}${warnBadge(g.id)}<img loading="lazy" src="${img(g.id)}" alt="${esc(g.n)}">${add}
       <button class="heart" data-heart="${g.id}" aria-pressed="${on}" aria-label="save ${esc(g.n)}">${heartSVG}</button></div>
     <div class="t"><div>${esc(lc(g.n))}${g.sizes&&g.sizes.length?` · from ${money(Math.min(...g.sizes.map(s=>s.price)))}`:(g.price!=null?` · ${money(g.price)}`:'')}${opts.sub?`<small>${esc(lc(g.g))}</small>`:''}</div></div>
   </div>`;
@@ -1205,8 +1245,8 @@ function openGift(id){
           ${g.sizes&&g.sizes.length?`<div class="price">from ${money(Math.min(...g.sizes.map(s=>s.price)))}</div>`:(g.price!=null?`<div class="price">${money(g.price)}</div>`:'')}
           ${codeFor(g)?`<div class="coderow"><span class="count">code · saves ${esc(codeFor(g).s)}</span>${codeBtn(g)}</div>`:''}
           ${g.why?`<p class="why">${esc(g.why)}</p>`:`<p class="why" style="color:var(--muted)">${PREP_SECTIONS.includes(g.s) ? 'for your own holiday prep this season' : 'great for ' + esc(g.w.filter(w => WHO.some(x=>x[0]===w)).map(w => WHO.find(x=>x[0]===w)[1]).join(', '))}</p>`}
-          ${BROKEN.has(id)?`<p class="why"><span class="miniwarn">!</span> this shop link isn’t opening right now.</p>`:''}
-          ${g.sizes&&g.sizes.length?`<div class="sizelist">${g.sizes.map(s=>`<a class="sizerow" href="${esc(s.u)}" target="_blank" rel="noopener sponsored" data-shop="${id}"><span>${esc(s.n)}</span><b>${money(s.price)}</b></a>`).join('')}</div>`:`<a class="btn shopdock" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${id}">${BROKEN.has(id)?'<span class="blink">!</span> ':''}shop this gift ↗</a>`}
+          ${BROKEN.has(id) && !g.soon?`<p class="why"><span class="miniwarn">!</span> this shop link isn’t opening right now.</p>`:''}
+          ${g.soon?`<p class="why"><span class="soonchip static">coming soon</span></p>`:(g.sizes&&g.sizes.length?`<div class="sizelist">${g.sizes.map(s=>`<a class="sizerow" href="${esc(s.u)}" target="_blank" rel="noopener sponsored" data-shop="${id}"><span>${esc(s.n)}</span><b>${money(s.price)}</b></a>`).join('')}</div>`:`<a class="btn shopdock" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${id}">${BROKEN.has(id)?'<span class="blink">!</span> ':''}shop this gift ↗</a>`)}
           ${(id==='p17_00'||id==='p46_08')?`<a class="btn ghost" href="#yoto" data-close>favorite cards</a>`:''}
           <div class="row2">
             <button class="btn ghost small" data-heart="${id}" aria-pressed="${on}">${on ? '♥ on my list' : '♡ add to my list'}</button>
@@ -1423,7 +1463,7 @@ function renderList(){
   const planned = sum(items), spent = sum(items.filter(g=>bought.includes(g.id)));
   const totalBudget = people.reduce((a,p)=>a+(+budgets[p]||0),0);
   const missing = items.filter(g => priceOf(g) == null).length;
-  B.innerHTML = pplRow + `<div class="toolbar"><button class="btn small" id="shareBtn">copy my list to share</button><span class="count">${items.length} saved · ${items.filter(g=>bought.includes(g.id)).length} bought</span></div>
+  B.innerHTML = pplRow + `<div class="toolbar">${items.length ? `<button class="btn small" data-sharewish="list">share wishlist link</button>` : ''}<span class="count">${items.length} saved · ${items.filter(g=>bought.includes(g.id)).length} bought</span></div>
   <div class="grandsum"><span class="big">total <b>${money(planned)||'$0'}</b></span><span>bought <b>${money(spent)||'$0'}</b></span>${totalBudget?`<span>budget <b>${money(totalBudget)}</b></span>`:''}</div>
   ${missing?`<p class="count" style="margin:6px 0 0">${missing===1?'one gift still needs a price':'a few gifts still need a price'}. type one in and the total updates.</p>`:''}` +
   order.map(p => { const gs = groups[p]; const done = gs.filter(g=>bought.includes(g.id)).length;
@@ -1443,11 +1483,6 @@ function renderList(){
       <button class="pill" style="padding:2px 8px;font-size:12px" data-heart="${g.id}" aria-pressed="false">remove</button></div>
     </div>`).join('') || `<div class="rempty">nothing for ${esc(p)} yet. tap the ♡ on a gift, then pick ${esc(p)} here.</div>`}</div></div>`; }).join('');
   bindAddP();
-  document.getElementById('shareBtn').onclick = async () => {
-    const text = 'my 2026 holidays made simple list\ntotal ' + (money(planned)||'$0') + '\n' + order.map(p => `\n${p.toUpperCase()}\n` + groups[p].map(g => { const c = codeFor(g); const pce = priceOf(g); return `• ${lc(g.n)}${pce!=null?' '+money(pce):''}${c?' · code '+c.c+' (saves '+c.s+')':''}${BROKEN.has(g.id)?' · link needs a look':''}: ${g.u}`; }).join('\n')).join('\n');
-    try { await navigator.clipboard.writeText(text); toast('list copied. paste it in a text or email'); track('share','list'); }
-    catch(e){ const ta = document.createElement('textarea'); ta.value = text; ta.className='field'; ta.rows=8; B.prepend(ta); ta.select(); toast('select all + copy the list above'); }
-  };
 }
 function bindAddP(){ const f = document.getElementById('addP'); if (!f) return; f.onsubmit = e => { e.preventDefault(); const v = document.getElementById('pName').value.trim().toLowerCase(); if (!v || people.includes(v)) return; people.push(v); store.set('people', people); renderList(); }; }
 
@@ -1573,7 +1608,8 @@ function bPool(){
   return out;
 }
 function fitStkName(){
-  const n = document.querySelector('.stk .name'); if (!n) return;
+  const n = document.querySelector('#v-wish:not([hidden]) .stk .name, #v-build:not([hidden]) .stk .name');
+  if (!n) return;
   const sp = n.firstElementChild; sp.style.transform = '';
   const max = n.parentNode.clientWidth * 0.66, w = sp.offsetWidth;
   if (w > max) sp.style.transform = `scale(${(max / w).toFixed(3)})`;
@@ -1598,7 +1634,7 @@ function renderBuild(){
   const unpriced = items.length - priced.length;
   document.getElementById('holder').innerHTML = visual +
     `<div class="tot box"><span>${items.length} ${items.length===1?'gift':'gifts'}</span><span>${priced.length ? `total <b>${money(total)}</b>` : ''}${unpriced?`<small>${priced.length?' · ':''}${unpriced} without a price</small>`:''}</span></div>
-     ${items.length ? `<div class="inlist">${items.map(g=>`<div class="inrow"><img src="${img(g.id)}" alt="">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span>':''}<span class="nm">${esc(lc(g.n))}</span><b class="pr">${priceOf(g)!=null?money(priceOf(g)):''}</b>${codeBtn(g)}<button class="rm" data-add="${g.id}">remove</button></div>`).join('')}</div><button class="btn small" id="saveSet">add all to my list for ${esc(b.name)}</button>` : (stocking?'<p class="count" style="text-align:center;margin:0">tap + add on any gift to tuck it in the stocking</p>':'')}`;
+     ${items.length ? `<div class="inlist">${items.map(g=>`<div class="inrow"><img src="${img(g.id)}" alt="">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span>':''}<span class="nm">${esc(lc(g.n))}</span><b class="pr">${priceOf(g)!=null?money(priceOf(g)):''}</b>${codeBtn(g)}<button class="rm" data-add="${g.id}">remove</button></div>`).join('')}</div><div class="toolbar"><button class="btn small" id="saveSet">add all to my list for ${esc(b.name)}</button><button class="btn ghost small" data-sharewish="build">share wishlist link</button></div>` : (stocking?'<p class="count" style="text-align:center;margin:0">tap + add on any gift to tuck it in the stocking</p>':'')}`;
   fitStkName();
   document.getElementById('bFloatTxt').textContent = `${items.length} in ${buildTitle(b)}`;
   document.querySelector('#bFloat img').src = stocking ? 'art/stocking.webp' : 'art/giftbox.webp';
@@ -2514,6 +2550,245 @@ function startSnow(){
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && current === 'home') startSnow(); });
 
+/* ===== wishlist links ===== */
+let wishPayload = null;
+let wishEdit = null;
+const wishName = s => String(s || '').replace(/[,;=/#&%]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 24);
+const wishIdOk = id => /^[a-z0-9_-]+$/i.test(id) && byId[id];
+const wishNote = s => String(s || '').replace(/#/g, 'no. ').replace(/,/g, ' · ').replace(/[~|;=&%/]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80);
+function wishMemory(){
+  try { return JSON.parse(sessionStorage.getItem('gg26:wishNotes') || '{}'); }
+  catch (e) { return {}; }
+}
+function saveWishMemory(all){
+  try { sessionStorage.setItem('gg26:wishNotes', JSON.stringify(all)); } catch (e) {}
+}
+function rememberNote(id, note){
+  const all = wishMemory();
+  all[id] = wishNote(note);
+  saveWishMemory(all);
+}
+function orderedIds(key, ids){
+  const saved = wishMemory()['@' + key];
+  if (!Array.isArray(saved)) return ids.slice();
+  const set = new Set(ids);
+  const kept = saved.filter(id => set.has(id));
+  ids.forEach(id => { if (!kept.includes(id)) kept.push(id); });
+  return kept;
+}
+function rememberOrder(key, ids){
+  const all = wishMemory();
+  all['@' + key] = ids.slice();
+  saveWishMemory(all);
+}
+function packEntries(ids){
+  const notes = wishMemory();
+  return ids.filter(wishIdOk).map(id => {
+    const n = wishNote(notes[id] || '');
+    return n ? id + '~' + encodeURIComponent(n) : id;
+  }).join(',');
+}
+function wishEntries(s){
+  return String(s || '').split(',').map(part => {
+    part = part.trim();
+    if (!part) return null;
+    const cut = part.indexOf('~');
+    const id = (cut < 0 ? part : part.slice(0, cut)).trim();
+    let note = cut < 0 ? '' : part.slice(cut + 1);
+    try { note = decodeURIComponent(note); } catch (e) {}
+    note = wishNote(note);
+    if (!/^[a-z0-9_-]+$/i.test(id)) return null;
+    return { id, note };
+  }).filter(Boolean).slice(0, 60);
+}
+function parseWish(v){
+  if (!v.startsWith('wish/')) return null;
+  const body = v.slice(5);
+  const kind = body[0];
+  const rest = body.slice(2);
+  if (kind === 'r') return { kind, items: wishEntries(rest) };
+  if (kind === 'l'){
+    const groups = rest.split(';').map(chunk => {
+      const i = chunk.indexOf('=');
+      if (i < 0) return null;
+      let person = chunk.slice(0, i);
+      try { person = decodeURIComponent(person); } catch (e) {}
+      person = wishName(person);
+      const items = wishEntries(chunk.slice(i + 1));
+      return items.length ? { person, items } : null;
+    }).filter(Boolean);
+    return { kind, groups };
+  }
+  if (kind === 's' || kind === 'k'){
+    const cut = rest.lastIndexOf('/');
+    let name = cut < 0 ? rest : rest.slice(0, cut);
+    try { name = decodeURIComponent(name); } catch (e) {}
+    return { kind, name: wishName(name), items: wishEntries(cut < 0 ? '' : rest.slice(cut + 1)) };
+  }
+  return null;
+}
+function wishRow(g, i, note){
+  const price = priceOf(g);
+  const code = codeFor(g);
+  const on = saved.includes(g.id);
+  const shop = g.soon
+    ? '<span class="soonchip static">coming soon</span>'
+    : (g.u ? `<a class="btn small" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${g.id}">shop ↗</a>` : '');
+  return `<article class="wrow">
+    <span class="wrank">${i + 1}</span>
+    <div class="wpic"><button class="openpic" data-open="${g.id}" aria-label="${esc(g.n)}"><img src="${img(g.id)}" alt=""></button><button class="heart" data-heart="${g.id}" aria-pressed="${on}" aria-label="save ${esc(g.n)}">${heartSVG}</button></div>
+    <div class="wbody"><b>${esc(lc(g.n))}</b>${price != null ? `<span class="wprice">${money(price)}</span>` : ''}${code ? `<div class="wcode"><button class="cbtn" data-copy="${esc(code.c)}" title="saves ${esc(code.s)}">${esc(code.c)}</button><span class="wsaves">saves ${esc(code.s)}</span></div>` : ''}${note ? `<p class="wnote">${esc(note)}</p>` : ''}</div>
+    <div class="wshop">${shop}</div>
+  </article>`;
+}
+function wishStack(entries){
+  const gifts = [];
+  const html = (entries || []).map(e => {
+    const g = byId[e.id];
+    if (!g) return '';
+    gifts.push(g);
+    return wishRow(g, gifts.length - 1, e.note);
+  }).join('');
+  return { gifts, html };
+}
+function wishBlurb(gifts){
+  const n = gifts.length;
+  const priced = gifts.map(priceOf).filter(p => p != null);
+  const total = Math.round(priced.reduce((a, p) => a + p, 0) * 100) / 100;
+  const count = `${n} ${n === 1 ? 'gift' : 'gifts'}`;
+  const moneyBit = priced.length ? ` · ${money(total)}` : '';
+  return `${count}${moneyBit}. in the order they shared. shop any of them, or tap the heart to save it on your own list.`;
+}
+function wishHead(thin, bub, gifts){
+  return `<div class="ptitle"><h2><span class="thin">${esc(thin)}</span><span class="bub">${esc(bub)}</span></h2><p>${esc(wishBlurb(gifts))}</p></div>`;
+}
+function renderWish(){
+  const B = document.getElementById('wishBody');
+  const w = wishPayload;
+  if (!w){ B.innerHTML = `<div class="ptitle"><h2><span class="thin">this </span><span class="bub">wishlist</span></h2><p>that link didn't include any gifts.</p></div>`; return; }
+  if (w.kind === 'r'){
+    const stack = wishStack(w.items);
+    if (!stack.gifts.length && !FM){ B.innerHTML = `<div class="ptitle"><h2><span class="thin">a fresh </span><span class="bub">routine</span></h2><p>one moment…</p></div>`; return; }
+    B.innerHTML = wishHead('a fresh', 'routine', stack.gifts) + `<div class="wishes">${stack.html}</div>`;
+    return;
+  }
+  if (w.kind === 's' || w.kind === 'k'){
+    const stack = wishStack(w.items);
+    const name = w.name || '';
+    const thin = w.kind === 's' ? (name ? name + "'s" : 'a') : (name || 'a gift');
+    const bub = w.kind === 's' ? 'stocking' : 'basket';
+    const visual = w.kind === 's'
+      ? `<div class="stk"><img class="base" src="art/stocking.webp" alt="${esc(name ? name + "'s stocking" : 'stocking')}"><div class="name" style="--n:${[...(name || 'stocking')].length}"><span>${esc(name || 'stocking')}</span></div><div class="fill">${stack.gifts.slice(0, 12).map((g, i) => `<div class="slot" style="left:${SLOTS[i][0]}%;top:${SLOTS[i][1]}%"><img src="${img(g.id)}" alt="${esc(g.n)}"></div>`).join('')}</div></div>`
+      : `<div class="basket box"><img class="bow" src="art/giftbox.webp" alt=""><div class="ttl">${esc(name || 'basket')}</div><div class="pile">${stack.gifts.map(g => `<img src="${img(g.id)}" alt="${esc(g.n)}">`).join('')}</div></div>`;
+    B.innerHTML = wishHead(thin, bub, stack.gifts) + visual + `<div class="wishes">${stack.html}</div>`;
+    if (w.kind === 's') fitStkName();
+    return;
+  }
+  const groups = (w.groups || []).map(g => ({ person: g.person, ...wishStack(g.items) })).filter(g => g.gifts.length);
+  if (!groups.length){ B.innerHTML = `<div class="ptitle"><h2><span class="thin">a gift </span><span class="bub">list</span></h2><p>that link didn't include any gifts.</p></div>`; return; }
+  const all = groups.flatMap(g => g.gifts);
+  B.innerHTML = wishHead('a gift', 'list', all) + groups.map(g => `${g.person ? `<div class="group"><div class="band">for ${esc(g.person)}</div></div>` : ''}<div class="wishes">${g.html}</div>`).join('');
+}
+function wishSource(kind){
+  if (kind === 'routine'){
+    if (!match.result) return null;
+    const ids = [];
+    const why = {};
+    const seen = new Set();
+    for (const p of [...(match.result.hero?.items || []), ...(match.result.playbook?.addNext || [])]){
+      const id = matchId(p);
+      if (!id || seen.has(id) || !wishIdOk(id)) continue;
+      seen.add(id);
+      ids.push(id);
+      if (p.why) why[id] = p.why;
+    }
+    if (!ids.length) return null;
+    return { kind, title: 'a fresh routine', groups: [{ key: 'r', person: '', ids: orderedIds('r', ids) }], why };
+  }
+  if (kind === 'list'){
+    const groups = new Map();
+    for (const id of saved){
+      if (!wishIdOk(id)) continue;
+      const person = wishName(assign[id] && people.includes(assign[id]) ? assign[id] : '');
+      if (!groups.has(person)) groups.set(person, []);
+      const arr = groups.get(person);
+      if (arr.length < 40) arr.push(id);
+    }
+    const list = [...groups.entries()].filter(([, ids]) => ids.length).map(([person, ids]) => ({ key: 'l:' + person, person, ids: orderedIds('l:' + person, ids) }));
+    if (!list.length) return null;
+    return { kind, title: 'my gift list', groups: list, why: {} };
+  }
+  const b = curB();
+  const ids = b.items.filter(wishIdOk).slice(0, 24);
+  if (!ids.length) return null;
+  const key = (b.mode === 'stocking' ? 's:' : 'k:') + wishName(b.name);
+  return { kind, title: buildTitle(b), groups: [{ key, person: '', ids: orderedIds(key, ids) }], why: {}, buildName: wishName(b.name), buildMode: b.mode };
+}
+function renderWishEditor(){
+  const ed = wishEdit;
+  if (!ed) return;
+  const notes = wishMemory();
+  const rows = ed.groups.map(g => `${g.person ? `<div class="band">for ${esc(g.person)}</div>` : ''}<ol class="wedit">${g.ids.map((id, i) => {
+    const item = byId[id];
+    if (!item) return '';
+    const price = priceOf(item);
+    const note = notes[id] != null ? notes[id] : wishNote(ed.why?.[id] || '');
+    return `<li><img src="${img(id)}" alt=""><div><b>${i + 1}. ${esc(lc(item.n))}</b>${price != null ? `<span class="wprice">${money(price)}</span>` : ''}<div class="wmove"><button type="button" data-wishup="${esc(g.key)}:${i}" ${i ? '' : 'disabled'}>up</button><button type="button" data-wishdown="${esc(g.key)}:${i}" ${i < g.ids.length - 1 ? '' : 'disabled'}>down</button></div><input class="field wnotein" data-wishnote="${esc(id)}" maxlength="80" placeholder="a note, like the color or the size" value="${esc(note)}"></div></li>`;
+  }).join('')}</ol>`).join('');
+  document.getElementById('layer').innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-label="share this wishlist"><button class="x" data-close aria-label="close">×</button><div class="wishedit"><h2>share this wishlist</h2><p>put the most wanted first. a note shows under that gift, like a size, a color, or why it's the one.</p>${rows}<button class="btn" data-wishsend>share wishlist link</button></div></div>`;
+}
+function shareWishlist(kind){
+  const src = wishSource(kind);
+  if (!src){ toast(kind === 'list' ? 'save a gift first' : 'add a gift first'); return; }
+  const mem = wishMemory();
+  let dirty = false;
+  for (const g of src.groups) for (const id of g.ids){
+    if (mem[id] == null && src.why?.[id]){ mem[id] = wishNote(src.why[id]); dirty = true; }
+  }
+  if (dirty) saveWishMemory(mem);
+  wishEdit = src;
+  renderWishEditor();
+}
+function hashFromEdit(){
+  const ed = wishEdit;
+  document.querySelectorAll('[data-wishnote]').forEach(el => rememberNote(el.dataset.wishnote, el.value));
+  ed.groups.forEach(g => rememberOrder(g.key, g.ids));
+  if (ed.kind === 'routine') return 'wish/r/' + packEntries(ed.groups[0].ids);
+  if (ed.kind === 'list') return 'wish/l/' + ed.groups.map(g => encodeURIComponent(g.person || '') + '=' + packEntries(g.ids)).join(';');
+  const kind = ed.buildMode === 'stocking' ? 's' : 'k';
+  return `wish/${kind}/${encodeURIComponent(ed.buildName || '')}/${packEntries(ed.groups[0].ids)}`;
+}
+function moveWish(spec, dir){
+  if (!wishEdit) return;
+  const cut = String(spec).lastIndexOf(':');
+  if (cut < 0) return;
+  const key = spec.slice(0, cut);
+  const i = +spec.slice(cut + 1);
+  const g = wishEdit.groups.find(x => x.key === key);
+  if (!g) return;
+  const j = i + dir;
+  if (j < 0 || j >= g.ids.length) return;
+  document.querySelectorAll('[data-wishnote]').forEach(el => rememberNote(el.dataset.wishnote, el.value));
+  const [id] = g.ids.splice(i, 1);
+  g.ids.splice(j, 0, id);
+  rememberOrder(key, g.ids);
+  renderWishEditor();
+}
+async function finishWishShare(){
+  if (!wishEdit) return;
+  const hash = hashFromEdit();
+  const title = wishEdit.title || 'a wishlist';
+  if (!hash || /\/$/.test(hash) || hash.endsWith('=')){ toast('nothing to share yet'); return; }
+  const url = location.href.split('#')[0] + '#' + hash;
+  const text = `${title} from holidays made simple`;
+  track('share', wishEdit.kind);
+  try {
+    if (navigator.share){ await navigator.share({ title, text, url }); closeLayer(); return; }
+  } catch (e){ if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(url); closeLayer(); toast('wishlist link copied'); }
+  catch (e){ toast(url); }
+}
+
 /* ===== share one gift ===== */
 const giftLink = id => location.href.split('#')[0] + '#gift-' + id.replace('_','-');
 async function shareGift(id){
@@ -2607,7 +2882,7 @@ function registerMatchCatalog(mod){
       if (!p || !p.slug) continue;
       const id = matchId(p);
       const who = (p.id === 'menMoisturiser' || p.id === 'mascu') ? ['him'] : (p.id === 'fem' ? ['her'] : ['her','him','teens']);
-      byId[id] = { id, n: prettyRingana(p.name), u: p.url, s: 'Women', g: 'Fresh Match', w: who, v: 'self-care', src: 'o' };
+      byId[id] = { id, n: prettyRingana(p.name), u: p.soon ? '' : p.url, s: 'Women', g: 'Fresh Match', w: who, v: 'self-care', src: 'o', soon: !!p.soon };
     }
   }
 }
@@ -2638,7 +2913,7 @@ function renderMatch(){
       ${next.length ? `<div class="group"><div class="band">add next</div><div class="grid">${next.map(matchCard).join('')}</div></div>` : ''}
       ${steps.length ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3><ul class="msteps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
       <p class="mnote">a product match only, not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
-      <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn ghost small" data-mrestart>start over</button></div>`;
+      <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;
     return;
   }
   const qs = FM.questionsFor(match.path, match.ans);
@@ -2692,7 +2967,7 @@ function matchToggle(v){
 }
 
 /* ===== routing ===== */
-const VIEWS = ['home','shop','sales','list','quiz','build','swipe','advent','traditions','codes','admin','match','yoto'];
+const VIEWS = ['home','shop','sales','list','quiz','build','swipe','advent','traditions','codes','admin','match','yoto','wish'];
 const YOTO = 'https://us.yotoplay.com';
 const YOTO_Q = '?utm_source=ShopMy&utm_medium=affiliate&utm_campaign=Toxin%20Free%20Tay&utm_content=gift-guide';
 const YOTO_CARDS = [
@@ -2714,21 +2989,26 @@ function show(v){
   if (v==='prep') v='traditions';
   let deepGift = null;
   if (/^gift-p\d+-\d+$/.test(v)) { deepGift = v.slice(5).replace('-','_'); v = 'shop'; }
+  else if (v.startsWith('wish/')) { wishPayload = parseWish(v); v = 'wish'; }
   if (!VIEWS.includes(v)) v = 'home';
   closeLayer(); document.body.classList.remove('fopen');
   current = v;
   VIEWS.forEach(x => document.getElementById('v-'+x).hidden = x !== v);
   const sec = document.getElementById('v-'+v); sec.classList.remove('enter'); void sec.offsetWidth; sec.classList.add('enter');
   document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav===v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  ({home:()=>{renderHome(); renderSalesBanner(); renderAdvStrip(); startSnow();}, advent:renderAdvent, shop:renderShop, sales:renderSales, list:renderList, quiz:renderQuiz, build:renderBuild, swipe:renderSwipe, traditions:renderTrad, codes:renderCodes, admin:renderAdmin, match:renderMatch, yoto:renderYoto})[v]();
+  ({home:()=>{renderHome(); renderSalesBanner(); renderAdvStrip(); startSnow();}, advent:renderAdvent, shop:renderShop, sales:renderSales, list:renderList, quiz:renderQuiz, build:renderBuild, swipe:renderSwipe, traditions:renderTrad, codes:renderCodes, admin:renderAdmin, match:renderMatch, yoto:renderYoto, wish:renderWish})[v]();
   window.scrollTo(0,0);
   if (deepGift && byId[deepGift]) setTimeout(() => openGift(deepGift), 60);
 }
 function go(v){ if (location.hash === '#'+v) show(v); else location.hash = v; }
 window.addEventListener('hashchange', () => show(location.hash.slice(1)));
 
+document.addEventListener('input', e => {
+  const n = e.target.closest('[data-wishnote]');
+  if (n) rememberNote(n.dataset.wishnote, n.value);
+});
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-fwho],[data-fsec],[data-qwho],[data-qvibe],[data-qsize],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-bought],[data-copy],[data-mode],[data-delp],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sw],[data-swfor],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
+  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-fwho],[data-fsec],[data-qwho],[data-qvibe],[data-qsize],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-bought],[data-copy],[data-mode],[data-delp],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t) return;
   const d = t.dataset;
   if (d.mpath){ match.path = d.mpath; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
@@ -2770,6 +3050,10 @@ document.addEventListener('click', e => {
   if ('clrrecent' in d){ recent = []; store.set('recent', recent); if (current==='home') document.getElementById('recentHome').innerHTML=''; else renderShop(); return; }
   if ('totop' in d){ window.scrollTo({top:0, behavior: REDUCE ? 'auto' : 'smooth'}); return; }
   if (d.share){ shareGift(d.share); return; }
+  if (d.sharewish){ shareWishlist(d.sharewish); return; }
+  if (d.wishup){ moveWish(d.wishup, -1); return; }
+  if (d.wishdown){ moveWish(d.wishdown, 1); return; }
+  if ('wishsend' in d){ finishWishShare(); return; }
   if (d.sw){ if (d.sw==='info'){ const g = sw.deck[sw.i]; if (g) openGift(g.id); } else swDecide(d.sw); return; }
   if (d.swfor !== undefined){ sw.who = d.swfor; swBuild(); renderSwipe(); return; }
   if (d.welcome){ openWelcome(+d.welcome); return; }
@@ -2864,7 +3148,7 @@ updateCount();
 import('./fresh-match/quiz.js').then(mod => {
   FM = mod;
   registerMatchCatalog(mod);
-  if (current === 'match' || current === 'list') show(current);
+  if (current === 'match' || current === 'list' || current === 'wish') show(location.hash.replace(/^#/, '') || current);
 }).catch(() => { if (current === 'match') document.getElementById('matchBody').innerHTML = `<div class="ptitle"><h2><span class="thin">fresh</span><span class="bub">match</span></h2><p>the quiz didn't load. refresh and try again.</p></div>`; });
 document.getElementById('askForm').addEventListener('submit', sendAsk);
 if ('serviceWorker' in navigator) {
@@ -2941,7 +3225,7 @@ Promise.race([loadPublishedGifts(), new Promise(resolve => setTimeout(resolve, 3
   if (document.readyState === 'complete') finish();
   else window.addEventListener('load', finish);
 })();
-const startWelcome = () => { if (!store.get('welcomed', 0) && !/^(admin|gift-)/.test(firstHash)) setTimeout(() => { if (!document.querySelector('#layer .sheet')) openWelcome(1); }, 350); };
+const startWelcome = () => { if (!store.get('welcomed', 0) && !/^(admin|gift-|wish\/)/.test(firstHash)) setTimeout(() => { if (!document.querySelector('#layer .sheet')) openWelcome(1); }, 350); };
 if (document.getElementById('boot')) window.addEventListener('bootdone', startWelcome, {once:true});
 else startWelcome();
 </script>

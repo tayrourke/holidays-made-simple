@@ -84,7 +84,6 @@ export const FACE_Q = [
       { v: "tint", label: "Light, natural coverage", sub: "Skincare-first tinted finish" },
       { v: "mask", label: "A weekly mask reset", sub: "Enzymes, clay, or peptides — I'll pick the right one" },
       { v: "scrub", label: "A gentle face & body scrub", sub: "Physical polish when you want it" },
-      { v: "afterSun", label: "After-sun / soft glow care", sub: "Soothe + subtle tan support — not SPF" },
       { v: "lips", label: "Lip care", sub: "Clean, intensive balm" },
       { v: "eyes", label: "Dedicated eye care", sub: "Even if eyes aren't your #1 concern" },
       { v: "men", label: "This is for a man's routine", sub: "Simple steps that still work hard" },
@@ -124,7 +123,6 @@ export const BODY_Q = [
       { v: "shampoo", label: "Shampoo", sub: "Gentle, scalp-smart cleanse" },
       { v: "conditioner", label: "Conditioner", sub: "Detangle, shine, seal it in" },
       { v: "oral", label: "Oral care", sub: "Oil pulling for teeth & gums" },
-      { v: "wipes", label: "Wet wipes swap", sub: "Plastic-free fresh-up foam" },
     ],
   },
   {
@@ -149,7 +147,6 @@ export const BODY_Q = [
     note: "Optional — these refine your everyday match.",
     options: [
       { v: "legs", label: "Legs feel heavy or tired", sub: "Standing, travel, heat, end-of-day swell" },
-      { v: "afterSun", label: "I want after-sun / soft glow", sub: "Post-outdoor care + subtle tan support" },
       { v: "scrub", label: "I like a body polish", sub: "Scrub face & body weekly-ish" },
       { v: "handsExtra", label: "My hands take a beating", sub: "Washing, weather, work" },
       { v: "feetExtra", label: "Feet need serious help", sub: "Cracks, dryness, sandal season" },

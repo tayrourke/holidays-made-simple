@@ -208,19 +208,8 @@ export function buildFace(a) {
   if (full && ex.includes("tint")) {
     am.push(item(FACE.tinted, "Perfect", "Light coverage over your moisturiser — skincare first"));
   }
-  if (full && ex.includes("lips")) {
+  if (ex.includes("lips")) {
     am.push(item(FACE.lipBalm, "Lips", "Clean, intensive lip care — zero petroleum"));
-  }
-
-  // After sun: only when they asked for it — never from climate alone, never AM
-  if (ex.includes("afterSun")) {
-    pm.push(
-      item(
-        FACE.afterSun,
-        "As needed · after sun",
-        "After-sun care with a soft glow boost — use after outdoor days, not as a morning step"
-      )
-    );
   }
 
   // Weekly — prefer one polish, not mask + scrub stacked
@@ -287,9 +276,6 @@ export function buildBody(a) {
     if (bx.includes("legs")) {
       out.push(item(BODY.lightLegs, "Legs", "Cooling care for heavy, tired, end-of-day legs"));
     }
-    if (bx.includes("afterSun")) {
-      out.push(item(FACE.afterSun, "After sun", "Post-outdoor soothe + soft glow — for body as much as face"));
-    }
     if (bx.includes("scrub")) {
       out.push(item(FACE.scrub, "Polish", "Face & body scrub when you want a physical reset"));
     }
@@ -308,7 +294,9 @@ export function buildBody(a) {
 
   const wantsTrio = has("lotion") && has("hands") && has("feet");
   if (wantsTrio) {
-    out.push(item(BODY.bodySet, "Head to toe", "You want body, hands and feet — Ringana's own base-care trio, in one"));
+    out.push(item(milk, "Body", skinWhy));
+    out.push(item(BODY.handBalm, "Hands", "Light enough to reapply constantly — and it works on pigment spots"));
+    out.push(item(BODY.footBalm, "Feet", "Fast-absorbing repair for the part of you that works hardest"));
   } else {
     if (has("lotion")) out.push(item(milk, "Body", skinWhy));
     if (has("hands") || bx.includes("handsExtra")) {
@@ -330,9 +318,6 @@ export function buildBody(a) {
   if (has("deo")) out.push(item(BODY.deodorant, "Deodorant", "No aluminium salts; lemon verbena supports sweat regulation rather than blocking it"));
   if (has("legs") || bx.includes("legs")) {
     out.push(item(BODY.lightLegs, "Legs", "Cooling botanical care for heavy, tired, or heat-swollen legs"));
-  }
-  if (bx.includes("afterSun")) {
-    out.push(item(FACE.afterSun, "After sun", "Soothe after outdoor days and support a soft, even glow — not SPF"));
   }
   if (bx.includes("scrub")) {
     out.push(item(FACE.scrub, "Polish", "Gentle face & body scrub — once a week is plenty"));
@@ -357,7 +342,6 @@ export function buildBody(a) {
   }
 
   if (has("oral")) out.push(item(BODY.toothOil, "Oral care", "Certified-organic oil pulling for teeth and gums"));
-  if (has("wipes")) out.push(item(BODY.stayFresh, "Fresh-up", "Plastic-free, and genuinely more effective than a dry-paper compromise"));
 
   return out;
 }
@@ -812,16 +796,6 @@ export function buildPlaybook(ans, path, hero, face, body, supp) {
     else if (ans.concern === "breakouts") week1.push("Zone clarifying booster on active spots; give it 2–3 weeks before judging.");
     else week1.push("Give any new booster 2–3 weeks before you decide it's not for you.");
   }
-  if (path === "supp" || path === "both") {
-    const { approach } = resolveSuppAnswers(ans);
-    if (approach === "overall") {
-      week1.push("Start with PACKS ABC daily — antiox, balancing, cleansing — before adding capsules.");
-    } else if (approach === "both") {
-      week1.push("Take PACKS ABC as your daily base; add targeted capsules with the meal pattern on each label.");
-    } else {
-      week1.push("Take supplements with the meal pattern on the label — consistency beats stacking.");
-    }
-  }
   if (body?.some((p) => p.id === "deodorant")) {
     week1.push("Coming off antiperspirant? Give FRESH deodorant 2–3 weeks to recalibrate.");
   }
@@ -830,9 +804,13 @@ export function buildPlaybook(ans, path, hero, face, body, supp) {
     break;
   }
 
+  const lead = stretch.filter((p) => p.soon || p.id === "lipBalm");
+  const later = stretch.filter((p) => !p.soon && p.id !== "lipBalm");
+  const addNext = [...lead, ...later].slice(0, Math.max(3, Math.min(lead.length + 2, 6)));
+
   return {
     buyFirst: hero?.items || [],
-    addNext: stretch.slice(0, 3),
+    addNext,
     week1: week1.slice(0, 3),
   };
 }
