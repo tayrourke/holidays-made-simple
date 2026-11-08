@@ -3,8 +3,8 @@
 -- Safe to re-run. Does not read or write vault rows.
 --
 -- Uses the VAPID keys and pg_net / pg_cron already set up for Hearthkeep.
--- Sends at 8:00am Pacific (16:00 UTC), which is the whole advent window
--- (Nov 23–Dec 16, after daylight saving time has ended).
+-- Sends at 8:00am in each phone's own time zone. The job runs every hour
+-- and only pings the phones whose local time is 8am on a door day.
 
 create extension if not exists pg_net;
 create extension if not exists pg_cron;
@@ -23,9 +23,13 @@ create table if not exists public.guide_push_subscriptions (
   endpoint text not null unique,
   p256dh text not null,
   auth text not null,
+  tz text not null default 'America/Los_Angeles',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.guide_push_subscriptions
+  add column if not exists tz text not null default 'America/Los_Angeles';
 
 alter table public.guide_push_subscriptions enable row level security;
 revoke all on table public.guide_push_subscriptions from public, anon, authenticated;
@@ -89,10 +93,13 @@ as $$
      and length(ep) between 20 and 2000;
 $$;
 
+drop function if exists public.guide_push_subscribe(text, text, text);
+
 create or replace function public.guide_push_subscribe(
   p_endpoint text,
   p_p256dh text,
-  p_auth text
+  p_auth text,
+  p_tz text default 'America/Los_Angeles'
 )
 returns uuid
 language plpgsql
@@ -102,6 +109,7 @@ as $$
 declare
   rid uuid;
   ep text := trim(coalesce(p_endpoint, ''));
+  zone text := trim(coalesce(p_tz, ''));
 begin
   if not public.guide_push_endpoint_ok(ep)
      or length(trim(coalesce(p_p256dh, ''))) < 8
@@ -110,11 +118,20 @@ begin
      or length(p_auth) > 400 then
     raise exception 'Invalid subscription';
   end if;
-  insert into public.guide_push_subscriptions as s (endpoint, p256dh, auth)
-  values (ep, trim(p_p256dh), trim(p_auth))
+  if zone = '' or length(zone) > 64 or zone !~ '^[A-Za-z0-9_+\-/]+$' then
+    zone := 'America/Los_Angeles';
+  end if;
+  begin
+    perform timezone(zone, now());
+  exception when others then
+    zone := 'America/Los_Angeles';
+  end;
+  insert into public.guide_push_subscriptions as s (endpoint, p256dh, auth, tz)
+  values (ep, trim(p_p256dh), trim(p_auth), zone)
   on conflict (endpoint) do update
     set p256dh = excluded.p256dh,
         auth = excluded.auth,
+        tz = excluded.tz,
         updated_at = now()
   returning s.id into rid;
   return rid;
@@ -133,12 +150,12 @@ begin
 end;
 $$;
 
-revoke all on function public.guide_push_subscribe(text, text, text) from public;
+revoke all on function public.guide_push_subscribe(text, text, text, text) from public;
 revoke all on function public.guide_push_unsubscribe(text) from public;
-grant execute on function public.guide_push_subscribe(text, text, text) to anon, authenticated;
+grant execute on function public.guide_push_subscribe(text, text, text, text) to anon, authenticated;
 grant execute on function public.guide_push_unsubscribe(text) to anon, authenticated;
 
--- 8am Pacific. No door that day, or any other hour: do nothing.
+-- 8am in each phone's time zone. No door that local day: skip that phone.
 create or replace function public.guide_dispatch_morning()
 returns void
 language plpgsql
@@ -149,16 +166,9 @@ declare
   cfg record;
   push_secret text;
   door record;
+  zone text;
   local_now timestamp;
 begin
-  local_now := timezone('America/Los_Angeles', now());
-  if extract(hour from local_now)::int <> 8 then
-    return;
-  end if;
-  select * into door from public.guide_door_pings where day = local_now::date;
-  if not found then
-    return;
-  end if;
   select * into cfg from public.hearthkeep_push_config where id = 1;
   if cfg is null or length(trim(coalesce(cfg.supabase_url, ''))) < 12 or length(trim(coalesce(cfg.anon_key, ''))) < 20 then
     raise warning 'guide push: hearthkeep_push_config is empty';
@@ -169,23 +179,41 @@ begin
     raise warning 'guide push: missing dispatch secret';
     return;
   end if;
-  perform net.http_post(
-    url := rtrim(trim(cfg.supabase_url), '/') || '/functions/v1/guide-send-push',
-    body := jsonb_build_object(
-      'event', 'guide',
-      'event_key', 'guide:' || to_char(door.day, 'YYYY-MM-DD'),
-      'title', 'day ' || door.n,
-      'body', 'open the app to unwrap today''s advent',
-      'url', './#advent',
-      'tag', 'guide-' || to_char(door.day, 'YYYY-MM-DD')
-    ),
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || trim(cfg.anon_key),
-      'apikey', trim(cfg.anon_key),
-      'x-push-secret', push_secret
-    )
-  );
+  for zone in
+    select distinct coalesce(nullif(trim(tz), ''), 'America/Los_Angeles')
+    from public.guide_push_subscriptions
+  loop
+    begin
+      local_now := timezone(zone, now());
+    exception when others then
+      continue;
+    end;
+    if extract(hour from local_now)::int <> 8 then
+      continue;
+    end if;
+    select * into door from public.guide_door_pings where day = local_now::date;
+    if not found then
+      continue;
+    end if;
+    perform net.http_post(
+      url := rtrim(trim(cfg.supabase_url), '/') || '/functions/v1/guide-send-push',
+      body := jsonb_build_object(
+        'event', 'guide',
+        'event_key', 'guide:' || to_char(door.day, 'YYYY-MM-DD') || ':' || zone,
+        'tz', zone,
+        'title', 'day ' || door.n,
+        'body', 'open the app to unwrap today''s advent',
+        'url', './#advent',
+        'tag', 'guide-' || to_char(door.day, 'YYYY-MM-DD')
+      ),
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || trim(cfg.anon_key),
+        'apikey', trim(cfg.anon_key),
+        'x-push-secret', push_secret
+      )
+    );
+  end loop;
 exception when others then
   raise warning 'guide push http: %', sqlerrm;
 end;
@@ -203,6 +231,6 @@ end $$;
 
 select cron.schedule(
   'guide-morning-door',
-  '0 16 * * *',
+  '0 * * * *',
   $$select public.guide_dispatch_morning();$$
 );

@@ -38,6 +38,7 @@ type Payload = {
   body?: string;
   url?: string;
   tag?: string;
+  tz?: string;
 };
 
 Deno.serve(async (req) => {
@@ -69,9 +70,9 @@ Deno.serve(async (req) => {
     return json(500, { error: "Could not claim event" });
   }
 
-  const { data: subs, error: subErr } = await db
-    .from("guide_push_subscriptions")
-    .select("endpoint, p256dh, auth");
+  let subsQuery = db.from("guide_push_subscriptions").select("endpoint, p256dh, auth");
+  if (payload.tz) subsQuery = subsQuery.eq("tz", payload.tz);
+  const { data: subs, error: subErr } = await subsQuery;
   if (subErr) {
     console.error("guide-send-push subs:", subErr);
     return json(500, { error: "Could not load subscriptions" });
