@@ -1346,10 +1346,17 @@ const GUIDE_SALES = [
   { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'through december 7. robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', active:true },
   { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', active:true },
   { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', active:true },
-  { id:'boncharge-bf-26', brand:'Boncharge', headline:'boncharge’s biggest sale of the year opens november 12', note:'red light masks, the cap, blankets, and sleep tools. the discount is not posted yet.', url:'https://boncharge.com/pages/black-friday-2026?rfsn=6797088.ea750a', starts:'2026-11-12', active:true }
+  { id:'boncharge-bf-26', brand:'Boncharge', headline:'boncharge’s biggest sale of the year opens november 12', note:'red light masks, the cap, blankets, and sleep tools. the discount is not posted yet.', url:'https://boncharge.com/pages/black-friday-2026?rfsn=6797088.ea750a', starts:'2026-11-12', active:true },
+  { id:'bearaby-bf-26', brand:'Bearaby', headline:'up to 30% off, sitewide', note:'their biggest sale of the year. blankets, pillows, and sleep masks are marked down now.', url:'https://bearaby.com/pages/black-friday-weighted-blanket', linkSave:'up to 30%', active:true },
+  { id:'anxi-early-26', brand:'Anxi Ring', headline:'$10 off 1 ring, $25 off 2, $40 off 3+', note:'early black friday, no code needed. free shipping on orders of $70+.', url:'https://anxiring.com/', linkSave:'up to $40 off', active:true },
+  { id:'aizome-bf-26', brand:'Aizome', headline:'the robe is $160, down from $189', note:'the matcha loungewear set is $135, down from $159. black friday deals are open.', url:'https://aizome-textiles.com/?ref=TOXINFREETAY', active:true },
+  { id:'rowe-holiday-26', brand:'Rowe Casa Organics', headline:'holiday savings start november 11', note:'november 11: 10% off $100, 15% off $150, 20% off $200. november 23–29: 25% off sitewide, with a free gift on bigger orders.', url:'https://www.rowecasaorganics.com/?sca_ref=3265168.het9Q7nqM3', starts:'2026-11-11', active:true },
+  { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'15% off filtration systems starting november 12', note:'that runs through november 23. november 24 through december 1 goes to 25% off filtration systems.', url:'https://www.clearlyfiltered.com/?rfsn=6673587.3fae40', starts:'2026-11-12', active:true },
+  { id:'ji-bf-26', brand:'Just Ingredients', headline:'black friday offers are coming', note:'they are taking signups now. the public discount is not posted yet.', url:'https://justingredients.us/TOXINFREETAY', soon:true, active:true },
+  { id:'ringana-bf-26', brand:'Ringana', headline:'the fresh skincare sale is coming', note:'dates are not posted yet. the shop is open in the meantime.', url:'https://taylor.ringana.us', soon:true, active:true }
 ];
 const today = () => new Date().toISOString().slice(0,10);
-const isLive = s => s.active !== false && (!s.starts || s.starts <= today()) && (!s.ends || s.ends >= today());
+const isLive = s => s.active !== false && !s.soon && (!s.starts || s.starts <= today()) && (!s.ends || s.ends >= today());
 function withLumabox(list){
   const next = list.slice();
   for (const extra of GUIDE_SALES){
@@ -2150,8 +2157,9 @@ function renderCodes(){
 
 /* ===== HOLIDAY SALES (public) ===== */
 function opensLabel(s){
-  if (!s.starts || s.starts <= today()) return '';
-  return 'opens ' + new Date(s.starts + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}).toLowerCase();
+  if (s.starts && s.starts > today()) return 'opens ' + new Date(s.starts + 'T12:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric'}).toLowerCase();
+  if (s.soon) return 'coming soon';
+  return '';
 }
 function saleCard(s){
   const end = endsLabel(s); const soon = /today|tomorrow|in [1-3] days/.test(end);
@@ -2167,7 +2175,7 @@ function saleCard(s){
     ${helps}
     ${link}
     <div class="row">
-      <a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a>
+      <a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">${(s.soon || (s.starts && s.starts > today())) ? 'see the shop ↗' : 'shop the sale ↗'}</a>
       ${code}
     </div>`;
   return `<div class="sale box ${s.featured?'feat':''}${helps?' story':''}">
@@ -2179,7 +2187,7 @@ async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
   const live = SALES.filter(isLive).slice().sort((a,b) => (b.featured?1:0) - (a.featured?1:0));
-  const upcoming = SALES.filter(s => s.active !== false && s.starts && s.starts > today());
+  const upcoming = SALES.filter(s => s.active !== false && ((s.starts && s.starts > today()) || s.soon));
   const later = upcoming.length ? `<p class="count" style="text-align:center;margin-top:22px">coming up</p><div class="sales">${upcoming.map(saleCard).join('')}</div>` : '';
   const ping = salePingBox();
   if (!live.length){
