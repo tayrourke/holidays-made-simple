@@ -1,0 +1,15 @@
+name: sales watch
+
+on:
+  schedule:
+    # Every morning, 8am Pacific (standard time).
+    - cron: "0 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check watched sale prices
+        run: python3 scripts/watch-sales.py
