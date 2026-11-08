@@ -339,7 +339,7 @@ def make_webp(data):
         im = ImageOps.exif_transpose(im)
     except Exception as exc:
         raise ValueError("couldn't read that photo. try another one") from exc
-    im.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+    im.thumbnail((2000, 2000), Image.Resampling.LANCZOS)
     im = im.convert('RGBA')
     w, h = im.size
     if w < 2 or h < 2:
@@ -355,9 +355,9 @@ def make_webp(data):
     bbox = im.getbbox()
     if bbox:
         im = im.crop(bbox)
-    im.thumbnail((900, 900), Image.Resampling.LANCZOS)
+    im.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
     buf = io.BytesIO()
-    im.save(buf, 'WEBP', quality=82, method=4)
+    im.save(buf, 'WEBP', quality=90, method=6)
     return buf.getvalue()
 
 

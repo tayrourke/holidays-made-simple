@@ -1,11 +1,15 @@
-/* Holidays Made Simple — home-screen alerts, and a fresh copy of the guide on every open. */
-const SHELL = 'gg-shell-v2';
+/* Holidays Made Simple — show the cached guide at once, then pick up the newest copy. */
+const SHELL = 'gg-shell-v3';
+
+function isDocument(req){
+  return req.mode === 'navigate' || req.destination === 'document';
+}
 
 function isAppShell(url, req){
   if (url.origin !== self.location.origin) return false;
-  if (req.mode === 'navigate' || req.destination === 'document') return true;
+  if (isDocument(req)) return true;
   const path = url.pathname;
-  return path.endsWith('/') || path.endsWith('.html') || path.endsWith('.js') || path.endsWith('.webmanifest');
+  return path.endsWith('/') || path.endsWith('.html') || path.endsWith('.js') || path.endsWith('.webmanifest') || /\/icons\/[^/]+\.png$/.test(path);
 }
 
 self.addEventListener('install', event => { event.waitUntil(self.skipWaiting()); });
@@ -17,24 +21,44 @@ self.addEventListener('activate', event => {
   })());
 });
 
+function stamp(res){
+  if (!res) return '';
+  return res.headers.get('etag') || res.headers.get('last-modified') || '';
+}
+
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (!isAppShell(url, req)) return;
   event.respondWith((async () => {
-    try {
-      const fresh = await fetch(req, { cache: 'no-store' });
-      if (fresh && fresh.ok && (req.mode === 'navigate' || req.destination === 'document')){
-        const cache = await caches.open(SHELL);
-        await cache.put(req, fresh.clone()).catch(() => {});
+    const cache = await caches.open(SHELL);
+    const cached = isDocument(req) ? await cache.match(req, { ignoreSearch: true }) : await cache.match(url.pathname);
+    const pull = fetch(req, { cache: 'no-store' }).then(fresh => {
+      if (fresh && fresh.ok) {
+        const saved = new Request(url.pathname + url.search);
+        cache.put(saved, fresh.clone()).catch(() => {});
       }
       return fresh;
-    } catch (err) {
-      const cached = await caches.match(req);
-      if (cached) return cached;
-      throw err;
+    }).catch(() => null);
+
+    if (isDocument(req) && cached) {
+      event.waitUntil((async () => {
+        const fresh = await pull;
+        if (!fresh) return;
+        const before = stamp(cached);
+        const after = stamp(fresh);
+        if (!before || !after || before === after) return;
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        clients.forEach(client => client.postMessage({ type: 'newer-shell' }));
+      })());
+      return cached;
     }
+
+    const fresh = await pull;
+    if (fresh) return fresh;
+    if (cached) return cached;
+    return new Response('', { status: 503, statusText: 'offline' });
   })());
 });
 
