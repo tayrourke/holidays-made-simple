@@ -2,48 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="gg-build" content="gg6">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
-if('serviceWorker' in navigator){
-  window.shellReady=new Promise(function(resolve){
-    var done=false, reloading=false;
-    var timer=setTimeout(function(){ finish('timeout'); }, 8000);
-    function finish(why){
-      if(done||reloading) return;
-      done=true;
-      clearTimeout(timer);
-      resolve(why);
-    }
-    navigator.serviceWorker.addEventListener('message',function(e){
-      var type=e.data&&e.data.type;
-      if(type==='shell-current'){ finish('current'); return; }
-      if(type!=='newer-shell') return;
-      var once=false;
-      try{ once=sessionStorage.getItem('gg26:shellOnce')==='1'; }catch(err){ once=true; }
-      if(once){ finish('current'); return; }
-      try{ sessionStorage.setItem('gg26:shellOnce','1'); }catch(err){ finish('current'); return; }
-      reloading=true;
-      clearTimeout(timer);
-      location.reload();
+(function(){
+  var buildEl=document.querySelector('meta[name="gg-build"]');
+  var build=buildEl?buildEl.getAttribute('content'):'';
+  function remoteBuild(html){
+    var m=String(html).match(/name="gg-build" content="([^"]+)"/);
+    return m?m[1]:'';
+  }
+  function ensureLive(){
+    return fetch('./?gglive='+Date.now(),{cache:'no-store',credentials:'same-origin'}).then(function(r){
+      if(!r.ok) throw new Error('offline');
+      return r.text();
+    }).then(function(html){
+      var remote=remoteBuild(html);
+      if(remote&&build&&remote!==build){
+        var stamped='';
+        try{ stamped=sessionStorage.getItem('gg26:liveOnce')||''; }catch(e){}
+        if(stamped!==remote){
+          try{ sessionStorage.setItem('gg26:liveOnce', remote); }catch(e){}
+          location.replace('./?gglive='+encodeURIComponent(remote));
+          return 'reload';
+        }
+      }else{
+        try{ sessionStorage.removeItem('gg26:liveOnce'); }catch(e){}
+      }
+      return 'current';
     });
-    if(navigator.serviceWorker.controller){
-      try{ navigator.serviceWorker.controller.postMessage({type:'shell-status'}); }
-      catch(err){ finish('network'); }
-    }else finish('network');
-    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){ return r.update(); }).catch(function(){});
+  }
+  if(!('serviceWorker' in navigator)) return;
+  window.shellReady=new Promise(function(resolve){
+    var done=false;
+    var timer=setTimeout(function(){ if(!done){ done=true; resolve('timeout'); } }, 12000);
+    ensureLive().then(function(why){
+      if(why==='reload'||done) return;
+      done=true; clearTimeout(timer); resolve(why);
+    }).catch(function(){
+      if(done) return;
+      done=true; clearTimeout(timer); resolve('offline');
+    });
   });
+  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){ return r.update(); }).catch(function(){});
   var shellAsked=0;
   function askAgain(){
-    if(document.getElementById('boot')||!navigator.serviceWorker.controller) return;
     var now=Date.now();
     if(now-shellAsked<15000) return;
     shellAsked=now;
-    navigator.serviceWorker.controller.postMessage({type:'recheck-shell'});
+    ensureLive().catch(function(){});
   }
   window.addEventListener('pageshow',function(e){ if(e.persisted) askAgain(); });
   document.addEventListener('visibilitychange',function(){ if(!document.hidden) askAgain(); });
-}
+})();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="description" content="Holidays Made Simple: Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
@@ -1712,7 +1724,9 @@ function renderHome(){
   document.getElementById('secGrid').innerHTML = SECTIONS.map(s => {
     if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage place"><img src="art/museum.webp" alt=""></div><b>experiences</b><span>memberships + days out</span></button>`;
     const items = GIFTS.filter(g => belongsOnShelf(g, s)); if (!items.length) return '';
-    const pics = takePics(g => belongsOnShelf(g, s), 4, used);
+    const picked = s === 'Women' ? ['p30_06','p28_07','p31_11','p62_46'].map(id => byId[id]).filter(Boolean) : [];
+    const pics = picked.length ? picked : takePics(g => belongsOnShelf(g, s), 4, used);
+    pics.forEach(g => { used.add(img(g.id)); used.add('n:' + giftNameKey(g)); });
     return `<button class="sec" data-gosec="${s}"><div class="collage">${pics.map(g=>`<img loading="lazy" src="${img(g.id)}" alt="">`).join('')}</div><b>${SECLABEL[s]}</b><span>${items.length} gifts</span></button>`;
   }).join('');
   document.getElementById('whoGrid').innerHTML = WHO.map(([k,l]) => {
@@ -1957,7 +1971,7 @@ function renderShop(){
       const hasPlush = items.some(g => PLUSH_IDS.has(g.id));
       items = dropTopBoosters(items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id)), sec);
       if (!items.length && !held.card && !bru.card && sec !== 'My Top Picks' && !hasAnat && !hasPlush) return '';
-      if (sec === 'My Top Picks') items = items.slice().sort((a,b) => (/ringana/i.test(a.n)?0:1) - (/ringana/i.test(b.n)?0:1));
+      if (sec === 'My Top Picks') items = orderTop(items);
       const buckets = []; const by = new Map();
       for (const g of items){
         const key = g.g || g.id;
@@ -2000,8 +2014,8 @@ function renderShop(){
       if (s === 'Stocking Stuffers' || s === 'Experiences') continue;
       rows.push(rowOf(SECLABEL[s], list.filter(g => g.s===s), s));
       if (s === 'Littles'){
-        rows.push(whoRow('teens', 'teens'));
         rows.push(whoRow('bigger kids', 'big kids'));
+        rows.push(whoRow('teens', 'teens'));
       }
     }
     const sockN = list.filter(g => g.s==='Stocking Stuffers').length;
@@ -2032,7 +2046,17 @@ function flatGrid(items){
   const showSteam = steam.length >= 2;
   if (showSteam) rest = rest.filter(g => !STEAMER_IDS.has(g.id));
   const rg = (F.sec === 'Women' || F.sec === 'My Top Picks') ? ringanaCard() : '';
+  if (F.sec === 'My Top Picks') rest = orderTop(rest);
   return `<div class="group"><div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${rest.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
+}
+const TOP_FRONT = ['p62_110','p15_00','p15_03','p62_111','p15_01','p16_00'];
+function orderTop(items){
+  const rank = new Map(TOP_FRONT.map((id, i) => [id, i]));
+  return items.map((g, i) => [g, i]).sort((a, b) => {
+    const ra = rank.has(a[0].id) ? rank.get(a[0].id) : 100;
+    const rb = rank.has(b[0].id) ? rank.get(b[0].id) : 100;
+    return ra - rb || a[1] - b[1];
+  }).map(pair => pair[0]);
 }
 function ringanaOk(){
   if (F.q && !/ringana|fresh|skin|serum|booster|deo|lip|toner/.test(lc(F.q))) return false;
@@ -4114,6 +4138,14 @@ document.addEventListener('input', e => {
   if (n) rememberNote(n.dataset.wishnote, n.value);
 });
 document.addEventListener('click', e => {
+  const shopNav = e.target.closest('a[data-nav="shop"]');
+  if (shopNav && (current === 'shop' || location.hash === '#shop')){
+    e.preventDefault();
+    F.sec=''; F.who=''; F.gt=''; F.q=''; F.sort=''; F.bud=''; F.gd='';
+    const q = document.getElementById('q'); if (q) q.value='';
+    show('shop');
+    return;
+  }
   const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t) return;
   const d = t.dataset;

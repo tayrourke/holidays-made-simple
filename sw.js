@@ -1,5 +1,5 @@
-/* Holidays Made Simple — the first open waits for the live guide, then shows it. */
-const SHELL = 'gg-shell-v5';
+/* Holidays Made Simple — a navigation waits for the live guide before the page is shown. */
+const SHELL = 'gg-shell-v6';
 
 function isDocument(req){
   return req.mode === 'navigate' || req.destination === 'document';
@@ -55,10 +55,20 @@ async function cachedGuide(cache){
   return await cache.match('/') || await cache.match('/index.html');
 }
 
-async function pullGuide(req){
+function passesThrough(url){
+  return url.searchParams.has('gglive') || url.searchParams.has('ggnet');
+}
+
+async function pullGuide(){
   try {
-    const fresh = await fetch(req, { cache: 'no-store' });
-    if (fresh && fresh.ok) return fresh;
+    const url = new URL('./', self.registration.scope);
+    url.searchParams.set('ggnet', String(Date.now()));
+    const fresh = await fetch(url.href, { cache: 'no-store', credentials: 'same-origin', redirect: 'follow' });
+    if (!fresh || !fresh.ok) return null;
+    const type = fresh.headers.get('content-type') || '';
+    if (type.indexOf('text/html') === -1) return null;
+    const headers = new Headers({ 'content-type': type });
+    return new Response(await fresh.arrayBuffer(), { status: 200, headers });
   } catch (e) {}
   return null;
 }
@@ -73,7 +83,9 @@ self.addEventListener('activate', event => {
     if (!hadGuide) return;
     const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     await Promise.all(clients.map(client => {
-      if (typeof client.navigate === 'function') return client.navigate(client.url).catch(() => {});
+      const target = new URL(client.url);
+      target.searchParams.set('gglive', String(Date.now()));
+      if (typeof client.navigate === 'function') return client.navigate(target.href).catch(() => client.postMessage({ type: 'newer-shell' }));
       client.postMessage({ type: 'newer-shell' });
     }));
   })());
@@ -90,10 +102,7 @@ function guideJob(req){
     try {
       const cache = await caches.open(SHELL);
       const cached = await cachedGuide(cache);
-      const fresh = await Promise.race([
-        pullGuide(req),
-        new Promise(resolve => setTimeout(() => resolve(null), 8000))
-      ]);
+      const fresh = await pullGuide();
       if (fresh) {
         await remember(cache, fresh);
         finish(fresh);
@@ -125,6 +134,7 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+  if (passesThrough(url)) return;
   if (!isAppShell(url, req)) return;
   if (isDocument(req) && isGuide(url)) {
     const job = guideJob(req);
@@ -141,7 +151,7 @@ self.addEventListener('message', event => {
     event.waitUntil((async () => {
       const cache = await caches.open(SHELL);
       const cached = await cachedGuide(cache);
-      const fresh = await pullGuide(new Request(new URL('./', self.registration.scope).href));
+      const fresh = await pullGuide();
       let type = 'shell-current';
       if (fresh) {
         let newer = false;
