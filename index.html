@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg6">
+<meta name="gg-build" content="gg7">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
@@ -1724,13 +1724,15 @@ function renderHome(){
   document.getElementById('secGrid').innerHTML = SECTIONS.map(s => {
     if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage place"><img src="art/museum.webp" alt=""></div><b>experiences</b><span>memberships + days out</span></button>`;
     const items = GIFTS.filter(g => belongsOnShelf(g, s)); if (!items.length) return '';
-    const picked = s === 'Women' ? ['p30_06','p28_07','p31_11','p62_46'].map(id => byId[id]).filter(Boolean) : [];
+    const picked = s === 'Women' ? ['p62_78','p62_17','p28_07','p30_06'].map(id => byId[id]).filter(Boolean) : [];
     const pics = picked.length ? picked : takePics(g => belongsOnShelf(g, s), 4, used);
     pics.forEach(g => { used.add(img(g.id)); used.add('n:' + giftNameKey(g)); });
     return `<button class="sec" data-gosec="${s}"><div class="collage">${pics.map(g=>`<img loading="lazy" src="${img(g.id)}" alt="">`).join('')}</div><b>${SECLABEL[s]}</b><span>${items.length} gifts</span></button>`;
   }).join('');
   document.getElementById('whoGrid').innerHTML = WHO.map(([k,l]) => {
-    const pics = takePics(g => fitsWho(g, k), 3, used);
+    const whoPick = k === 'her' ? ['p31_11','p31_08','p62_46'].map(id => byId[id]).filter(Boolean) : [];
+    const pics = whoPick.length ? whoPick : takePics(g => fitsWho(g, k), 3, used);
+    pics.forEach(g => { used.add(img(g.id)); used.add('n:' + giftNameKey(g)); });
     return `<button class="whobtn" data-gowho="${k}"><div class="pics">${pics.map(g=>`<img loading="lazy" src="${img(g.id)}" alt="">`).join('')}</div><b>${l}</b><small>${whoIdeas(k)} ideas</small></button>`;
   }).join('') + `<button class="whobtn" data-gowho=""><div class="pics">${['art/giftbox.webp','art/deer.webp','art/spiral.webp'].map(s=>`<img src="${s}" alt="">`).join('')}</div><b>browse it all</b><small>${GIFTS.length} gifts</small></button>`;
   const bpic = takePics(g => g.v==='self-care' && priceOf(g) != null && priceOf(g) <= 40, 1, used)[0];
