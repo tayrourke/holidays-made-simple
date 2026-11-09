@@ -231,6 +231,7 @@ section.view[hidden]{display:none}
 .sec .collage img:nth-child(1){left:9%;top:9%}.sec .collage img:nth-child(2){right:9%;top:9%}
 .sec .collage img:nth-child(3){left:9%;bottom:9%}.sec .collage img:nth-child(4){right:9%;bottom:9%}
 .sec .collage.words p{position:absolute;inset:12%;margin:0;display:grid;place-items:center;text-align:center;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.03em;font-size:clamp(18px,4.2vw,26px);line-height:1.15;color:var(--ink)}
+.sec .collage.place img{width:76%;height:76%;left:12%;top:12%;right:auto;bottom:auto;object-fit:cover}
 .sec b{display:block;background:var(--berry);color:#fff;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:15px;padding:5px 6px;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 .sec span{font-size:12px;color:var(--muted)}
 
@@ -1709,7 +1710,7 @@ function takePics(pred, n, used){
 function renderHome(){
   const used = new Set(['img/rg-fresh-hydro-serum.webp']);
   document.getElementById('secGrid').innerHTML = SECTIONS.map(s => {
-    if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage words"><p>the memory, not the pile</p></div><b>experiences</b><span>memberships + days out</span></button>`;
+    if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage place"><img src="art/museum.webp" alt=""></div><b>experiences</b><span>memberships + days out</span></button>`;
     const items = GIFTS.filter(g => belongsOnShelf(g, s)); if (!items.length) return '';
     const pics = takePics(g => belongsOnShelf(g, s), 4, used);
     return `<button class="sec" data-gosec="${s}"><div class="collage">${pics.map(g=>`<img loading="lazy" src="${img(g.id)}" alt="">`).join('')}</div><b>${SECLABEL[s]}</b><span>${items.length} gifts</span></button>`;
