@@ -1,5 +1,5 @@
-/* Holidays Made Simple — keep the load screen up until this open has the newest guide. */
-const SHELL = 'gg-shell-v4';
+/* Holidays Made Simple — the first open waits for the live guide, then shows it. */
+const SHELL = 'gg-shell-v5';
 
 function isDocument(req){
   return req.mode === 'navigate' || req.destination === 'document';
@@ -67,12 +67,15 @@ self.addEventListener('install', event => { event.waitUntil(self.skipWaiting());
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    const hadGuide = keys.length > 0;
+    const hadGuide = keys.some(key => key.indexOf('gg-shell') === 0);
     await Promise.all(keys.filter(key => key !== SHELL).map(key => caches.delete(key)));
     await self.clients.claim();
     if (!hadGuide) return;
     const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    clients.forEach(client => client.postMessage({ type: 'newer-shell' }));
+    await Promise.all(clients.map(client => {
+      if (typeof client.navigate === 'function') return client.navigate(client.url).catch(() => {});
+      client.postMessage({ type: 'newer-shell' });
+    }));
   })());
 });
 
@@ -80,35 +83,25 @@ function guideJob(req){
   let resolveResponse;
   const response = new Promise(resolve => { resolveResponse = resolve; });
   const done = (async () => {
+    const finish = body => {
+      settleShell('shell-current');
+      resolveResponse(body);
+    };
     try {
       const cache = await caches.open(SHELL);
       const cached = await cachedGuide(cache);
-      shellVerdict = '';
-      shellWaiters.length = 0;
-      const pull = pullGuide(req);
-      if (cached) {
-        const snapshot = cached.clone();
-        resolveResponse(cached);
-        const fresh = await pull;
-        if (!fresh) { settleShell('shell-current'); return; }
-        let newer = true;
-        try { newer = !(await sameShell(snapshot, fresh)); } catch (e) { newer = true; }
-        await remember(cache, fresh);
-        settleShell(newer ? 'newer-shell' : 'shell-current');
-        return;
-      }
-      const fresh = await pull;
+      const fresh = await Promise.race([
+        pullGuide(req),
+        new Promise(resolve => setTimeout(() => resolve(null), 8000))
+      ]);
       if (fresh) {
         await remember(cache, fresh);
-        settleShell('shell-current');
-        resolveResponse(fresh);
+        finish(fresh);
         return;
       }
-      settleShell('shell-current');
-      resolveResponse(new Response('', { status: 503, statusText: 'offline' }));
+      finish(cached || new Response('', { status: 503, statusText: 'offline' }));
     } catch (e) {
-      settleShell('shell-current');
-      resolveResponse(new Response('', { status: 503, statusText: 'offline' }));
+      finish(new Response('', { status: 503, statusText: 'offline' }));
     }
   })();
   return { response, done };
