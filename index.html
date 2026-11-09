@@ -140,7 +140,7 @@ main{padding-bottom:84px}
 .ptitle .thin{display:block;font-family:var(--body);font-weight:300;font-style:italic;text-transform:uppercase;font-size:clamp(36px,9vw,66px);letter-spacing:.02em}
 .ptitle .bub{display:block;font-family:var(--bubble);text-transform:uppercase;font-size:clamp(34px,8.6vw,62px);letter-spacing:.02em;text-shadow:3px 3px 0 rgba(20,16,16,.18)}
 .ptitle .inline{display:inline}
-.ptitle p{margin:12px auto 0;max-width:52ch;color:var(--muted);font-size:14px}
+.ptitle p{margin:12px auto 0;max-width:46ch;color:var(--muted);font-size:14px;text-wrap:pretty}
 h1,h2,h3{text-wrap:balance}
 .badge{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;font-weight:600;font-family:var(--body);flex:none}
 
@@ -203,6 +203,7 @@ section.view[hidden]{display:none}
 .sec .collage img{position:absolute;width:38%;height:38%;object-fit:contain}
 .sec .collage img:nth-child(1){left:9%;top:9%}.sec .collage img:nth-child(2){right:9%;top:9%}
 .sec .collage img:nth-child(3){left:9%;bottom:9%}.sec .collage img:nth-child(4){right:9%;bottom:9%}
+.sec .collage.words p{position:absolute;inset:12%;margin:0;display:grid;place-items:center;text-align:center;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.03em;font-size:clamp(18px,4.2vw,26px);line-height:1.15;color:var(--ink)}
 .sec b{display:block;background:var(--berry);color:#fff;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:15px;padding:5px 6px;text-shadow:1px 1px 0 rgba(0,0,0,.4)}
 .sec span{font-size:12px;color:var(--muted)}
 
@@ -266,7 +267,7 @@ section.view[hidden]{display:none}
 .gift .badge{position:absolute;left:2px;top:2px}
 .gift .t{display:flex;justify-content:center;text-align:center;font-size:13px;line-height:1.3;font-weight:500;padding:0 6px;text-wrap:balance}
 .gift .t small{display:block;font-family:var(--label);font-size:12px;color:var(--muted);font-weight:400;margin-top:1px}
-.heart{position:absolute;top:0;right:0;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:var(--paper);display:grid;place-items:center}
+.heart{position:absolute;top:0;right:0;z-index:2;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--ink);background:var(--paper);display:grid;place-items:center}
 .heart svg{width:16px;height:16px;fill:none;stroke:var(--berry);stroke-width:2.2}
 .heart[aria-pressed="true"]{background:var(--berry);border-color:var(--berry)}
 .heart[aria-pressed="true"] svg{fill:#fff;stroke:#fff}
@@ -481,19 +482,16 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .blocktitle{margin-top:34px;text-align:center}
 .quote{padding:20px;font-size:15px;text-align:center;max-width:62ch;margin:14px auto 0}
 .quote .src{display:block;margin-top:8px;font-family:var(--label);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.expdeck{max-width:440px;margin:18px auto 0}
-.expcard{background:#fff;border:1.5px solid var(--ink);overflow:hidden;touch-action:pan-y}
-.expcard img{width:100%;height:230px;object-fit:contain;background:var(--paper)}
-.expbody{padding:16px 16px 18px}
-.expbody .expn{margin:0;font-family:var(--label);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:var(--muted)}
-.expbody h3{margin:6px 0 6px;font-family:var(--bubble);font-weight:400;text-transform:uppercase;font-size:26px;line-height:1.05;letter-spacing:.02em}
-.expbody p{margin:0;font-size:15px}
-.expnav{display:flex;justify-content:space-between;gap:8px;margin-top:10px}
+.expnote{padding:18px 18px 16px;max-width:70ch;margin:0 auto}
+.expnote p{margin:0 0 10px}
+.expnote p:last-child{margin:0}
 .expgrid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:14px}
 @media(min-width:760px){.expgrid{grid-template-columns:1fr 1fr}}
 .explist{background:var(--berry);color:#fff;padding:16px 18px}
 .explist h3{margin:0 0 6px;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:20px}
-.explist ul{margin:0;padding-left:18px;columns:2;font-size:14px}
+.explist ul{margin:0;padding-left:18px;font-size:15px;line-height:1.45}
+.explist li{margin:3px 0}
+.explist a{color:inherit}
 .ideas{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 4px}
 .ideas span{font-family:var(--label);text-transform:uppercase;letter-spacing:.06em;font-size:12px}
 .ycards{display:grid;gap:10px;margin-top:16px}
@@ -553,10 +551,11 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .helps i{font-style:normal;background:var(--paper);border:1.5px solid var(--ink);padding:5px 8px;font-size:13px}
 .sale .ends{font-family:var(--label);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border:1.5px solid var(--ink);white-space:nowrap}
 .sale .ends.soon{background:var(--ink);color:var(--paper)}
-.sale .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
-.sale .row .btn{white-space:nowrap;font-size:14px;padding-inline:10px}
-.sale .row .cbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:100%;font-size:16px;padding:8px 14px;line-height:1.1}
-.sale .row .cbtn small{font-size:16px;font-weight:700;letter-spacing:.03em;line-height:1}
+.sale .row{display:flex}
+.sale .row .btn{white-space:nowrap;font-size:14px;padding-inline:16px}
+.sale .salecode{margin:0;font-size:14.5px;line-height:1.3}
+.sale .salecode button{border:0;background:transparent;padding:0;font:inherit;color:inherit;text-align:left}
+.sale .salecode b{font-weight:800;letter-spacing:.03em}
 .sale .pin{position:absolute;top:-10px;left:14px}
 .salesempty{text-align:center;padding:26px 18px;display:grid;gap:10px;justify-items:center;max-width:560px;margin:0 auto}
 .salesempty img{width:90px}
@@ -869,7 +868,7 @@ body.fopen .filterbtn .n{background:#fff;color:var(--berry)}
 .pingcard small{display:block;margin-top:4px;font-size:13px;line-height:1.35;color:var(--muted)}
 .pingcard em{font-style:normal;font-family:var(--label);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:13px;background:var(--berry);color:#fff;padding:8px 12px;border-radius:999px;white-space:nowrap}
 .pingcard.on{background:var(--paper);box-shadow:none}
-.linksaves{margin:0;font-family:var(--bubble);font-weight:400;font-size:28px;letter-spacing:.02em;text-transform:uppercase;color:var(--berry);line-height:1}
+.linksaves{margin:0;font-family:var(--label);font-weight:700;font-size:15px;letter-spacing:.03em;text-transform:uppercase;color:var(--berry);line-height:1.2;white-space:nowrap}
 .wishapp{max-width:420px;margin:32px auto 8px;text-align:center}
 .wishapp button{border:0;background:transparent;padding:0;font:inherit;font-size:16px;line-height:1.45;color:var(--berry);text-decoration:underline;text-underline-offset:3px}
 body.guest .bar,body.guest footer,body.guest .tabsbar{display:none}
@@ -1357,7 +1356,7 @@ let SALES = null;   // null = loading
 const GUIDE_SALES = [
   { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'through december 7. robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', gift:'p56_00', active:true },
   { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', gift:'p58_08', active:true },
-  { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', gift:'p56_09', active:true },
+  { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', ends:'2026-11-10', gift:'p56_09', active:true },
   { id:'boncharge-bf-26', brand:'Boncharge', headline:'boncharge’s biggest sale of the year opens november 12', note:'red light masks, the cap, blankets, and sleep tools. the discount is not posted yet.', url:'https://boncharge.com/pages/black-friday-2026?rfsn=6797088.ea750a', starts:'2026-11-12', gift:'p35_15', active:true },
   { id:'bearaby-bf-26', brand:'Bearaby', headline:'up to 30% off, sitewide', note:'their biggest sale of the year. blankets, pillows, and sleep masks are marked down now.', url:'https://bearaby.com/pages/black-friday-weighted-blanket', linkSave:'up to 30%', gift:'p30_01', active:true },
   { id:'anxi-early-26', brand:'Anxi Ring', headline:'$10 off 1 ring, $25 off 2, $40 off 3+', note:'early black friday, no code needed. free shipping on orders of $70+.', url:'https://anxiring.com/', linkSave:'up to $40 off', gift:'p62_46', active:true },
@@ -1410,6 +1409,14 @@ function endsLabel(s){
 }
 function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(()=> t.hidden = true, 2200); }
 const heartSVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
+function slideFrame(ids){
+  const list = ids.filter(id => byId[id]);
+  const imgs = list.map((id, i) => `<img class="${i ? '' : 'on'}" data-gid="${id}" src="${img(id)}" alt="">`).join('');
+  const first = list[0];
+  if (!first) return imgs;
+  const on = saved.includes(first);
+  return imgs + `<button class="heart" data-heart="${first}" data-slideheart aria-pressed="${on ? 'true' : 'false'}" aria-label="save ${esc(byId[first].n)}">${heartSVG}</button>`;
+}
 
 function giftCard(g, i, opts={}){
   const on = saved.includes(g.id);
@@ -1422,8 +1429,8 @@ function giftCard(g, i, opts={}){
   </div>`;
 }
 function boosterCard(){
-  const imgs = BOOSTERS.filter(([id]) => byId[id]).map(([id], i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
-  return `<div class="gift" data-boosters role="button" tabindex="0" aria-label="ringana fresh boosters"><div class="im slides">${imgs}</div><div class="t"><div>ringana fresh boosters</div></div></div>`;
+  const ids = BOOSTERS.map(([id]) => id);
+  return `<div class="gift" data-boosters role="button" tabindex="0" aria-label="ringana fresh boosters"><div class="im slides">${slideFrame(ids)}</div><div class="t"><div>ringana fresh boosters</div></div></div>`;
 }
 function openBoosters(){
   const rows = BOOSTERS.map(([id]) => {
@@ -1436,15 +1443,13 @@ function dropTopBoosters(items, sec){ return sec === 'My Top Picks' ? items.filt
 function anatomyCard(){
   const books = ANATOMY.filter(id => byId[id]);
   if (books.length < 2) return '';
-  const imgs = books.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
-  return `<div class="gift" data-anatomy role="button" tabindex="0" aria-label="anatomy books"><div class="im slides">${imgs}</div><div class="t"><div>anatomy books</div></div></div>`;
+  return `<div class="gift" data-anatomy role="button" tabindex="0" aria-label="anatomy books"><div class="im slides">${slideFrame(books)}</div><div class="t"><div>anatomy books</div></div></div>`;
 }
 function steamerCard(){
   const flavors = STEAMERS.filter(id => byId[id]);
   if (flavors.length < 2) return '';
-  const imgs = flavors.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
   const price = priceLabel(byId[flavors[0]]);
-  return `<div class="gift" data-steamers role="button" tabindex="0" aria-label="just ingredients superfood steamers"><div class="im slides">${imgs}</div><div class="t"><div>just ingredients superfood steamers${price ? ` · ${price}` : ''}</div></div></div>`;
+  return `<div class="gift" data-steamers role="button" tabindex="0" aria-label="just ingredients superfood steamers"><div class="im slides">${slideFrame(flavors)}</div><div class="t"><div>just ingredients superfood steamers${price ? ` · ${price}` : ''}</div></div></div>`;
 }
 function wafflePair(items){
   for (const pair of WAFFLE_PAIRS) if (pair.every(id => items.some(g => g.id === id))) return pair;
@@ -1453,9 +1458,8 @@ function wafflePair(items){
 function waffleCard(ids, showPick){
   const phones = ids.filter(id => byId[id]);
   if (phones.length < 2) return '';
-  const imgs = phones.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
   const pick = showPick ? `<span class="tnote">tay's pick ♥</span>` : '';
-  return `<div class="gift" data-waffle role="button" tabindex="0" aria-label="waffle kids phone"><div class="im slides">${pick}${imgs}</div><div class="t"><div>waffle kids phone</div></div></div>`;
+  return `<div class="gift" data-waffle role="button" tabindex="0" aria-label="waffle kids phone"><div class="im slides">${pick}${slideFrame(phones)}</div><div class="t"><div>waffle kids phone</div></div></div>`;
 }
 function withoutWaffle(items){
   const pair = wafflePair(items);
@@ -1474,8 +1478,7 @@ const BRU_PAIR = [];
 function bruCard(){
   const cups = BRU_PAIR.filter(id => byId[id]);
   if (cups.length < 2) return '';
-  const imgs = cups.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
-  return `<div class="gift" data-bru role="button" tabindex="0" aria-label="brümate kids tumbler"><div class="im slides">${imgs}</div><div class="t"><div>brümate kids tumbler</div></div></div>`;
+  return `<div class="gift" data-bru role="button" tabindex="0" aria-label="brümate kids tumbler"><div class="im slides">${slideFrame(cups)}</div><div class="t"><div>brümate kids tumbler</div></div></div>`;
 }
 function withoutBru(items){
   if (!BRU_PAIR.every(id => items.some(g => g.id === id))) return {card:'', items};
@@ -1499,10 +1502,9 @@ function openSteamers(){
 function plushCard(){
   const toys = PLUSH.filter(id => byId[id]);
   if (toys.length < 2) return '';
-  const imgs = toys.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
   const first = byId[toys[0]];
   const price = toys.every(id => byId[id].price === first.price) ? priceLabel(first) : '';
-  return `<div class="gift" data-plush role="button" tabindex="0" aria-label="organic plush toys"><div class="im slides">${imgs}</div><div class="t"><div>organic plush toys${price ? ` · ${price}` : ''}</div></div></div>`;
+  return `<div class="gift" data-plush role="button" tabindex="0" aria-label="organic plush toys"><div class="im slides">${slideFrame(toys)}</div><div class="t"><div>organic plush toys${price ? ` · ${price}` : ''}</div></div></div>`;
 }
 function openPlush(){
   const rows = PLUSH.map(id => {
@@ -1649,7 +1651,7 @@ function takePics(pred, n, used){
 function renderHome(){
   const used = new Set(['img/rg-fresh-hydro-serum.webp']);
   document.getElementById('secGrid').innerHTML = SECTIONS.map(s => {
-    if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage">${['art/giftbox.webp','art/deer.webp','art/cone.webp','art/spiral.webp'].map(src=>`<img src="${src}" alt="">`).join('')}</div><b>experiences</b><span>memberships + days out</span></button>`;
+    if (s === 'Experiences') return `<button class="sec" data-gosec="Experiences"><div class="collage words"><p>the memory, not the pile</p></div><b>experiences</b><span>memberships + days out</span></button>`;
     const items = GIFTS.filter(g => g.s === s); if (!items.length) return '';
     const pics = takePics(g => g.s===s, 4, used);
     return `<button class="sec" data-gosec="${s}"><div class="collage">${pics.map(g=>`<img loading="lazy" src="${img(g.id)}" alt="">`).join('')}</div><b>${SECLABEL[s]}</b><span>${items.length} gifts</span></button>`;
@@ -1739,45 +1741,16 @@ function recentRow(){
   if (!items.length) return '';
   return `<div class="recent"><div class="rhd"><b>recently viewed</b><button data-clrrecent>clear</button></div><div class="chips">${items.map(m=>`<button data-open="${m.id}"><img loading="lazy" src="${img(m.id)}" alt=""><span>${esc(lc(m.n))}</span></button>`).join('')}</div></div>`;
 }
-let expAt = 0;
-const EXPERIENCES = [
-  {t:'a special dinner out', d:'the table, the dessert, the night they still tell the story about.', img:'art/deer.webp'},
-  {t:'tickets to an attraction', d:'one place they have wanted to go. the ticket is the gift.', img:'art/cone.webp'},
-  {t:'tickets to a sports game', d:'seats together. that is the present.', img:'art/spiral.webp'},
-  {t:'a movie or show date', d:'pick the show, plan the seats, and leave the extra stuff at the store.', img:'art/giftbox.webp'},
-  {t:'season passes', d:'a whole year of going back, instead of one more toy.', img:'art/stocking.webp'},
-  {t:'a museum or zoo membership', d:'repeat visits. the kind of gift that actually gets used.', img:'art/deer.webp'},
-  {t:'a class or lesson membership', d:'something they learn with their hands, all season.', img:'art/cone.webp'},
-  {t:'a fishing or camping trip', d:'one night outside. the memory is the gift.', img:'art/trees.webp'},
-  {t:'a nail or hair salon visit', d:'an hour that is just for them.', img:'art/spiral.webp'},
-  {t:'a day at a museum', d:'wander, sketch, stop for a treat. nothing to store after.', img:'art/giftbox.webp'},
-  {t:'a YES day', d:'they pick the plan. you say yes.', img:'art/cone.webp'},
-  {t:'a yoto club membership', d:'a new story card in the app each month. nothing to wrap.', img:'art/giftbox.webp', u:'https://us.yotoplay.com/yoto-club?utm_source=ShopMy&utm_medium=affiliate&utm_campaign=Toxin%20Free%20Tay&utm_content=gift-guide'}
-];
-function stepExp(dir){
-  expAt = (expAt + dir + EXPERIENCES.length) % EXPERIENCES.length;
-  if (F.sec === 'Experiences') renderShop();
-}
 function experiencePage(){
-  const e = EXPERIENCES[expAt];
-  return `<div class="ptitle blocktitle" style="margin-top:8px"><h2><span class="thin">gift an</span><span class="bub">experience</span></h2><p>the thing they still talk about in january. swipe for the next idea.</p></div>
-  <div class="box" style="padding:18px;max-width:70ch;margin:0 auto"><p style="margin:0">if you want fewer toys under the tree, gift the plan instead. nothing to ship, and it does not add a pile of plastic to the house.</p></div>
-  <div class="expdeck">
-    <div class="expcard" id="expCard">
-      <img src="${e.img}" alt="">
-      <div class="expbody">
-        <p class="expn">${expAt + 1} of ${EXPERIENCES.length}</p>
-        <h3>${esc(e.t)}</h3>
-        <p>${esc(e.d)}</p>
-        ${e.u ? `<p style="margin-top:12px"><a class="btn" href="${esc(e.u)}" target="_blank" rel="noopener sponsored">see this one ↗</a></p>` : ''}
-      </div>
-    </div>
-    <div class="expnav">
-      <button type="button" class="btn ghost small" data-exp="-1">back</button>
-      <button type="button" class="btn small" data-exp="1">next experience</button>
-    </div>
-  </div>
-  <div class="quote box" style="max-width:70ch;margin:18px auto 0">"I don't remember what I got for Christmas when I was 6 or 10. I do remember the smell of the kitchen on Christmas morning. I remember counting the marshmallows my dad put in my hot cocoa. I remember waking up, giving my parents a hug, and feeling magic before a gift was even opened. Remember, it is the memories that make the magic."<span class="src">a quote I saw shared a few years ago + wanted to pass on</span></div>`;
+  const yoto = 'https://us.yotoplay.com/yoto-club?utm_source=ShopMy&utm_medium=affiliate&utm_campaign=Toxin%20Free%20Tay&utm_content=gift-guide';
+  const ideas = ['a special dinner out','tickets to an attraction','tickets to a sports game','a movie or show date','season passes','a museum or zoo membership','a class or lesson membership','a fishing or camping trip','a nail or hair salon visit','a day at a museum','a YES day', ['a yoto club membership', yoto]];
+  const lis = ideas.map(item => Array.isArray(item) ? `<li><a href="${esc(item[1])}" target="_blank" rel="noopener sponsored">${esc(item[0])} ↗</a></li>` : `<li>${esc(item)}</li>`).join('');
+  return `<div class="ptitle blocktitle" style="margin-top:8px"><h2><span class="thin">gift an</span><span class="bub">experience</span></h2><p>the thing they still talk about in january.</p></div>
+  <div class="box expnote"><p>there is something extra magical about the holiday season when you have children. seeing the joy + excitement through their eyes is so special, but the excitement of new gifts can quickly dissipate. we are then left with empty wallets, cluttered houses, lots of plastic gadgets, + toys that will hardly be played with.</p><p>of course, I'm not an extremist by any means. I'm a firm believer that we can find the healthy balance between enjoying the magic + consuming more consciously. sometimes simple can be better!</p><p>if you're looking to reduce the number of toys under the tree this year, opt for gifts that are useful, or gift a family experience or a membership. nothing to ship, and it doesn't add a pile of plastic to the house.</p></div>
+  <div class="expgrid">
+    <div class="explist"><h3>experience ideas</h3><ul>${lis}</ul></div>
+    <div class="quote box">"I don't remember what I got for Christmas when I was 6 or 10. I do remember the smell of the kitchen on Christmas morning. I remember counting the marshmallows my dad put in my hot cocoa. I remember waking up, giving my parents a hug, and feeling magic before a gift was even opened. Remember, it is the memories that make the magic."<span class="src">a quote I saw shared a few years ago + wanted to pass on</span></div>
+  </div>`;
 }
 function renderShop(){
   renderFilters();
@@ -1922,8 +1895,7 @@ function ringanaCard(){
   if (!ringanaOk()) return '';
   const pics = ['p16_03','p16_04','p62_16','p62_17'].filter(id => byId[id]);
   if (pics.length < 2) return '';
-  const imgs = pics.map((id, i) => `<img class="${i ? '' : 'on'}" src="${img(id)}" alt="">`).join('');
-  return `<div class="gift" data-ringana role="button" tabindex="0" aria-label="ringana fresh skincare"><div class="im slides">${imgs}</div><div class="t"><div>ringana fresh skincare</div></div></div>`;
+  return `<div class="gift" data-ringana role="button" tabindex="0" aria-label="ringana fresh skincare"><div class="im slides">${slideFrame(pics)}</div><div class="t"><div>ringana fresh skincare</div></div></div>`;
 }
 function ringanaHere(sec, sub){
   if (!ringanaOk()) return false;
@@ -2165,6 +2137,11 @@ function bPool(){
     if (v === 'treats') return (g.s === 'Holiday Treats' || g.v === 'treats') && basketPriced(g);
     if (v === 'cozy'){
       if (!basketPriced(g)) return false;
+      if (g.g === 'Drinkware'){
+        const w = g.w || [];
+        if (w.includes('little kids') || w.includes('baby')) return false;
+        if (w.includes('big kids') && !w.some(x => x === 'her' || x === 'him' || x === 'teens' || x === 'family')) return false;
+      }
       if (g.s === 'Holiday Scents') return true;
       if (g.s === 'Home') return false;
       if (g.s === 'Men' && g.g !== 'Coffee' && g.g !== 'Drinkware') return false;
@@ -2226,6 +2203,15 @@ function renderBuild(){
     store.set('saved', saved); store.set('assign', assign); refreshHearts(); toast(`added to your list for ${who} ♥`);
   };
 }
+function basketLane(g){
+  const n = lc(g.n);
+  if (/br[uü]mate|tumbler|travel mug/.test(n) || g.g === 'Drinkware') return 'drinkware';
+  if (/sheet mask/.test(n)) return 'sheet masks';
+  if (/candy cane/.test(n)) return 'candy canes';
+  if (/hot cocoa|hot chocolate/.test(n)) return 'cocoa';
+  if (/protein/.test(n)) return 'protein';
+  return '';
+}
 function basketFills(pool){
   const uniq = []; const seen = new Set();
   for (const g of pool){
@@ -2244,6 +2230,7 @@ function basketFills(pool){
       for (let k = 0; k < uniq.length && pick.length < 4; k++){
         const g = uniq[(start + k) % uniq.length];
         if (pick.includes(g) || used.has(g.id)) continue;
+        if (pick.some(p => basketLane(p) && basketLane(p) === basketLane(g))) continue;
         if (sum && sum + g.price > target * 1.18) continue;
         pick.push(g); sum += g.price;
         if (pick.length >= 3 && sum >= target * 0.78) break;
@@ -2331,15 +2318,15 @@ function saleCard(s){
   const end = endsLabel(s); const soon = /today|tomorrow|in [1-3] days/.test(end);
   const when = end;
   const link = s.linkSave ? `<p class="linksaves">link saves ${esc(s.linkSave)}</p>` : '';
-  const code = s.code ? `<button class="cbtn" data-copy="${esc(s.code)}" data-salecode="${esc(s.id)}" aria-label="copy code ${esc(s.code)}${s.save ? ', saves ' + esc(s.save) : ''}"><span>${esc(s.code)}</span>${s.save ? `<small>saves ${esc(s.save)}</small>` : ''}</button>` : '';
+  const code = s.code ? `<p class="salecode"><button type="button" data-copy="${esc(s.code)}" data-salecode="${esc(s.id)}">code <b>${esc(s.code)}</b>${s.save ? ` saves ${esc(s.save)}` : ''}</button></p>` : '';
   const body = `<div class="top"><span class="brand">${esc(s.brand)}</span>${when?`<span class="ends ${soon?'soon':''}">${esc(when)}</span>`:''}</div>
     <p class="deal">${esc(s.headline||'')}</p>
     ${s.kicker?`<p class="kicker">${esc(s.kicker)}</p>`:''}
     ${s.note?`<p class="note">${esc(s.note)}</p>`:''}
     ${link}
+    ${code}
     <div class="row">
       <a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a>
-      ${code}
     </div>`;
   return `<div class="sale box ${s.featured?'feat':''}">
     ${s.featured?'<span class="tab pin">tay\'s pick</span>':''}
@@ -2349,7 +2336,7 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const live = SALES.filter(isLive).slice().sort((a,b) => (b.featured?1:0) - (a.featured?1:0));
+  const live = SALES.filter(isLive).slice().sort((a,b) => (a.id==='lumebox-holiday-26'?0:1) - (b.id==='lumebox-holiday-26'?0:1) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
   const later = upcoming.length ? `<p class="count" style="text-align:center;margin-top:22px">coming up</p><div class="sales">${upcoming.map(saleCard).join('')}</div>` : '';
   const ping = salePingBox();
@@ -3942,28 +3929,22 @@ function endSheetDrag(){
 }
 document.addEventListener('pointerup', endSheetDrag);
 document.addEventListener('pointercancel', endSheetDrag);
-let expDrag = null;
-document.addEventListener('pointerdown', e => {
-  const card = e.target.closest('.expcard');
-  if (!card) return;
-  expDrag = {x: e.clientX, y: e.clientY};
-});
-document.addEventListener('pointerup', e => {
-  if (!expDrag) return;
-  const dx = e.clientX - expDrag.x;
-  const dy = e.clientY - expDrag.y;
-  expDrag = null;
-  if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy)) return;
-  stepExp(dx < 0 ? 1 : -1);
-});
 if (!matchMedia('(prefers-reduced-motion: reduce)').matches){
   setInterval(() => {
     document.querySelectorAll('.slides').forEach(el => {
       const imgs = [...el.querySelectorAll('img')];
       if (imgs.length < 2) return;
       const i = Math.max(0, imgs.findIndex(n => n.classList.contains('on')));
+      const next = imgs[(i + 1) % imgs.length];
       imgs[i].classList.remove('on');
-      imgs[(i + 1) % imgs.length].classList.add('on');
+      next.classList.add('on');
+      const heart = el.querySelector('[data-slideheart]');
+      const gid = next.dataset.gid;
+      if (heart && gid && byId[gid]){
+        heart.dataset.heart = gid;
+        heart.setAttribute('aria-pressed', saved.includes(gid) ? 'true' : 'false');
+        heart.setAttribute('aria-label', 'save ' + byId[gid].n);
+      }
     });
   }, 2400);
 }
@@ -3973,7 +3954,7 @@ document.addEventListener('input', e => {
   if (n) rememberNote(n.dataset.wishnote, n.value);
 });
 document.addEventListener('click', e => {
-  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-exp],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
+  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t) return;
   const d = t.dataset;
   if (d.mpath){ match.path = d.mpath; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
@@ -3999,7 +3980,7 @@ document.addEventListener('click', e => {
   if ('mrestart' in d){ match.path = 'skin'; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
   if (d.heart){ e.stopPropagation();
     const willAdd = !saved.includes(d.heart);
-    if (willAdd){ fly(t.closest('.gift')?.querySelector('.im img') || document.querySelector('.sheet .bigimg img'), document.querySelector('.listbtn')); }
+    if (willAdd){ fly(t.closest('.gift')?.querySelector('.im img.on') || t.closest('.gift')?.querySelector('.im img') || document.querySelector('.sheet .bigimg img'), document.querySelector('.listbtn')); }
     t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop');
     toggleSave(d.heart); return; }
   if (d.add){ e.stopPropagation();
@@ -4068,7 +4049,6 @@ document.addEventListener('click', e => {
   if ('waffle' in d){ openWaffle(); return; }
   if ('bru' in d){ openBru(); return; }
   if ('ringana' in d){ openRingana(); return; }
-  if (d.exp){ stepExp(+d.exp); return; }
   if (d.bfill){ const b = curB(); d.bfill.split(',').filter(id => byId[id] && !b.items.includes(id)).forEach(id => b.items.push(id)); saveBuilds(); renderBuild(); toast('added a basket that fits that budget'); return; }
   if (d.fwho !== undefined){ F.who = d.fwho; F.gt=''; if (F.who) F.sec=''; else if (F.sec && F.sec!=='Experiences' && !GIFTS.some(g=>g.s===F.sec && fitsWho(g, F.who))) F.sec=''; renderShop(); return; }
   if (d.fsec !== undefined){ F.sec = d.fsec; F.gt=''; renderShop(); return; }
