@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg33">
+<meta name="gg-build" content="gg34">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -422,6 +422,12 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .mnote{margin:18px auto 0;max-width:54ch;text-align:center;color:var(--muted);font-size:13px}
 .msteps{margin:8px 0 0;padding-left:18px;font-size:14px}
 .msteps li{margin:4px 0}
+.steplink{border:0;background:transparent;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.playgrid{display:grid;gap:12px;margin-top:8px}
+.playgrid b,.weeklab{display:block;font-family:var(--label);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px}
+.playgrid ul{margin:0;padding-left:18px;font-size:14px}
+.playgrid li{margin:3px 0}
+.weeklab{margin-top:12px}
 .prog i{width:28px;height:4px;background:rgba(20,16,16,.2)}
 .prog i.on{background:var(--berry)}
 
@@ -4239,6 +4245,42 @@ function bindMatchSave(){
     saveMatchFor(input && input.value);
   };
 }
+const STEP_LINKS = [
+  ['anti wrinkle serum', 'fresh-anti-wrinkle-serum'],
+  ['skin perfecting cream', 'fresh-skin-perfection'],
+  ['clarifying booster', 'fresh-adds-repair'],
+  ['lifting booster', 'fresh-adds-effect'],
+  ['glow booster', 'fresh-adds-glow'],
+  ['cream cleanser', 'fresh-cleanser'],
+  ['micellar water', 'fresh-cleansing-water'],
+  ['cleansing water', 'fresh-cleansing-water'],
+  ['soap liquid', 'fresh-soap-liquid'],
+  ['hydro serum', 'fresh-hydro-serum'],
+  ['tonic pure', 'fresh-tonic-pure'],
+  ['tonic calm', 'fresh-tonic-calm']
+];
+function stepHtml(line){
+  const text = String(line || '');
+  const lower = text.toLowerCase();
+  let i = 0, out = '';
+  while (i < text.length){
+    const hit = STEP_LINKS.find(([phrase, slug]) => lower.startsWith(phrase, i) && byId['rg-' + slug]);
+    if (hit){
+      out += `<button type="button" class="steplink" data-open="rg-${hit[1]}">${esc(text.slice(i, i + hit[0].length))}</button>`;
+      i += hit[0].length;
+    } else {
+      out += esc(text[i]);
+      i++;
+    }
+  }
+  return out;
+}
+function matchNameBtn(p){
+  const id = matchId(p);
+  const g = byId[id];
+  if (!g) return esc(p.name || '');
+  return `<button type="button" class="steplink" data-open="${esc(id)}">${esc(lc(g.n))}</button>`;
+}
 function matchCard(p, i){
   const g = byId[matchId(p)];
   if (!g) return '';
@@ -4262,11 +4304,21 @@ function renderMatch(){
     const steps = r.playbook?.week1 || [];
     const savedFor = matchSavedFor();
     const whoBtns = ['me', ...people.filter(p => p !== 'me')].map(p => `<button type="button" class="pill" data-matchfor="${esc(p)}" aria-pressed="${savedFor === p}">${esc(p)}</button>`).join('');
-    B.innerHTML = `<div class="ptitle"><h2><span class="thin">${esc(lc(r.hero?.title || 'your match'))}</span></h2><p>${esc(r.hero?.subtitle || r.summary || '')}</p></div>
-      ${r.insight ? `<p class="mwhy">${esc(r.insight)}</p>` : ''}
-      <div class="hrow">${hero.map(matchCard).join('')}</div>
-      ${next.length ? `<div class="group"><div class="band">add next</div><div class="hrow">${next.map(matchCard).join('')}</div></div>` : ''}
-      ${steps.length ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3><ul class="msteps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
+    const labels = { Morning:'morning', Night:'evening', Weekly:'weekly', 'Body & personal care':'your everyday swaps' };
+    const full = (r.ritual || []).map(sec => {
+      const items = sec.items || [];
+      if (!items.length) return '';
+      return `<div class="group"><div class="band">${esc(labels[sec.title] || lc(sec.title))}</div><div class="hrow">${items.map(matchCard).join('')}</div></div>`;
+    }).join('');
+    B.innerHTML = `<div class="ptitle"><h2><span class="thin">your</span> <span class="bub">fresh match</span></h2><p>${esc(r.summary || r.hero?.subtitle || '')}</p></div>
+      <p class="mnote" style="margin-top:8px">this is a recommendation from your answers, not a prescription. send it to me before you order and i'll help you sort what to start with.</p>
+      <div class="group"><div class="band">${esc(lc(r.hero?.title || 'start here'))}</div>${r.hero?.subtitle ? `<p class="mwhy" style="margin-top:0">${esc(r.hero.subtitle)}</p>` : ''}<div class="hrow">${hero.map(matchCard).join('')}</div></div>
+      ${r.insight ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">why this match</h3><p class="mwhy" style="margin-top:0">${esc(r.insight)}</p></div>` : ''}
+      <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3>
+        <div class="playgrid"><div><b>buy first</b><ul>${hero.map(p => `<li>${matchNameBtn(p)}</li>`).join('')}</ul></div>${next.length ? `<div><b>add next</b><ul>${next.map(p => `<li>${matchNameBtn(p)}</li>`).join('')}</ul></div>` : ''}</div>
+        ${steps.length ? `<b class="weeklab">week 1</b><ul class="msteps">${steps.map(s => `<li>${stepHtml(s)}</li>`).join('')}</ul>` : ''}
+      </div>
+      ${full ? `<div class="group"><div class="band">full match</div><p class="mwhy" style="margin-top:0">everything that fit your answers. start here is still the first order.</p></div>${full}` : ''}
       <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">save this match</h3><p class="why" style="margin-top:0">add these to a list. yours, or whoever you took the quiz for.</p><div class="people">${whoBtns}</div><form class="addp" id="matchSave" style="margin-top:10px"><input id="matchWho" placeholder="or type a name" aria-label="who this match is for" maxlength="24"><button class="btn small" type="submit">add</button></form></div>
       <p class="mnote">this quiz is just a recommendation. send it to me before you order. it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
       <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;

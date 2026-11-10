@@ -938,12 +938,11 @@ export function buildPlaybook(ans, path, hero, face, body, supp) {
   const week1 = [];
   if (path === "skin" || path === "both") {
     week1.push(week1Cleanse(ans));
-    week1.push("Serum → cream every morning and night — a little goes far.");
+    week1.push("Serum → cream every morning and night — a little goes far. Boosters are meant to be added to the serum: mix them in your palm, then apply together.");
     if (ans.concern === "aging") week1.push(ans.skinType === "sensitive"
-      ? "Sensitive + firmness: hydro serum daily; anti wrinkle every other night until skin stays calm."
-      : "If you're new to retinoid-type actives, start the anti wrinkle serum every other night.");
-    else if (ans.concern === "breakouts") week1.push("Zone clarifying booster on active spots; give it 2–3 weeks before judging.");
-    else week1.push("Give any new booster 2–3 weeks before you decide it's not for you.");
+      ? "Sensitive + firmness: hydro serum daily; anti wrinkle every other night until skin stays calm. Mix the lifting booster into the serum."
+      : "If you're new to retinoid-type actives, start the anti wrinkle serum every other night. Mix the lifting booster into that serum.");
+    else if (ans.concern === "breakouts") week1.push("Mix the clarifying booster into the serum, then use it on active spots.");
   }
   if (path === "supp" || path === "both") {
     const { approach } = resolveSuppAnswers(ans);
