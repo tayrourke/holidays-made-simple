@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg31">
+<meta name="gg-build" content="gg32">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -4195,6 +4195,50 @@ function registerMatchCatalog(mod){
     }
   }
 }
+function matchResultIds(){
+  const r = match.result;
+  if (!r) return [];
+  const ids = [];
+  [...(r.hero?.items || []), ...(r.playbook?.addNext || [])].forEach(p => {
+    const id = matchId(p);
+    if (byId[id] && !ids.includes(id)) ids.push(id);
+  });
+  return ids;
+}
+function matchSavedFor(){
+  const ids = matchResultIds();
+  if (!ids.length) return '';
+  const who = assign[ids[0]];
+  return who && ids.every(id => saved.includes(id) && assign[id] === who) ? who : '';
+}
+function saveMatchFor(raw){
+  const name = String(raw || '').trim().toLowerCase().slice(0, 24);
+  if (!name){ toast('type a name first'); return; }
+  const ids = matchResultIds();
+  if (!ids.length){ toast('nothing to save yet'); return; }
+  if (!people.includes(name)){ people.push(name); store.set('people', people); }
+  let changed = 0;
+  ids.forEach(id => {
+    if (!saved.includes(id)){ saved.push(id); track('save', id); changed++; }
+    else if (assign[id] !== name) changed++;
+    assign[id] = name;
+  });
+  store.set('saved', saved);
+  store.set('assign', assign);
+  updateCount();
+  toast(changed ? 'added to ' + name + '’s list' : 'already on ' + name + '’s list');
+  bump(listTarget());
+  renderMatch();
+}
+function bindMatchSave(){
+  const f = document.getElementById('matchSave');
+  if (!f) return;
+  f.onsubmit = e => {
+    e.preventDefault();
+    const input = document.getElementById('matchWho');
+    saveMatchFor(input && input.value);
+  };
+}
 function matchCard(p, i){
   const g = byId[matchId(p)];
   if (!g) return '';
@@ -4216,13 +4260,17 @@ function renderMatch(){
     const hero = r.hero?.items || [];
     const next = r.playbook?.addNext || [];
     const steps = r.playbook?.week1 || [];
+    const savedFor = matchSavedFor();
+    const whoBtns = ['me', ...people.filter(p => p !== 'me')].map(p => `<button type="button" class="pill" data-matchfor="${esc(p)}" aria-pressed="${savedFor === p}">${esc(p)}</button>`).join('');
     B.innerHTML = `<div class="ptitle"><h2><span class="thin">${esc(lc(r.hero?.title || 'your match'))}</span></h2><p>${esc(r.hero?.subtitle || r.summary || '')}</p></div>
       ${r.insight ? `<p class="mwhy">${esc(r.insight)}</p>` : ''}
       <div class="hrow">${hero.map(matchCard).join('')}</div>
       ${next.length ? `<div class="group"><div class="band">add next</div><div class="hrow">${next.map(matchCard).join('')}</div></div>` : ''}
       ${steps.length ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3><ul class="msteps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
+      <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">save this match</h3><p class="why" style="margin-top:0">add these to a list. yours, or whoever you took the quiz for.</p><div class="people">${whoBtns}</div><form class="addp" id="matchSave" style="margin-top:10px"><input id="matchWho" placeholder="or type a name" aria-label="who this match is for" maxlength="24"><button class="btn small" type="submit">add</button></form></div>
       <p class="mnote">this quiz is just a recommendation. send it to me before you order. it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
       <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;
+    bindMatchSave();
     return;
   }
   const qs = FM.questionsFor(match.path, match.ans);
@@ -4409,10 +4457,11 @@ document.addEventListener('click', e => {
       return;
     }
   }
-  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
+  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-matchfor],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t){ if (hashGo) go(hashGo); return; }
   const d = t.dataset;
   if (d.mpath){ match.path = 'skin'; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
+  if (d.matchfor){ saveMatchFor(d.matchfor); return; }
   if (d.mopt){ matchToggle(d.mopt); return; }
   if ('mgo' in d){
     const q = FM.questionsFor(match.path, match.ans)[match.i];
