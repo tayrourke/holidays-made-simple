@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg26">
+<meta name="gg-build" content="gg27">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -126,11 +126,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .listbtn{margin-left:auto;display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-family:var(--label);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.05em;border:1.5px solid var(--ink);padding:5px 10px;background:var(--taupe)}
 .n{background:var(--berry);color:#fff;border-radius:999px;font-size:11px;min-width:18px;height:18px;display:inline-grid;place-items:center;padding:0 5px;font-family:var(--body);letter-spacing:0}
 .n[data-zero]{display:none}
-@media(min-width:820px){.topnav{display:flex}.listbtn{margin-left:8px}}
+@media(min-width:820px){.topnav{display:flex}.listbtn{display:none}}
 
 /* ---------- bottom tabs (phone) ---------- */
 .tabsbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--paper);border-top:1.5px solid var(--ink);display:grid;grid-template-columns:repeat(5,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
-.tabsbar a{display:grid;justify-items:center;align-content:center;gap:2px;text-decoration:none;font-family:var(--label);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 2px;min-height:48px;color:var(--muted)}
+.tabsbar a{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;text-decoration:none;font-family:var(--label);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 2px;min-height:48px;color:var(--muted)}
+.tabsbar .savedn{position:absolute;top:2px;left:calc(50% + 8px)}
 .tabsbar svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7}
 .tabsbar a[aria-current="page"]{color:var(--berry)}
 @media(min-width:820px){.tabsbar{display:none}}
@@ -1000,8 +1001,9 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
       <a href="#build" data-nav="build">build</a>
       <a href="#traditions" data-nav="traditions">holiday prep</a>
       <a href="#codes" data-nav="codes">savings</a>
+      <a href="#list" data-nav="list">my list <span class="n savedn" data-zero>0</span></a>
     </nav>
-    <a class="listbtn" href="#list" data-nav="list">my list <span class="n" id="savedN" data-zero>0</span></a>
+    <a class="listbtn" href="#advent" data-nav="advent">24 days</a>
   </div>
 </header>
 
@@ -1196,7 +1198,7 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
   <a href="#shop" data-nav="shop"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>shop</a>
   <a href="#sales" data-nav="sales"><svg viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/></svg>sales</a>
   <a href="#build" data-nav="build"><svg viewBox="0 0 24 24"><path d="M8 3h8v3H8z"/><path d="M9 6v7c0 2-4 2-4 5 0 2 2 3 4 3 3 0 5-2 7-4s1-4 1-6V6"/></svg>build</a>
-  <a href="#list" data-nav="list"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>my list</a>
+  <a href="#list" data-nav="list"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="n savedn" data-zero>0</span>my list</a>
 </nav>
 
 <div id="layer"></div>
@@ -1568,7 +1570,15 @@ function shopBack(){
   b.hidden = !(F.sec || F.who || F.gt || lc(F.q).trim() || F.sort || F.bud || F.gd);
   b.textContent = (F.sec && !F.who) ? '← all categories' : '← all gifts';
 }
-function updateCount(){ const n = document.getElementById('savedN'); n.textContent = saved.length; if (saved.length) n.removeAttribute('data-zero'); else n.setAttribute('data-zero',''); }
+function updateCount(){
+  document.querySelectorAll('.savedn').forEach(n => {
+    n.textContent = saved.length;
+    if (saved.length) n.removeAttribute('data-zero'); else n.setAttribute('data-zero','');
+  });
+}
+function listTarget(){
+  return [...document.querySelectorAll('a[data-nav="list"]')].find(a => a.getBoundingClientRect().width) || null;
+}
 function refreshHearts(){ document.querySelectorAll('[data-heart]').forEach(b => { const on = saved.includes(b.dataset.heart); b.setAttribute('aria-pressed', on); if (b.classList.contains('btn')) b.textContent = on ? '♥ on my list' : '♡ add to my list'; }); updateCount(); }
 function toggleSave(id){
   if (saved.includes(id)) { saved = saved.filter(x => x !== id); toast('removed from your list'); }
@@ -1581,7 +1591,7 @@ function toggleSave(id){
     else toast('added to your list ♥');
   }
   store.set('saved', saved); refreshHearts();
-  bump(document.getElementById('savedN'));
+  bump(listTarget());
   if (current === 'list') renderList();
 }
 function bump(el){ if (!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
@@ -3577,7 +3587,7 @@ function swBind(el){
 function swDecide(dir, el){
   const g = sw.deck[sw.i]; if (!g) return;
   el = el || document.querySelector('.swcard.top');
-  if (dir === 'yes'){ if (!saved.includes(g.id)){ saved.push(g.id); store.set('saved', saved); track('save', g.id); updateCount(); bump(document.getElementById('savedN')); } }
+  if (dir === 'yes'){ if (!saved.includes(g.id)){ saved.push(g.id); store.set('saved', saved); track('save', g.id); updateCount(); bump(listTarget()); } }
   else track('swipe', g.id);
   if (el && !REDUCE){
     el.style.transition = 'transform .35s ease, opacity .35s ease';
@@ -4405,7 +4415,7 @@ document.addEventListener('click', e => {
   if ('mrestart' in d){ match.path = 'skin'; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
   if (d.heart){ e.stopPropagation();
     const willAdd = !saved.includes(d.heart);
-    if (willAdd){ fly(t.closest('.gift')?.querySelector('.im img.on') || t.closest('.gift')?.querySelector('.im img') || document.querySelector('.sheet .bigimg img'), document.querySelector('.listbtn')); }
+    if (willAdd){ fly(t.closest('.gift')?.querySelector('.im img.on') || t.closest('.gift')?.querySelector('.im img') || document.querySelector('.sheet .bigimg img'), listTarget()); }
     t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop');
     toggleSave(d.heart); return; }
   if (d.add){ e.stopPropagation();
