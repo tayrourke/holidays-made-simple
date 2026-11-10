@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg11">
+<meta name="gg-build" content="gg12">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
@@ -1773,16 +1773,43 @@ function belongsOnShelf(g, sec){
   if (sec === 'Home' && w.length && w.every(x => x === 'teachers + neighbors')) return false;
   return true;
 }
-function sectionStockings(sec){
-  const spec = sec === 'Women' ? {who:'her', groups:['Mom']} : sec === 'Men' ? {who:'him', groups:['Dad']} : sec === 'Littles' ? {who:'', groups:['Bigger Kid','Little Kid','Baby']} : null;
-  if (!spec) return '';
-  const rows = GIFTS.filter(g => g.s === 'Stocking Stuffers' && (spec.groups.includes(g.g) || (spec.who && g.g === 'Anyone' && fitsWho(g, spec.who))));
-  if (!rows.length) return '';
-  return `<div class="group"><div class="band">stocking stuffers</div><div class="grid">${rows.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
+const SOCK_GROUP = { her:'Mom', him:'Dad', teens:'Teen', 'big kids':'Bigger Kid', 'little kids':'Little Kid', baby:'Baby' };
+function socksForSection(sec, who){
+  let groups = [];
+  if (sec === 'Women') groups = !who || who === 'her' ? ['Mom'] : [];
+  else if (sec === 'Men') groups = !who || who === 'him' ? ['Dad'] : [];
+  else if (sec === 'Littles'){
+    if (who === 'big kids') groups = ['Bigger Kid'];
+    else if (who === 'little kids') groups = ['Little Kid'];
+    else if (who === 'baby') groups = ['Baby'];
+    else if (!who) groups = ['Bigger Kid','Little Kid','Baby'];
+  }
+  if (!groups.length) return [];
+  return GIFTS.filter(g => g.s === 'Stocking Stuffers' && groups.includes(g.g));
+}
+function mixInSocks(items){
+  const socks = [], rest = [];
+  for (const g of items) (g.s === 'Stocking Stuffers' ? socks : rest).push(g);
+  if (!socks.length || !rest.length) return items;
+  const out = [];
+  const step = Math.max(1, Math.floor(rest.length / socks.length));
+  let si = 0;
+  rest.forEach((g, i) => {
+    out.push(g);
+    if ((i + 1) % step === 0 && si < socks.length) out.push(socks[si++]);
+  });
+  while (si < socks.length) out.push(socks[si++]);
+  return out;
 }
 function fitsWho(g, who){
   if (!who) return true;
   if (!g.w || !g.w.includes(who)) return false;
+  if (g.s === 'Stocking Stuffers'){
+    const group = SOCK_GROUP[who];
+    if (group) return g.g === group;
+    if (who === 'family') return g.g === 'Anyone';
+    if (who !== 'white elephant') return false;
+  }
   if (who === 'big kids'){
     const biggerShelf = (g.g === 'Everyday' || g.g === 'Drinkware') && !(g.w || []).includes('little kids');
     if (g.s === 'Littles' && g.g !== 'Games 5+' && g.g !== 'Building + Science' && g.g !== 'Active Play' && g.g !== 'Cameras' && g.id !== 'p62_116' && !biggerShelf) return false;
@@ -1814,6 +1841,7 @@ function renderFilters(){
     for (const g of GIFTS){
       if (!fitsWho(g, F.who) || FRESH_HIDE.has(g.id) || PREP_SECTIONS.includes(g.s)) continue;
       const key = typeKey(g);
+      if (key === 'stocking stuffers') continue;
       if (seen.has(key)) continue;
       seen.add(key); types.push(key);
     }
@@ -1945,8 +1973,7 @@ function renderShop(){
     if (sockAt >= 0){ order.splice(sockAt, 1); order.push('stocking stuffers'); }
     if (FLAT_WHO.has(F.who)){
       const seen = new Set();
-      let flat = list.filter(g => { const name = giftNameKey(g); if (seen.has(name)) return false; seen.add(name); return true; });
-      if (F.who === 'teens') flat = flat.filter(g => g.s !== 'Stocking Stuffers').concat(flat.filter(g => g.s === 'Stocking Stuffers'));
+      let flat = mixInSocks(list.filter(g => { const name = giftNameKey(g); if (seen.has(name)) return false; seen.add(name); return true; }));
       const held = withoutWaffle(withoutRingana(flat));
       const bru = withoutBru(held.items);
       let items = bru.items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id));
@@ -1972,7 +1999,8 @@ function renderShop(){
       if (key === 'Top Picks') items = dropTopBoosters(items, 'My Top Picks');
       const rg = (key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) ? ringanaCard() : '';
       if (!items.length && !held.card && !bru.card && !rg && !anatomy && !plush && !showSteam) return '';
-      return `<div class="group"><div class="band">${esc(key)}</div><div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${items.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
+      const band = key === 'stocking stuffers' ? '' : `<div class="band">${esc(key)}</div>`;
+      return `<div class="group">${band}<div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${items.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
     }).join('');
     return;
   }
@@ -2046,16 +2074,13 @@ function renderShop(){
     document.getElementById('results').innerHTML = matchBanner() + rows.join('') + sock;
     return;
   }
-  const foldSocks = !!F.who && F.sec !== 'Stocking Stuffers';
-  const mainRows = foldSocks ? list.filter(g => g.s !== 'Stocking Stuffers') : list;
-  const sockRows = foldSocks ? list.filter(g => g.s === 'Stocking Stuffers') : [];
-  const sockHtml = sockRows.length ? `<details class="sockfold"><summary><span class="sockline"><i>stocking stuffers</i>looking for smaller gifts or stocking stuffers?</span><b>browse here</b></summary>${blocksFor(sockRows)}</details>` : '';
-  const extraSocks = !F.who ? sectionStockings(F.sec) : '';
   if (F.sec && F.sec !== 'Stocking Stuffers'){
-    document.getElementById('results').innerHTML = matchBanner() + flatGrid(mainRows) + extraSocks;
+    const seen = new Set(list.map(g => g.id));
+    const socks = socksForSection(F.sec, F.who).filter(g => !seen.has(g.id));
+    document.getElementById('results').innerHTML = matchBanner() + flatGrid(mixInSocks(list.concat(socks)));
     return;
   }
-  document.getElementById('results').innerHTML = matchBanner() + (blocksFor(mainRows) || '') + sockHtml + extraSocks;
+  document.getElementById('results').innerHTML = matchBanner() + (blocksFor(list) || '');
 }
 function flatGrid(items){
   const seen = new Set();
