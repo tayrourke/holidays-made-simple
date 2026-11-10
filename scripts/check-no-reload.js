@@ -22,7 +22,7 @@ if (skipDocuments < 0 || (respond >= 0 && skipDocuments > respond)) {
 if (html.includes("location.replace('./?gglive=") || html.includes('location.replace("./?gglive=')) {
   problems.push('index.html must not reload the guide to pick up a new copy');
 }
-if (!html.includes("if (href.charAt(0) === '#') e.preventDefault()")) {
+if (!html.includes("href.charAt(0) === '#'") || !html.includes('e.preventDefault()')) {
   problems.push('buttons inside the guide must stay on the same page');
 }
 

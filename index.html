@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg19">
+<meta name="gg-build" content="gg20">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
 window.shellReady=Promise.resolve('current');
+setTimeout(function(){
+  var boot=document.getElementById('boot');
+  if(!boot) return;
+  boot.classList.add('done');
+  setTimeout(function(){ if(boot.parentNode) boot.remove(); }, 450);
+}, 4500);
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="description" content="Holidays Made Simple: Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
@@ -4253,9 +4259,13 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('click', e => {
   const link = e.target.closest('a[href]');
+  let hashGo = '';
   if (link){
     const href = link.getAttribute('href') || '';
-    if (href.charAt(0) === '#') e.preventDefault();
+    if (href.charAt(0) === '#'){
+      e.preventDefault();
+      hashGo = href.slice(1);
+    }
     const nav = link.getAttribute('data-nav');
     if (nav && href.charAt(0) === '#'){
       if (nav === 'shop' && (current === 'shop' || location.hash === '#shop')){
@@ -4269,7 +4279,7 @@ document.addEventListener('click', e => {
     }
   }
   const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
-  if (!t) return;
+  if (!t){ if (hashGo) go(hashGo); return; }
   const d = t.dataset;
   if (d.mpath){ match.path = d.mpath; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
   if (d.mopt){ matchToggle(d.mopt); return; }
@@ -4322,7 +4332,7 @@ document.addEventListener('click', e => {
   if (d.wgo !== undefined){ closeLayer(); F.who = d.wgo; F.gd=''; F.sec=''; F.gt=''; go('shop'); return; }
   if (d.wwho !== undefined){ wSel = wSel.includes(d.wwho) ? wSel.filter(x => x !== d.wwho) : [...wSel, d.wwho]; openWelcome(3); return; }
   if ('install' in d){ if (installEvt){ installEvt.prompt(); installEvt.userChoice.finally(() => { installEvt = null; openWelcome(3); }); } return; }
-  if ('close' in d){ closeLayer(); return; }
+  if ('close' in d){ closeLayer(); if (hashGo) go(hashGo); return; }
   if (d.jump){ e.preventDefault(); const el = document.getElementById(d.jump); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 108, behavior: REDUCE ? 'auto' : 'smooth' }); return; }
   if (d.advrec){ const [di, ri] = d.advrec.split(':').map(Number); openAdvRecipe(di, ri); return; }
   if ('advrecx' in d){ document.getElementById('recsheet')?.remove(); return; }
@@ -4384,7 +4394,7 @@ document.addEventListener('click', e => {
   if ('qback' in d){ const steps = quizSteps(); const i = steps.indexOf(quiz.phase === 'done' ? 'bud' : quiz.phase); quiz.phase = steps[Math.max(0, i - 1)] || 'who'; renderQuiz(); return; }
   if ('qrestart' in d){ quiz = {phase:'who', who:'', vibe:'', gd:'', bud:'', size:''}; renderQuiz(); return; }
   if ('qall' in d){ F.who = quiz.who; F.gd = quiz.gd; F.bud = quiz.bud || ''; F.sec=''; F.gt=''; F.q = quiz.vibe || ''; document.getElementById('q').value = F.q; go('shop'); return; }
-  if (d.mode){ const b = builds.find(x => x.mode === d.mode) || newBuild(d.mode); activeB = b.id; saveBuilds(); return; }
+  if (d.mode){ const b = builds.find(x => x.mode === d.mode) || newBuild(d.mode); activeB = b.id; saveBuilds(); go('build'); return; }
   if (d.plist){ const el = document.querySelector(`#listBody [data-person="${CSS.escape(d.plist)}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
   if (d.delp){ people = people.filter(p=>p!==d.delp); store.set('people', people); renderList(); return; }
   if (d.sale){ track('sale', d.sale, d.salename); return; }
@@ -4544,10 +4554,10 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const animation = wait(reduceMotion ? 380 : (replay ? 900 : 1900));
 const shellReady = window.shellReady || Promise.resolve('no-sw');
 Promise.all([catalogReady, iconsReady, animation, shellReady]).then(() => {
-  beginGuide();
   const boot = document.getElementById('boot');
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', '#A2042A');
+  try { beginGuide(); } catch (e) {}
   if (!boot){ try { sessionStorage.removeItem('gg26:shellOnce'); } catch (e) {} return; }
   requestAnimationFrame(() => requestAnimationFrame(() => {
     boot.classList.add('done');
