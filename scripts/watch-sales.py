@@ -2,8 +2,10 @@
 """Watch brand sites for a holiday sale launch.
 
 Each morning the GitHub Action compares what the page says now with
-scripts/sale-baseline.json. A new Black Friday or holiday-sale line
-fails the run so it shows up. Everyday newsletter discounts do not.
+scripts/sale-baseline.json. A brand that newly announces a holiday sale,
+or posts a new percent or dollar offer, fails the run so it shows up.
+A wording tweak on a sale already on file does not. Everyday newsletter
+discounts do not.
 
 Amazon and ShopMy links are not in this list. Those pages block a
 morning check, and they are not the brand's own sale announcement.
@@ -24,6 +26,7 @@ HOLIDAY = re.compile(
     r".{0,50}(?:black friday|cyber monday|cyber week|holiday sale|biggest sale|sale is live|sitewide).{0,70}",
     re.I,
 )
+FACT = re.compile(r"\d+\s*%|\$\s*\d+", re.I)
 
 # One page per brand shop in the guide. The URL is the public site, not an affiliate redirect.
 SITES = [
@@ -96,6 +99,11 @@ def phrases(raw):
     return found
 
 
+def sale_facts(lines):
+    blob = " ".join(lines).lower()
+    return {re.sub(r"\s+", "", item) for item in FACT.findall(blob)}
+
+
 def lumebox_note():
     product = json.loads(fetch(LUMEBOX["url"]).decode("utf-8", "replace"))
     variant = (product.get("variants") or [{}])[0]
@@ -127,8 +135,11 @@ def main():
         current[name] = lines
         previous = baseline.get(name, [])
         added = [line for line in lines if line not in previous]
-        if not baseline_mode and added:
-            changes.append(f"{name} sale announcement: {added[0]}")
+        new_facts = sale_facts(lines) - sale_facts(previous)
+        if not baseline_mode and ((lines and not previous) or new_facts):
+            detail = added[0] if added else lines[0]
+            extra = f" ({', '.join(sorted(new_facts))})" if new_facts else ""
+            changes.append(f"{name} sale announcement: {detail}{extra}")
         status = lines[0] if lines else "no holiday sale announced"
         print(f"{name}: {status}")
     try:
