@@ -27,7 +27,7 @@ export const FACE = {
   },
   tonicCalm: {
     id: "tonicCalm",
-    name: "FRESH toner calm",
+    name: "FRESH tonic calm",
     kind: "Soothing toner · dry, normal & sensitive skin",
     slug: "fresh-tonic-calm",
     url: productUrl("fresh-toner-calm"),
@@ -38,7 +38,7 @@ export const FACE = {
   },
   tonicPure: {
     id: "tonicPure",
-    name: "FRESH toner pure",
+    name: "FRESH tonic pure",
     kind: "Clarifying toner · oily & blemish-prone skin",
     slug: "fresh-tonic-pure",
     url: productUrl("fresh-toner-pure"),
@@ -207,7 +207,7 @@ export const FACE = {
   },
   tinted: {
     id: "tinted",
-    name: "FRESH tinted moisturizer",
+    name: "FRESH tinted moisturiser",
     kind: "Tinted day cream · shades N1–N4 + tan",
     slug: "fresh-tinted-moisturiser",
     url: productUrl("fresh-tinted-moisturizer"),
@@ -229,7 +229,7 @@ export const FACE = {
   },
   menMoisturiser: {
     id: "menMoisturiser",
-    name: "FRESH moisturizer for men",
+    name: "FRESH moisturiser for men",
     kind: "All-in-one men's day care",
     slug: "fresh-moisturiser-for-men",
     url: productUrl("fresh-moisturizer-for-men"),
@@ -355,7 +355,7 @@ export const BODY = {
   },
   shampoo: {
     id: "shampoo",
-    name: "FRESH repair shampoo",
+    name: "FRESH shampoo repair",
     kind: "Gentle daily shampoo · repair",
     slug: "fresh-shampoo-repair",
     url: productUrl("fresh-repair-shampoo"),
@@ -366,7 +366,7 @@ export const BODY = {
   },
   volumeShampoo: {
     id: "volumeShampoo",
-    name: "FRESH volume shampoo",
+    name: "FRESH shampoo volume",
     kind: "Volumising shampoo",
     slug: "fresh-volume-shampoo",
     url: productUrl("fresh-volume-shampoo"),

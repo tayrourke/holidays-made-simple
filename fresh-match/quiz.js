@@ -1,8 +1,9 @@
-import { FACE_Q, BODY_Q, INTENT_Q } from "./quizQuestions.js";
+import { FACE_Q, BODY_Q, SUPP_Q, INTENT_Q } from "./quizQuestions.js";
 import { productBySlug } from "./catalog.js";
 import {
   buildFace,
   buildBody,
+  buildSupp,
   buildHero,
   buildPlaybook,
   buildInsight,
@@ -13,7 +14,9 @@ import {
 } from "./quizEngine.js";
 
 export const PATHS = [
-  { v: "skin", t: "Skincare & personal care", s: "Face, body, hair — matched to your skin" },
+  { v: "skin", t: "Face, body, and hair", s: "How you wash, and the products you use every day" },
+  { v: "supp", t: "Supplements", s: "A daily base, or something more specific" },
+  { v: "both", t: "The whole routine", s: "Skin, everyday products, and supplements" },
 ];
 
 function wantsHair(answers) {
@@ -26,7 +29,10 @@ function wantsHair(answers) {
 export function questionsFor(path, answers = {}) {
   if (!path) return [];
   const bodyQs = BODY_Q.filter((q) => q.id !== "hairType" || wantsHair(answers));
-  return [...FACE_Q, ...bodyQs, INTENT_Q];
+  if (path === "skin") return [...FACE_Q, ...bodyQs, INTENT_Q];
+  if (path === "supp") return [...SUPP_Q, INTENT_Q];
+  if (path === "both") return [...FACE_Q, ...bodyQs, ...SUPP_Q, INTENT_Q];
+  return [];
 }
 
 export function labeledAnswers(answers = {}, path) {
@@ -49,10 +55,12 @@ function addSlugs(list, into) {
 }
 
 export function runMatch(path, answers) {
-  const face = buildFace(answers);
-  const body = buildBody(answers);
-  const supp = null;
-  const hero = buildHero(answers, 'skin', face, body, supp);
+  const skin = path === "skin" || path === "both";
+  const inside = path === "supp" || path === "both";
+  const face = skin ? buildFace(answers) : null;
+  const body = skin ? buildBody(answers) : null;
+  const supp = inside ? buildSupp(answers) : null;
+  const hero = buildHero(answers, path, face, body, supp);
   const collected = [];
   if (face) {
     addSlugs(face.am, collected);
@@ -66,11 +74,11 @@ export function runMatch(path, answers) {
   }
   const slugs = [...new Set(collected)];
   const startSlugs = [...new Set((hero.items || []).map((p) => p.slug).filter((slug) => productBySlug(slug)))];
-  const playbook = buildPlaybook(answers, 'skin', hero, face, body, supp);
-  const insight = buildInsight(answers, 'skin', hero.items);
+  const playbook = buildPlaybook(answers, path, hero, face, body, supp);
+  const insight = buildInsight(answers, path, hero.items);
   const ritual = ritualSections(face, body, supp);
-  const notes = partnerNotes(answers, 'skin', playbook);
-  const summary = summarizeAnswers(answers, 'skin');
+  const notes = partnerNotes(answers, path, playbook);
+  const summary = summarizeAnswers(answers, path);
   return {
     slugs,
     startSlugs: startSlugs.length ? startSlugs : slugs.slice(0, 4),

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg29">
+<meta name="gg-build" content="gg30">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1035,7 +1035,7 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
       <a class="door box" href="#build" data-mode="stocking"><div><span class="tab">for mom, dad + kids</span><h3>build a stocking</h3><p>fill a real stocking, see it come together</p></div><img src="art/stocking.webp" alt=""></a>
       <a class="door box" href="#build" data-mode="basket"><div><span class="tab">teachers + neighbors</span><h3>build a gift basket</h3><p>pick a theme, fill the basket</p></div><img id="basketDoorImg" alt=""></a>
       <a class="door box" href="#swipe"><div><span class="tab">swipe right to save</span><h3>swipe to shop</h3><p>one gift at a time. so fun on your phone</p></div><img id="swipeDoorImg" alt=""></a>
-      <a class="door box" href="#match"><div><span class="tab">skincare + bodycare</span><h3>fresh match</h3><p>looking to gift or ask for skincare or bodycare this year? find your freshest match.</p></div><img src="img/rg-fresh-hydro-serum.webp" alt=""></a>
+      <a class="door box" href="#match"><div><span class="tab">skincare + supplements</span><h3>fresh match</h3><p>face, body, hair, or the inside stuff. find your freshest match.</p></div><img src="img/rg-fresh-hydro-serum.webp" alt=""></a>
       <a class="door box" href="#traditions"><div><span class="tab">scents, treats + diys</span><h3>holiday prep</h3><p>cozy scents, real-food treats, matching pajamas + easy diys</p></div><img src="art/spiral.webp" alt=""></a>
       <a class="door box" href="#codes"><div><span class="tab">tap to copy</span><h3>year round savings</h3><p>my codes for the brands in this guide</p></div><img src="art/deer.webp" alt=""></a>
     </div>
@@ -4210,7 +4210,15 @@ function renderMatch(){
     B.innerHTML = `<div class="ptitle"><h2><span class="thin">fresh</span><span class="bub">match</span></h2><p>one moment…</p></div>`;
     return;
   }
-  if (!match.path) match.path = 'skin';
+  if (!match.path){
+    const paths = (FM.PATHS || []).map(p => `<button class="mopt box" data-mpath="${esc(p.v)}"><span class="mark">→</span><span><b>${esc(p.t)}</b><small>${esc(p.s)}</small></span></button>`).join('');
+    B.innerHTML = `<div class="ptitle"><h2><span class="thin">what i'd</span> <span class="bub">start</span> you with</h2><p>tell me how you wash, what your skin is doing, and what you want to swap out. i'll give you the short list, and you can send it straight to me.</p></div>
+      <p style="text-align:center;margin:18px 0 0;font-family:var(--label);font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted)">where do you want to start?</p>
+      <div class="mopts">${paths}</div>
+      <p class="mnote">this quiz is just a recommendation. send it to me before you order. it is not an official ringana site, and not medical advice.</p>
+      <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 8px;font-family:var(--band);font-style:italic;text-transform:uppercase">made fresh, on purpose</h3><p class="why" style="margin-top:0">family-led for thirty years. small batches, their own campus, airless glass. it's why i trust what i'm about to recommend.</p><ul class="msteps"><li>made about twice a week, with a real expiration date</li><li>made in-house in austria, with u.s. production coming to virginia</li><li>airless glass, so the plants stay potent</li><li>totally toxin free, and they publish what's in each product</li><li>skin and supplements follow the same rules</li><li>just opening in america</li></ul></div>`;
+    return;
+  }
   if (match.result){
     const r = match.result;
     const hero = r.hero?.items || [];
@@ -4221,7 +4229,7 @@ function renderMatch(){
       <div class="hrow">${hero.map(matchCard).join('')}</div>
       ${next.length ? `<div class="group"><div class="band">add next</div><div class="hrow">${next.map(matchCard).join('')}</div></div>` : ''}
       ${steps.length ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3><ul class="msteps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul></div>` : ''}
-      <p class="mnote">a product match only, not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
+      <p class="mnote">this quiz is just a recommendation. send it to me before you order. it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
       <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;
     return;
   }
@@ -4432,7 +4440,7 @@ document.addEventListener('click', e => {
     else { match.draft = Array.isArray(match.ans[prev.id]) ? [...match.ans[prev.id]] : []; match.picked = null; }
     renderMatch(); return;
   }
-  if ('mrestart' in d){ match.path = 'skin'; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
+  if ('mrestart' in d){ match.path = null; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
   if (d.heart){ e.stopPropagation();
     const willAdd = !saved.includes(d.heart);
     if (willAdd){ fly(t.closest('.gift')?.querySelector('.im img.on') || t.closest('.gift')?.querySelector('.im img') || document.querySelector('.sheet .bigimg img'), listTarget()); }

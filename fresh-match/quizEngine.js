@@ -1,8 +1,17 @@
-import { supplementShareLines } from "./disclosures.js";
 import { FACE, BODY, SUPP } from "./ringana-products.js";
 
-function item(product, step, why) {
-  return { ...product, step, why };
+function item(product, step, why, extra) {
+  return { ...product, step, why, ...extra };
+}
+
+/** Really-clean wash is FRESH soap liquid, not the bar and not the body wash. */
+function liquidSoap() {
+  return {
+    ...BODY.soapLiquid,
+    kind: "Microbiome-friendly liquid soap",
+    desc: "FRESH soap liquid. NBC7 prebiotic and postbiotic care, so a proper wash can feel really clean without stripping the barrier. This is the liquid soap, not the body wash and not the bar.",
+    use: "Wet your face, work a small amount into a lather, massage, rinse. Morning and night if this is your cleanse. Moisturizer after.",
+  };
 }
 
 export function buildFace(a) {
@@ -21,31 +30,84 @@ export function buildFace(a) {
   const sensitiveAging = a.skinType === "sensitive" && a.concern === "aging";
   const hasConcern = (c) => a.concern === c || also.has(c);
 
-  // —— Cleanse (essential) ——
-  am.push(
-    item(
-      FACE.cleansingWater,
-      "Cleanse",
-      wantsMakeup
-        ? "Morning only needs the micellar rinse — last night did the heavy lift"
-        : "A light micellar rinse is enough before the day starts"
-    )
-  );
-  pm.push(
-    item(
-      FACE.cleanser,
-      "Cleansing milk",
-      wantsMakeup
-        ? "Dissolves makeup, SPF, and the day's film — cleansing milk, not a foam strip"
-        : "Evening milk cleanse — lifts sebum and the day's film without stripping"
-    )
-  );
-  if (!minimal || wantsMakeup) {
+  // —— Cleanse. Their answer picks the products. Makeup only changes how they use them. ——
+  const cleanse = a.cleanse || (minimal && !wantsMakeup ? "cream" : "both");
+  const makeupDays = a.makeup === "yes";
+  if (cleanse === "soap") {
+    am.push(
+      item(
+        liquidSoap(),
+        "Cleanse",
+        makeupDays
+          ? "You like a really clean wash. FRESH soap liquid morning and night, makeup days included. Work it over the makeup until it lifts, then rinse. Moisturizer after so it doesn't finish tight."
+          : "You like a really clean wash. This is FRESH soap liquid, the microbiome-friendly liquid soap. Not the body wash. Lather, rinse, then moisturize so it doesn't finish tight."
+      )
+    );
+    pm.push(
+      item(
+        liquidSoap(),
+        "Cleanse",
+        "Same liquid soap at night. Microbiome-friendly soap, not the body wash."
+      )
+    );
+  } else if (cleanse === "cream") {
+    const creamCleanse = makeupDays
+      ? "Cream cleanser on its own. It takes makeup and sunscreen off. No second cleanse."
+      : "You wanted the cream cleanser by itself. Morning and night, then rinse. No micellar step.";
+    am.push(item(FACE.cleanser, "Cleanse", creamCleanse));
+    pm.push(item(FACE.cleanser, "Cleanse", "Same cream cleanser at night. One step, then the rest of the routine."));
+  } else if (cleanse === "water") {
+    const waterOnly = {
+      desc: "Micellar water. This is the whole cleanse, morning and night — not a second step after a cream cleanser.",
+      use: "Cotton pad, morning and night. It can stay on. No cream cleanser before it.",
+    };
+    am.push(
+      item(
+        FACE.cleansingWater,
+        "Cleanse",
+        "Cleansing water on a cotton pad. It can stay on. This is the micellar cleanse, not a sink wash.",
+        waterOnly
+      )
+    );
+    pm.push(
+      item(
+        FACE.cleansingWater,
+        "Cleanse",
+        makeupDays
+          ? "Same at night. On makeup days, use a fresh side of the pad until the cotton comes away clean."
+          : "Same at night. A cotton pad, and it can stay on.",
+        makeupDays
+          ? {
+              ...waterOnly,
+              use: "On makeup days, use a fresh side of the pad until the cotton comes away clean. No cream cleanser before it.",
+            }
+          : waterOnly
+      )
+    );
+  } else {
+    am.push(
+      item(
+        FACE.cleansingWater,
+        "Cleanse",
+        makeupDays
+          ? "Morning is the micellar water. Last night did the heavy lift."
+          : "Morning cleanse is the micellar water. Light, and it can stay on."
+      )
+    );
+    pm.push(
+      item(
+        FACE.cleanser,
+        "Cleanse",
+        makeupDays
+          ? "Night: cream cleanser first. It melts makeup, sunscreen, and the day."
+          : "Night: the cream cleanser. One real wash, not a foam strip."
+      )
+    );
     pm.push(
       item(
         FACE.cleansingWater,
         "Cleansing water",
-        "Micellar follow-through — what the milk starts, this finishes"
+        "Then cleansing water. The cream starts it. The micellar water finishes it."
       )
     );
   }
@@ -93,26 +155,32 @@ export function buildFace(a) {
     } else {
       pm.push(item(FACE.hydroSerum, "Hydrate", "Keep hydration steady while skin settles — add a clear step when you're ready"));
     }
-  } else if (a.concern === "dullness") {
+  } else if (a.concern === "dullness" || a.concern === "brightening" || a.concern === "scarring") {
     am.push(
       item(
         FACE.hydroSerum,
         "Hydrate",
-        "Plump, hydrated skin reflects light — glow starts with water, not shimmer"
+        "Hydrated skin is what makes brightness show. Glow starts with water."
       )
     );
-    if (!minimal) {
-      am.push(
-        item(
-          FACE.addsGlow,
-          "Treat",
-          cityStress
-            ? "City stress and screens — vitamin C, niacinamide and an anti-pollution complex earn their place"
-            : "Vitamin C, niacinamide, EGCG and liquorice — the shortlist for uneven tone"
-        )
-      );
-    }
-    pm.push(item(FACE.hydroSerum, "Hydrate", "Twice-daily hydration keeps radiance from looking flat by evening"));
+    const glowWhy =
+      a.concern === "scarring"
+        ? "Glow booster is the one for marks left behind. On a leftover mark, it can go on that spot undiluted. Not around the eyes. Shake first."
+        : a.concern === "brightening"
+          ? "Glow booster for dark spots and uneven color. Vitamin C, niacinamide, EGCG, and licorice. One pump into your serum. Shake first."
+          : cityStress
+            ? "Flat, tired skin in city air. Glow booster — vitamin C, niacinamide, and the anti-pollution complex. One pump into your serum."
+            : "Dullness is the brief. Glow booster on top of the hydro serum, so skin has something to reflect.";
+    am.push(item(FACE.addsGlow, "Treat", glowWhy));
+    pm.push(
+      item(
+        FACE.hydroSerum,
+        "Hydrate",
+        a.concern === "scarring"
+          ? "Night stays on hydration. The mark treatment is the morning glow booster."
+          : "Twice-daily hydration keeps the brightening from looking flat by evening."
+      )
+    );
   } else if (a.concern === "eyes") {
     am.push(item(FACE.hydroSerum, "Hydrate", "Whole-face hydration supports the eye area too"));
     am.push(item(FACE.eyeSerum, "Eyes", "Your top concern — face cream is too heavy for skin this thin"));
@@ -138,9 +206,38 @@ export function buildFace(a) {
       );
     } else if (also.has("breakouts") && a.concern !== "breakouts" && !hasConcern("aging")) {
       pm.push(item(FACE.addsRepair, "Spot treat", "Secondary congestion — zone it; don't run a second full face serum"));
-    } else if (also.has("dullness") && a.concern !== "dullness" && a.concern !== "breakouts") {
-      am.push(item(FACE.addsGlow, "Boost", "Secondary glow goal — morning only so evenings stay simple"));
+    } else if (
+      (also.has("dullness") || also.has("brightening") || also.has("scarring")) &&
+      a.concern !== "dullness" &&
+      a.concern !== "brightening" &&
+      a.concern !== "scarring" &&
+      a.concern !== "breakouts"
+    ) {
+      const why = also.has("scarring")
+        ? "Marks you also flagged. Glow booster in the morning. Undiluted only on a leftover mark, never around the eyes."
+        : also.has("brightening")
+          ? "Dark spots you also flagged. Glow booster in the morning, one pump into your serum."
+          : "Dullness you also flagged. Glow booster in the morning, on top of hydration.";
+      am.push(item(FACE.addsGlow, "Boost", why));
     }
+  }
+
+  const glowAlready =
+    a.concern === "dullness" ||
+    a.concern === "brightening" ||
+    a.concern === "scarring" ||
+    am.some((p) => p.id === "addsGlow") ||
+    pm.some((p) => p.id === "addsGlow");
+  if (
+    !glowAlready &&
+    (also.has("scarring") || also.has("brightening") || (full && also.has("dullness")))
+  ) {
+    const why = also.has("scarring")
+      ? "Marks you also flagged. Glow booster in the morning. Undiluted only on a leftover mark, never around the eyes. Shake first."
+      : also.has("brightening")
+        ? "Dark spots you also flagged. Glow booster in the morning, one pump into your serum. Shake first."
+        : "Dullness you also flagged. Glow booster in the morning, on top of hydration.";
+    am.push(item(FACE.addsGlow, "Boost", why));
   }
 
   // Eyes as add-on (not already primary) — secondary concern only, not every extra checkbox
@@ -208,8 +305,19 @@ export function buildFace(a) {
   if (full && ex.includes("tint")) {
     am.push(item(FACE.tinted, "Perfect", "Light coverage over your moisturiser — skincare first"));
   }
-  if (ex.includes("lips")) {
+  if (full && ex.includes("lips")) {
     am.push(item(FACE.lipBalm, "Lips", "Clean, intensive lip care — zero petroleum"));
+  }
+
+  // After sun: only when they asked for it — never from climate alone, never AM
+  if (ex.includes("afterSun")) {
+    pm.push(
+      item(
+        FACE.afterSun,
+        "As needed · after sun",
+        "After-sun care with a soft glow boost — use after outdoor days, not as a morning step"
+      )
+    );
   }
 
   // Weekly — prefer one polish, not mask + scrub stacked
@@ -276,6 +384,9 @@ export function buildBody(a) {
     if (bx.includes("legs")) {
       out.push(item(BODY.lightLegs, "Legs", "Cooling care for heavy, tired, end-of-day legs"));
     }
+    if (bx.includes("afterSun")) {
+      out.push(item(FACE.afterSun, "After sun", "Post-outdoor soothe + soft glow — for body as much as face"));
+    }
     if (bx.includes("scrub")) {
       out.push(item(FACE.scrub, "Polish", "Face & body scrub when you want a physical reset"));
     }
@@ -294,9 +405,7 @@ export function buildBody(a) {
 
   const wantsTrio = has("lotion") && has("hands") && has("feet");
   if (wantsTrio) {
-    out.push(item(milk, "Body", skinWhy));
-    out.push(item(BODY.handBalm, "Hands", "Light enough to reapply constantly — and it works on pigment spots"));
-    out.push(item(BODY.footBalm, "Feet", "Fast-absorbing repair for the part of you that works hardest"));
+    out.push(item(BODY.bodySet, "Head to toe", "You want body, hands and feet — Ringana's own base-care trio, in one"));
   } else {
     if (has("lotion")) out.push(item(milk, "Body", skinWhy));
     if (has("hands") || bx.includes("handsExtra")) {
@@ -318,6 +427,9 @@ export function buildBody(a) {
   if (has("deo")) out.push(item(BODY.deodorant, "Deodorant", "No aluminium salts; lemon verbena supports sweat regulation rather than blocking it"));
   if (has("legs") || bx.includes("legs")) {
     out.push(item(BODY.lightLegs, "Legs", "Cooling botanical care for heavy, tired, or heat-swollen legs"));
+  }
+  if (bx.includes("afterSun")) {
+    out.push(item(FACE.afterSun, "After sun", "Soothe after outdoor days and support a soft, even glow — not SPF"));
   }
   if (bx.includes("scrub")) {
     out.push(item(FACE.scrub, "Polish", "Gentle face & body scrub — once a week is plenty"));
@@ -342,6 +454,7 @@ export function buildBody(a) {
   }
 
   if (has("oral")) out.push(item(BODY.toothOil, "Oral care", "Certified-organic oil pulling for teeth and gums"));
+  if (has("wipes")) out.push(item(BODY.stayFresh, "Fresh-up", "Plastic-free, and genuinely more effective than a dry-paper compromise"));
 
   return out;
 }
@@ -437,13 +550,11 @@ export function buildSupp(a) {
         break;
       case "beauty":
         addTargeted(SUPP.beautyHair, "Beauty from within — skin, hair and nails");
-        addTargeted(SUPP.bty, "The beauty drink on top — vegan collagen amino acids, plant hyaluronic acid, sea buckthorn");
         if (!life("lowFish") && !life("plantHeavy") && !goals.includes("omega")) {
           addTargeted(SUPP.omega, "Plant omega-3 that rounds out beauty-from-within");
         }
         break;
       case "energy":
-        addTargeted(SUPP.chi, "A plant energy shot for the slump — guarana, ginseng, ginger. Dilute it.");
         if (!wantFoundation) {
           addTargeted(SUPP.packBalancing, "Greens and minerals for acid–base balance and everyday steadiness");
         }
@@ -556,11 +667,20 @@ export function summarizeAnswers(ans, path) {
       aging: "fine lines & firmness",
       dehydration: "dehydration",
       breakouts: "breakouts",
-      dullness: "dullness & tone",
+      dullness: "dullness",
+      brightening: "dark spots & brightening",
+      scarring: "marks & scarring",
       eyes: "eye care",
     }[ans.concern];
+    const cleanseLabel = {
+      soap: "liquid soap cleanse",
+      cream: "cream cleanser only",
+      water: "micellar water",
+      both: "cream at night, water in the morning",
+    }[ans.cleanse];
     if (skin) bits.push(skin);
     if (concern) bits.push(concern);
+    if (cleanseLabel) bits.push(cleanseLabel);
     if ((ans.also || []).includes("barrier")) bits.push("barrier support");
     if (ans.makeup === "yes") bits.push("makeup days");
     if (ans.climate === "sunSeason") bits.push("outdoor / sun season");
@@ -666,9 +786,15 @@ export function buildHero(ans, path, face, body, supp) {
       bump(byId.addsRepair || FACE.addsRepair, 98, "Your #1 face goal — clear without wrecking your barrier");
       bump(byId.hydroSerum || FACE.hydroSerum, 85, "Hydrated skin produces less compensatory oil");
       bump(byId.creamLight || FACE.creamLight, 78, "Formulated for oil — Copper PCA, not just a thinner cream");
-    } else if (ans.concern === "dullness") {
-      bump(byId.addsGlow || FACE.addsGlow, 98, "Your #1 face goal — tone, spots, and radiance");
-      bump(byId.hydroSerum || FACE.hydroSerum, 86, "Plump skin reflects light — glow starts with water");
+    } else if (ans.concern === "dullness" || ans.concern === "brightening" || ans.concern === "scarring") {
+      const glowHero =
+        ans.concern === "scarring"
+          ? "Your #1 — glow booster on the marks left behind"
+          : ans.concern === "brightening"
+            ? "Your #1 — glow booster for dark spots and uneven color"
+            : "Your #1 — glow booster for skin that looks flat";
+      bump(byId.addsGlow || FACE.addsGlow, 98, glowHero);
+      bump(byId.hydroSerum || FACE.hydroSerum, 86, "Hydration underneath, so the brightening has something to sit on");
     } else if (ans.concern === "eyes") {
       bump(byId.eyeSerum || FACE.eyeSerum, 100, "Your #1 concern — dedicated care for the thinnest skin on your face");
       bump(byId.hydroSerum || FACE.hydroSerum, 80, "Whole-face hydration supports the eye area too");
@@ -685,9 +811,17 @@ export function buildHero(ans, path, face, body, supp) {
       FACE.creamMedium;
     bump(cream, 70, cream.why || "Seals your treat step — matched to your skin type");
 
-    // Cleanse hero for first orders
-    if (intent === "starter" || intent === "curious") {
-      bump(byId.cleanser || FACE.cleanser, 65, "Evening cleansing milk — the step that makes everything after it work better");
+    const wantsMakeup = ans.makeup === "yes" || ans.makeup === "sometimes";
+    const cleansePick = ans.cleanse || (ans.depth === "minimal" && !wantsMakeup ? "cream" : "both");
+    if (cleansePick === "soap") {
+      bump(byId.soapLiquid || BODY.soapLiquid, 74, "Your cleanse — FRESH soap liquid, the microbiome-friendly liquid soap, not the body wash");
+    } else if (cleansePick === "water") {
+      bump(byId.cleansingWater || FACE.cleansingWater, 74, "Your cleanse — micellar cleansing water");
+    } else if (cleansePick === "cream") {
+      bump(byId.cleanser || FACE.cleanser, 74, "Your cleanse — the cream cleanser, and nothing else");
+    } else if (intent === "starter" || intent === "curious") {
+      bump(byId.cleanser || FACE.cleanser, 68, "Night cream cleanser, morning cleansing water");
+      bump(byId.cleansingWater || FACE.cleansingWater, 64, "The morning half of the cleanse");
     }
 
     if (ans.concern === "breakouts" || ans.skinType === "oily") {
@@ -714,6 +848,9 @@ export function buildHero(ans, path, face, body, supp) {
       if (p.id === "volumeShampoo" || p.id === "shampoo") score = 55;
       if (p.id === "handBalm") score = 50;
       if (p.id === "footBalm") score = 52;
+      /* Pages exist. They are not orderable yet, so they stay in the routine
+         and off the first-order shortlist. */
+      if (p.id === "deodorant" || p.id === "lightLegs" || p.id === "hairTreatment") score = Math.min(score, 36);
       bump(p, Math.round(score * bodyScale), p.why);
     });
   }
@@ -754,12 +891,24 @@ export function buildHero(ans, path, face, body, supp) {
 
   const subtitle =
     intent === "upgrade"
-      ? "The highest-impact picks from your full match — start with these."
+      ? "The ones worth starting with from your full match."
       : intent === "curious"
         ? "A few products to learn the line — start here, no rush."
         : "If you only order a handful, make it these.";
 
   return { title, subtitle, items: ranked };
+}
+
+function week1Cleanse(ans = {}) {
+  const minimal = ans.depth === "minimal";
+  const wantsMakeup = ans.makeup === "yes" || ans.makeup === "sometimes";
+  const cleanse = ans.cleanse || (minimal && !wantsMakeup ? "cream" : "both");
+  if (cleanse === "soap") {
+    return "Morning and night: FRESH soap liquid. Lather, rinse, then moisturize. Don't add the cream cleanser.";
+  }
+  if (cleanse === "cream") return "Cream cleanser morning and night. Don't add micellar water.";
+  if (cleanse === "water") return "Micellar water morning and night. That's the whole cleanse.";
+  return "Morning: micellar water. Night: cream cleanser, then micellar water.";
 }
 
 export function buildPlaybook(ans, path, hero, face, body, supp) {
@@ -788,13 +937,23 @@ export function buildPlaybook(ans, path, hero, face, body, supp) {
 
   const week1 = [];
   if (path === "skin" || path === "both") {
-    week1.push("Night: cleansing milk, then cleansing water if you're running both.");
+    week1.push(week1Cleanse(ans));
     week1.push("Serum → cream every morning and night — a little goes far.");
     if (ans.concern === "aging") week1.push(ans.skinType === "sensitive"
       ? "Sensitive + firmness: hydro serum daily; anti wrinkle every other night until skin stays calm."
       : "If you're new to retinoid-type actives, start the anti wrinkle serum every other night.");
     else if (ans.concern === "breakouts") week1.push("Zone clarifying booster on active spots; give it 2–3 weeks before judging.");
     else week1.push("Give any new booster 2–3 weeks before you decide it's not for you.");
+  }
+  if (path === "supp" || path === "both") {
+    const { approach } = resolveSuppAnswers(ans);
+    if (approach === "overall") {
+      week1.push("Start with PACKS ABC daily — antiox, balancing, cleansing — before adding capsules.");
+    } else if (approach === "both") {
+      week1.push("Take PACKS ABC as your daily base; add targeted capsules with the meal pattern on each label.");
+    } else {
+      week1.push("Take supplements with the meal pattern on the label — consistency beats stacking.");
+    }
   }
   if (body?.some((p) => p.id === "deodorant")) {
     week1.push("Coming off antiperspirant? Give FRESH deodorant 2–3 weeks to recalibrate.");
@@ -804,13 +963,9 @@ export function buildPlaybook(ans, path, hero, face, body, supp) {
     break;
   }
 
-  const lead = stretch.filter((p) => p.soon || p.id === "lipBalm");
-  const later = stretch.filter((p) => !p.soon && p.id !== "lipBalm");
-  const addNext = [...lead, ...later].slice(0, Math.max(3, Math.min(lead.length + 2, 6)));
-
   return {
     buyFirst: hero?.items || [],
-    addNext,
+    addNext: stretch.slice(0, 3),
     week1: week1.slice(0, 3),
   };
 }
@@ -820,7 +975,7 @@ export function buildInsight(ans, path, heroItems = []) {
   const heroNames = (heroItems || []).slice(0, 3).map((p) => p.name);
   if (heroNames.length) {
     parts.push(
-      `Start with ${heroNames.join(", ").replace(/, ([^,]*)$/, " and $1")} — those are the highest-signal picks from your answers.`
+      `Start with ${heroNames.join(", ").replace(/, ([^,]*)$/, " and $1")} — those are the ones that fit your answers best.`
     );
   }
 
@@ -836,7 +991,9 @@ export function buildInsight(ans, path, heroItems = []) {
       aging: "Firmness and fine lines put anti wrinkle serum at the center of your treat step.",
       dehydration: "Thirst is the brief — hydro serum's six hyaluronic depths, sealed with the right cream.",
       breakouts: "Breakouts called the shot — clear, hydrate underneath, and don't strip the barrier.",
-      dullness: "Dullness and tone put brightening actives and real hydration on the shortlist.",
+      dullness: "Dullness put hydration and the glow booster on the shortlist.",
+      brightening: "Dark spots and brightening put the glow booster on the shortlist, on top of real hydration.",
+      scarring: "Marks left behind put the glow booster on those spots. Undiluted only on a mark, never around the eyes.",
       eyes: "The eye area is the priority — dedicated serum, light enough for skin this thin.",
     }[ans.concern];
 
@@ -866,8 +1023,8 @@ export function buildInsight(ans, path, heroItems = []) {
       focus: "Focus and mental clarity called cognitive support to the front.",
       mood: "Calm and emotional balance sit at the center of your inside routine.",
       joints: "Joints and easy movement shape your mobility picks.",
-      beauty: "Beauty from within means skin, hair, nails — and the bty glass — get a dedicated seat.",
-      energy: "Steady everyday energy is covered by chi for the slump, and balancing greens when you want a daily base.",
+      beauty: "Beauty from within means skin, hair and nails get a dedicated seat.",
+      energy: "Steady everyday energy is covered by balancing greens in the foundation.",
       longevity: "Long-game vitality points to cellular renewal support.",
     };
     const first = goals.find((g) => goalLine[g]);
@@ -918,12 +1075,10 @@ export function formatMatchSummary(summary, hero, playbook, quizUrl) {
   if (playbook?.week1?.length) {
     lines.push("", "Week 1:", ...playbook.week1.map((line) => `• ${line}`));
   }
-  const suppIds = new Set(Object.values(SUPP).map((p) => p.id));
-  const suppCount = [...(hero?.items || []), ...(playbook?.addNext || [])]
-    .filter((p) => p && (suppIds.has(p.id) || p.category === "supplements")).length;
   lines.push(
     "",
-    ...(suppCount ? supplementShareLines(suppCount > 1) : ["Educational match only — not medical advice."]),
+    "This is just a recommendation, not a prescription. Please check it with Taylor before you order.",
+    "Educational match only — not medical advice.",
     quizUrl ? `Open match: ${quizUrl}` : null
   );
   return lines.filter((l) => l !== null).join("\n");
@@ -966,7 +1121,10 @@ export function partnerNotes(ans = {}, path, playbook) {
   if (ans.intent === "starter") notes.push("They asked for a first order — keep the open tight.");
   if (ans.intent === "upgrade") notes.push("They already have a ritual — treat this as upgrades, not a from-scratch kit.");
   if (ans.intent === "curious") notes.push("They're learning — a map, not a mandate to buy everything.");
-  if (ans.makeup === "yes") notes.push("Makeup days — evening is a two-step cleanse.");
+  if (ans.cleanse === "soap") notes.push("They want a real wash — soap liquid only, not the cream cleanser.");
+  else if (ans.cleanse === "cream") notes.push("Cream cleanser only — don't add micellar water.");
+  else if (ans.cleanse === "water") notes.push("Micellar water is the whole cleanse.");
+  else if (ans.cleanse === "both") notes.push("Morning is micellar water. Night is cream cleanser, then water.");
   if (ans.skinType === "sensitive") notes.push("Sensitive skin — go slow on new actives.");
   if ((ans.also || []).includes("barrier")) notes.push("Barrier is on their mind — rebuild before stacking more treat steps.");
   if (ans.climate === "sunSeason") notes.push("Outdoor / sun season — after-sun is as-needed, not a morning step.");
