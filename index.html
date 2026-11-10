@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg24">
+<meta name="gg-build" content="gg25">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -138,7 +138,7 @@ main{padding-bottom:84px}
 @media(min-width:820px){main{padding-bottom:0}}
 
 /* ---------- pdf vocabulary ---------- */
-.band{background:var(--berry);color:#fff;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.06em;text-shadow:2px 2px 0 rgba(0,0,0,.45);font-size:clamp(20px,4.6vw,30px);line-height:1.1;padding:10px 16px;text-align:center}
+.band{background:var(--berry);color:#fff;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.06em;text-shadow:2px 2px 0 rgba(0,0,0,.45);font-size:clamp(20px,4.6vw,30px);line-height:1.2;padding:12px 16px 14px;text-align:center;overflow:visible}
 .tab{display:inline-block;background:var(--berry);color:#fff;font-family:var(--body);font-weight:400;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px}
 .box{background:var(--taupe);border:1.5px solid var(--hair)}
 .ptitle{position:relative;text-align:center;padding:26px 0 18px;isolation:isolate}
@@ -249,16 +249,17 @@ section.view[hidden]{display:none}
 .count{font-size:13px;color:var(--muted)}
 .tip{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:12px 14px;font-size:13.5px}
 .tip img{width:34px;height:auto;flex:none}
-.shopsec{content-visibility:auto;contain-intrinsic-size:auto 640px}
 .group{margin-top:30px}
 .group .band, .shopsec > .band{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
 @media(min-width:1150px){.group .band, .shopsec > .band{margin-inline:0}}
 .group .sub{display:flex;justify-content:center;margin-top:-1px}
-.rowband{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left}
-.rowband .pill{background:#fff;color:var(--berry);border-color:#fff;font-size:12px;padding:5px 10px}
+.rowband{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;overflow:visible}
+.rowband > span{line-height:1.25;padding:2px 0 4px}
+.rowband .pill{background:#fff;color:var(--berry);border-color:#fff;font-size:12px;padding:5px 10px;flex:none}
 .hrow{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin-top:14px;padding:2px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
 .hrow::-webkit-scrollbar{display:none}
 .hrow .gift{flex:0 0 46%;max-width:210px;scroll-snap-align:start}
+.hrow .gift .t{text-wrap:balance}
 .sockdoor{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;padding:16px}
 .sockdoor p{margin:4px 0 0}
 .sockdoor .btn{flex:none}
@@ -2000,40 +2001,76 @@ function renderShop(){
     return;
   }
   if (!F.sec && !q && !F.sort){
-    const jobs = [];
-    for (const s of SECTIONS){
-      if (s === 'Experiences') continue;
-      let items = list.filter(g => s === 'Stocking Stuffers' ? g.s === s : belongsOnShelf(g, s));
-      if (s !== 'Stocking Stuffers'){
-        const seen = new Set(items.map(g => g.id));
-        items = items.concat(socksForSection(s, '').filter(g => !seen.has(g.id)));
+    const rowOf = (title, items, sec, who) => {
+      if (!items.length) return '';
+      const onTopRow = sec === 'My Top Picks';
+      const held = withoutWaffle(withoutRingana(items), onTopRow);
+      const bru = withoutBru(held.items);
+      items = bru.items;
+      const hasAnat = items.some(g => ANATOMY_IDS.has(g.id));
+      const hasPlush = items.some(g => PLUSH_IDS.has(g.id));
+      items = dropTopBoosters(items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id)), sec);
+      if (!items.length && !held.card && !bru.card && sec !== 'My Top Picks' && !hasAnat && !hasPlush) return '';
+      if (sec === 'My Top Picks') items = orderTop(items);
+      let lead = [];
+      if (sec === 'Women'){
+        const skip = new Set(['p28_00','p18_05','p29_13']);
+        lead = ['p62_78','p62_17','p28_07','p30_06'].map(id => byId[id]).filter(Boolean);
+        const hide = new Set([...skip, ...lead.map(g => g.id)]);
+        items = items.filter(g => !hide.has(g.id));
       }
-      jobs.push({ title: SECLABEL[s], items, jump: `data-secjump="${esc(s)}"`, top: s === 'My Top Picks' });
+      const buckets = []; const by = new Map();
+      for (const g of items){
+        const key = g.g || g.id;
+        if (!by.has(key)){ const bucket = []; by.set(key, bucket); buckets.push(bucket); }
+        by.get(key).push(g);
+      }
+      let mixed = []; const seen = new Set();
+      const cap = sec === 'My Top Picks' ? 8 : 12;
+      while (mixed.length < cap && buckets.some(bucket => bucket.length)){
+        let moved = false;
+        for (const bucket of buckets){
+          if (mixed.length >= cap) break;
+          while (bucket.length){
+            const g = bucket.shift();
+            const name = giftNameKey(g);
+            if (seen.has(name)) continue;
+            seen.add(name); mixed.push(g); moved = true; break;
+          }
+        }
+        if (!moved) break;
+      }
+      if (lead.length) mixed = lead.concat(mixed).slice(0, cap);
+      const rg = onTopRow ? ringanaCard(false) : '';
+      const first = onTopRow ? '' : (hasAnat ? anatomyCard() : (hasPlush ? plushCard() : ''));
+      const jump = who ? `data-whojump="${esc(who)}"` : `data-secjump="${esc(sec)}"`;
+      holdTaySticker = onTopRow;
+      const cards = mixed.map((g,i)=>giftCard(g,i+1,{sub:true})).join('');
+      holdTaySticker = false;
+      return `<div class="group"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div><div class="hrow">${held.card}${bru.card}${rg}${first}${cards}</div></div>`;
+    };
+    const whoRow = (title, who) => {
+      const picked = new Map();
+      for (const g of list){
+        if (!fitsWho(g, who)) continue;
+        const name = giftNameKey(g);
+        const prev = picked.get(name);
+        if (!prev || (prev.s === 'My Top Picks' && g.s !== 'My Top Picks')) picked.set(name, g);
+      }
+      return rowOf(title, [...picked.values()], '', who);
+    };
+    const rows = [];
+    for (const s of SECTIONS){
+      if (s === 'Stocking Stuffers' || s === 'Experiences') continue;
+      rows.push(rowOf(SECLABEL[s], list.filter(g => belongsOnShelf(g, s)), s));
       if (s === 'Littles'){
-        jobs.push({ title: 'bigger kids', items: list.filter(g => fitsWho(g, 'big kids')), jump: 'data-whojump="big kids"', top: false });
-        jobs.push({ title: 'teens', items: list.filter(g => fitsWho(g, 'teens')), jump: 'data-whojump="teens"', top: false });
+        rows.push(whoRow('bigger kids', 'big kids'));
+        rows.push(whoRow('teens', 'teens'));
       }
     }
-    const results = document.getElementById('results');
-    const token = ++shopPaint;
-    results.innerHTML = matchBanner();
-    const alive = () => token === shopPaint && current === 'shop' && !F.sec && !F.who && !lc(F.q).trim() && !F.sort;
-    let ji = 0;
-    const nextJob = () => {
-      if (!alive()) return;
-      if (ji >= jobs.length) return;
-      const job = jobs[ji++];
-      if (job.top) holdTaySticker = true;
-      const parts = groupParts(job.items, job.top ? {top:true} : null);
-      if (job.top) holdTaySticker = false;
-      if (!parts.length) { nextJob(); return; }
-      const sec = document.createElement('div');
-      sec.className = 'shopsec';
-      sec.innerHTML = `<div class="band rowband"><span>${esc(job.title)}</span><button class="pill" type="button" ${job.jump}>see all</button></div>`;
-      results.appendChild(sec);
-      paintGroups(sec, parts, alive, nextJob);
-    };
-    nextJob();
+    const sockN = list.filter(g => g.s === 'Stocking Stuffers').length;
+    const sock = sockN ? `<div class="sockdoor box"><div><span class="tab">stocking stuffers</span><h3>looking for smaller gifts or stocking stuffers?</h3></div><button class="btn" type="button" data-secjump="Stocking Stuffers">browse here</button></div>` : '';
+    document.getElementById('results').innerHTML = matchBanner() + rows.join('') + sock;
     return;
   }
   if (F.sec){
