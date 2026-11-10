@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg36">
+<meta name="gg-build" content="gg37">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -2762,9 +2762,10 @@ async function renderSales(){
   B.innerHTML = ping + `<p class="count" style="text-align:center">${live.length} ${live.length===1?'sale':'sales'} live right now</p><div class="sales">${live.map(saleCard).join('')}</div>` + later;
 }
 function salePingBox(){
-  const on = store.get('salePush', 0);
+  const on = store.get('salePush', 0) && (typeof Notification === 'undefined' || Notification.permission === 'granted');
   if (on) return `<button class="pingcard on" type="button" data-salepushoff><span class="dot" aria-hidden="true"></span><span><b>you're on the list</b><small>this phone gets a ping when a new sale lands. tap to turn it off.</small></span></button>`;
-  return `<button class="pingcard" type="button" data-salepush><span class="dot" aria-hidden="true"></span><span><b>ping me about sales</b><small>a little note on this phone when a new deal lands.</small></span><em>turn on</em></button><div class="err" id="saleErr"></div>`;
+  if (store.get('saleRemindOff', 0)) return `<p class="advnote" style="margin:0 0 14px"><button class="back" type="button" data-salepush style="margin:0">turn on sale alerts</button></p><div class="err" id="saleErr"></div>`;
+  return `<button class="pingcard" type="button" data-salepush style="margin-bottom:8px"><span class="dot" aria-hidden="true"></span><span><b>ping me about sales</b><small>a little note on this phone when a new deal lands.</small></span><em>turn on</em></button><p class="advnote" style="margin:0 0 14px"><button class="back" type="button" data-saleremindoff style="margin:0">not now</button></p><div class="err" id="saleErr"></div>`;
 }
 async function renderSalesBanner(){
   const el = document.getElementById('salesBanner'); if (!el) return;
@@ -4516,7 +4517,7 @@ document.addEventListener('click', e => {
       return;
     }
   }
-  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-matchfor],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
+  const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-saleremindoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-matchfor],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t){ if (hashGo) go(hashGo); return; }
   const d = t.dataset;
   if (d.mpath){ match.path = 'skin'; match.i = 0; match.ans = {}; match.picked = null; match.draft = []; match.result = null; renderMatch(); window.scrollTo(0,0); return; }
@@ -4583,6 +4584,7 @@ document.addEventListener('click', e => {
   if ('advpush' in d){ enableGuidePush(); return; }
   if ('salepush' in d){ store.set('saleWant', 1); enableGuidePush(); return; }
   if ('salepushoff' in d){ disableGuidePush(); return; }
+  if ('saleremindoff' in d){ store.set('saleRemindOff', 1); if (current === 'sales') renderSales(); return; }
   if ('advpushoff' in d){ disableGuidePush(); return; }
   if ('advremindoff' in d){ store.set('advRemindOff', 1); renderAdvent(); return; }
   if (d.shop){ track('shop', d.shop); return; }
