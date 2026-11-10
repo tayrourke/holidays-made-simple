@@ -2,11 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg21">
+<meta name="gg-build" content="gg22">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
 window.shellReady=Promise.resolve('current');
+document.addEventListener('click', function(e){
+  var link = e.target && e.target.closest && e.target.closest('a[href]');
+  if (!link) return;
+  var href = link.getAttribute('href') || '';
+  if (href.charAt(0) === '#') e.preventDefault();
+}, true);
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(r){ return r.update(); }).catch(function(){});
+}
 setTimeout(function(){
   var boot=document.getElementById('boot');
   if(!boot) return;
@@ -4185,8 +4194,14 @@ function show(v){
   window.scrollTo(0,0);
   if (deepGift && byId[deepGift]) setTimeout(() => openGift(deepGift), 60);
 }
-function go(v){ if (location.hash === '#'+v) show(v); else location.hash = v; }
-window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+function go(v){
+  if (!v) v = 'home';
+  const next = '#' + v;
+  if (location.hash !== next) history.pushState(null, '', next);
+  show(v);
+}
+window.addEventListener('hashchange', () => show(location.hash.slice(1) || 'home'));
+window.addEventListener('popstate', () => show(location.hash.slice(1) || 'home'));
 function pinTabs(){
   const bar = document.querySelector('.tabsbar');
   if (!bar) return;

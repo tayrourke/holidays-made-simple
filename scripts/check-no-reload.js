@@ -4,10 +4,13 @@ const html = fs.readFileSync('index.html', 'utf8');
 const problems = [];
 
 const activateStart = sw.indexOf("addEventListener('activate'");
-const activateEnd = sw.indexOf("function guideJob");
-const activate = activateStart >= 0 ? sw.slice(activateStart, activateEnd) : '';
-if (activate.includes('client.navigate') || activate.includes('location.')) {
+const activateEnd = sw.indexOf("addEventListener('fetch'");
+const activate = activateStart >= 0 && activateEnd > activateStart ? sw.slice(activateStart, activateEnd) : '';
+if (!activate || activate.includes('client.navigate') || activate.includes('location.')) {
   problems.push('sw.js must not reload pages that are already open');
+}
+if (sw.includes('respondWith')) {
+  problems.push('sw.js must not answer page or file loads');
 }
 
 const fetchStart = sw.indexOf("addEventListener('fetch'");
@@ -24,6 +27,9 @@ if (html.includes("location.replace('./?gglive=") || html.includes('location.rep
 }
 if (!html.includes("href.charAt(0) === '#'") || !html.includes('e.preventDefault()')) {
   problems.push('buttons inside the guide must stay on the same page');
+}
+if (/location\.hash\s*=[^=]/.test(html)) {
+  problems.push('tabs must not change the page address in a way that reloads iPhone');
 }
 
 if (problems.length) {
