@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg12">
+<meta name="gg-build" content="gg13">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
@@ -494,8 +494,9 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .inlist{display:grid;gap:6px;font-size:13px;padding:0 2px}
 .inrow{display:flex;gap:8px;align-items:center}
 .inrow img{width:28px;height:28px;object-fit:contain;flex:none}
-.inrow .nm{min-width:0}
-.inrow .pr{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.inrow .nm{min-width:0;flex:1}
+.inrow .end{display:flex;align-items:center;gap:8px;flex:none}
+.inrow .pr{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:52px;text-align:right}
 .inrow .rm{border:0;background:transparent;color:var(--muted);padding:2px 0;flex:none}
 .inrow .cbtn{padding:2px 6px;font-size:11px;flex:none}
 .gift .add{position:absolute;left:0;bottom:-2px;border:1.5px solid var(--ink);border-radius:999px;background:var(--paper);font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px}
@@ -1475,9 +1476,10 @@ function tayPick(g){
   const name = giftNameKey(g);
   return GIFTS.some(o => o.id !== g.id && o.s === 'My Top Picks' && giftNameKey(o) === name);
 }
+let holdTaySticker = false;
 function showTaySticker(g){
-  if (!tayPick(g)) return false;
-  if (g.s === 'My Top Picks' && !F.who) return false;
+  if (holdTaySticker || !tayPick(g)) return false;
+  if (F.sec === 'My Top Picks') return false;
   return true;
 }
 function giftCard(g, i, opts={}){
@@ -1529,20 +1531,23 @@ function waffleCard(ids, showPick){
   const pick = showPick ? `<span class="tnote">tay's pick ♥</span>` : '';
   return `<div class="gift" data-waffle role="button" tabindex="0" aria-label="waffle kids phone"><div class="im slides">${pick}${slideFrame(phones)}</div><div class="t"><div>waffle kids phone</div></div></div>`;
 }
-function withoutWaffle(items){
+function withoutWaffle(items, inTopRow){
   const pair = wafflePair(items);
   if (!pair) return {card:'', items};
   const drop = new Set(pair);
-  const inTop = !F.who && (F.sec === 'My Top Picks' || pair.every(id => byId[id] && byId[id].s === 'My Top Picks'));
+  const inTop = inTopRow || F.sec === 'My Top Picks';
   const pick = !inTop && pair.some(id => tayPick(byId[id]));
   return {card: waffleCard(pair, pick), items: items.filter(g => !drop.has(g.id))};
 }
 function openWaffle(){
+  const home = byId['p62_103'], go = byId['p62_104'];
   const rows = ['p62_103','p62_104'].map(id => {
     const g = byId[id]; if (!g) return '';
     return `<a class="boostrow" href="${esc(g.u)}" target="_blank" rel="noopener sponsored" data-shop="${esc(id)}"><img src="${img(id)}" alt=""><span><b>${esc(lc(g.n))}</b>${priceLabel(g) ? `<small>${priceLabel(g)}</small>` : ''}</span></a>`;
   }).join('');
-  document.getElementById('layer').innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="waffleT"><button class="x" data-close aria-label="close">×</button><div class="sheetbody"><h2 id="waffleT">waffle kids phone</h2><p class="why">two phones for ages 5 to 12. home is the screen-free wifi phone. go is the gps phone with an esim and no apps.</p><div class="boostlist">${rows}</div></div></div>`;
+  const homePrice = home && priceLabel(home) ? `, ${priceLabel(home)}` : '';
+  const goPrice = go && priceLabel(go) ? `, ${priceLabel(go)}` : '';
+  document.getElementById('layer').innerHTML = `<div class="scrim" data-close></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="waffleT"><button class="x" data-close aria-label="close">×</button><div class="sheetbody"><div class="detail"><h2 id="waffleT">waffle kids phone</h2><p class="why">screen free phones for kids. they can only call the people you add in the waffle hub app. there’s no internet on it, and nothing to download.</p><p class="why"><b>home${esc(homePrice)}.</b> this one stays on the house wifi. calls, voice notes, and an emergency call.</p><p class="why"><b>go${esc(goPrice)}.</b> this one can leave the house. it has gps and an esim, so it works away from wifi and you can see where they are. battery is about two days. shipping late november.</p></div><div class="boostlist">${rows}</div></div></div>`;
 }
 const BRU_PAIR = [];
 function bruCard(){
@@ -1925,7 +1930,7 @@ function renderShop(){
     const held = withoutWaffle(withoutRingana(list));
     const bru = withoutBru(held.items);
     const sorted = dropTopBoosters(bru.items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id)), F.sec);
-    const rg = (!F.sec || F.sec==='My Top Picks' || F.sec==='Women') ? ringanaCard() : '';
+    const rg = (!F.sec || F.sec==='My Top Picks' || F.sec==='Women') ? ringanaCard(F.sec !== 'My Top Picks') : '';
     const anat = showAnat ? anatomyCard() : '';
     const plush = showPlush ? plushCard() : '';
     document.getElementById('results').innerHTML = matchBanner() + `<div class="group"><div class="band">${ttl}</div><div class="grid">${held.card}${bru.card}${rg}${anat}${plush}${sorted.map((g,i)=>giftCard(g,i+1,{sub:true})).join('')}</div></div>`;
@@ -1941,7 +1946,7 @@ function renderShop(){
         const bru = withoutBru(held.items);
         const anatomy = raw.some(g => ANATOMY_IDS.has(g.id));
         const plush = raw.some(g => PLUSH_IDS.has(g.id));
-        groups.push({s, sub, items: dropTopBoosters(bru.items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id)), s), anatomy, plush, waffle: held.card, bru: bru.card, ringana: ringanaHere(s, sub) ? ringanaCard() : ''});
+        groups.push({s, sub, items: dropTopBoosters(bru.items.filter(g => !ANATOMY_IDS.has(g.id) && !PLUSH_IDS.has(g.id)), s), anatomy, plush, waffle: held.card, bru: bru.card, ringana: ringanaHere(s, sub) ? ringanaCard(s !== 'My Top Picks') : ''});
       }
     }
     if (groups.length && groups.every(gr => gr.s === 'Women')){
@@ -1997,7 +2002,7 @@ function renderShop(){
       const showSteam = steam.length >= 2;
       items = items.filter(g => !ANATOMY_IDS.has(g.id) && !(plush && PLUSH_IDS.has(g.id)) && !(showSteam && STEAMER_IDS.has(g.id)));
       if (key === 'Top Picks') items = dropTopBoosters(items, 'My Top Picks');
-      const rg = (key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) ? ringanaCard() : '';
+      const rg = (key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) ? ringanaCard(true) : '';
       if (!items.length && !held.card && !bru.card && !rg && !anatomy && !plush && !showSteam) return '';
       const band = key === 'stocking stuffers' ? '' : `<div class="band">${esc(key)}</div>`;
       return `<div class="group">${band}<div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${items.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
@@ -2008,7 +2013,8 @@ function renderShop(){
     const rowOf = (title, items, sec, who) => {
       if (!items.length) return '';
       let lead = [];
-      const held = withoutWaffle(withoutRingana(items));
+      const onTopRow = sec === 'My Top Picks';
+      const held = withoutWaffle(withoutRingana(items), onTopRow);
       const bru = withoutBru(held.items);
       items = bru.items;
       const hasAnat = items.some(g => ANATOMY_IDS.has(g.id));
@@ -2044,21 +2050,23 @@ function renderShop(){
         if (!moved) break;
       }
       if (lead.length) mixed = lead.concat(mixed).slice(0, cap);
-      const rg = sec === 'My Top Picks' ? ringanaCard() : '';
-      const first = sec === 'My Top Picks' ? '' : (hasAnat ? anatomyCard() : (hasPlush ? plushCard() : ''));
+      const rg = onTopRow ? ringanaCard(false) : '';
+      const first = onTopRow ? '' : (hasAnat ? anatomyCard() : (hasPlush ? plushCard() : ''));
       const jump = who ? `data-whojump="${esc(who)}"` : `data-secjump="${esc(sec)}"`;
-      return `<div class="group"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div><div class="hrow">${held.card}${bru.card}${rg}${first}${mixed.map((g,i)=>giftCard(g,i+1,{sub:true})).join('')}</div></div>`;
+      holdTaySticker = onTopRow;
+      const cards = mixed.map((g,i)=>giftCard(g,i+1,{sub:true})).join('');
+      holdTaySticker = false;
+      return `<div class="group"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div><div class="hrow">${held.card}${bru.card}${rg}${first}${cards}</div></div>`;
     };
     const whoRow = (title, who) => {
-      const seen = new Set();
-      const items = list.filter(g => {
-        if (!fitsWho(g, who)) return false;
+      const picked = new Map();
+      for (const g of list){
+        if (!fitsWho(g, who)) continue;
         const name = giftNameKey(g);
-        if (seen.has(name)) return false;
-        seen.add(name);
-        return true;
-      });
-      return rowOf(title, items, '', who);
+        const prev = picked.get(name);
+        if (!prev || (prev.s === 'My Top Picks' && g.s !== 'My Top Picks')) picked.set(name, g);
+      }
+      return rowOf(title, [...picked.values()], '', who);
     };
     const rows = [];
     for (const s of SECTIONS){
@@ -2093,7 +2101,7 @@ function flatGrid(items){
   const steam = rest.filter(g => STEAMER_IDS.has(g.id));
   const showSteam = steam.length >= 2;
   if (showSteam) rest = rest.filter(g => !STEAMER_IDS.has(g.id));
-  const rg = (F.sec === 'Women' || F.sec === 'My Top Picks') ? ringanaCard() : '';
+  const rg = (F.sec === 'Women' || F.sec === 'My Top Picks') ? ringanaCard(F.sec !== 'My Top Picks') : '';
   if (F.sec === 'My Top Picks') rest = orderTop(rest);
   return `<div class="group"><div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${rest.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
 }
@@ -2111,11 +2119,12 @@ function ringanaOk(){
   if (F.who && !['her','teens'].includes(F.who)) return false;
   return true;
 }
-function ringanaCard(){
+function ringanaCard(showPick){
   if (!ringanaOk()) return '';
   const pics = ['p16_03','p16_04','p62_16','p62_17'].filter(id => byId[id]);
   if (pics.length < 2) return '';
-  return `<div class="gift" data-ringana role="button" tabindex="0" aria-label="ringana fresh skincare"><div class="im slides">${slideFrame(pics)}</div><div class="t"><div>ringana fresh skincare</div></div></div>`;
+  const pick = showPick ? `<span class="tnote">tay's pick ♥</span>` : '';
+  return `<div class="gift" data-ringana role="button" tabindex="0" aria-label="ringana fresh skincare"><div class="im slides">${pick}${slideFrame(pics)}</div><div class="t"><div>ringana fresh skincare</div></div></div>`;
 }
 function ringanaHere(sec, sub){
   if (!ringanaOk()) return false;
@@ -2415,7 +2424,7 @@ function renderBuild(){
   const unpriced = items.length - priced.length;
   document.getElementById('holder').innerHTML = visual +
     `<div class="tot box"><span>${items.length} ${items.length===1?'gift':'gifts'}</span><span>${priced.length ? `total <b>${money(total)}</b>` : ''}${unpriced?`<small>${priced.length?' · ':''}${unpriced} without a price</small>`:''}</span></div>
-     ${items.length ? `<div class="inlist">${items.map(g=>`<div class="inrow"><img src="${img(g.id)}" alt="">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span>':''}<span class="nm">${esc(lc(g.n))}</span><b class="pr">${priceOf(g)!=null?money(priceOf(g)):''}</b>${codeBtn(g)}<button class="rm" data-add="${g.id}">remove</button></div>`).join('')}</div><div class="toolbar"><button class="btn small" id="saveSet">add all to my list for ${esc(b.name)}</button><button class="btn ghost small" data-sharewish="build">share this one</button><button class="btn ghost small" data-sharewish="all">share everything</button></div>` : (stocking?'<p class="count" style="text-align:center;margin:0">tap + add on any gift to tuck it in the stocking</p>':'')}`;
+     ${items.length ? `<div class="inlist">${items.map(g=>`<div class="inrow"><img src="${img(g.id)}" alt="">${BROKEN.has(g.id)?'<span class="miniwarn" title="this shop link isn’t opening">!</span>':''}<span class="nm">${esc(lc(g.n))}</span><span class="end">${codeBtn(g)}<b class="pr">${priceOf(g)!=null?money(priceOf(g)):''}</b></span><button class="rm" data-add="${g.id}">remove</button></div>`).join('')}</div><div class="toolbar"><button class="btn small" id="saveSet">add all to my list for ${esc(b.name)}</button><button class="btn ghost small" data-sharewish="build">share this one</button></div>` : (stocking?'<p class="count" style="text-align:center;margin:0">tap + add on any gift to tuck it in the stocking</p>':'')}`;
   fitStkName();
   document.getElementById('bFloatTxt').textContent = `${items.length} in ${buildTitle(b)}`;
   document.querySelector('#bFloat img').src = stocking ? 'art/stocking.webp' : 'art/giftbox.webp';
