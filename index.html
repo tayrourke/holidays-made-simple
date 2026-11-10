@@ -2,61 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg18">
+<meta name="gg-build" content="gg19">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
-window.shellReady=Promise.resolve('no-sw');
-(function(){
-  var buildEl=document.querySelector('meta[name="gg-build"]');
-  var build=buildEl?buildEl.getAttribute('content'):'';
-  function remoteBuild(html){
-    var m=String(html).match(/name="gg-build" content="([^"]+)"/);
-    return m?m[1]:'';
-  }
-  function ensureLive(){
-    return fetch('./?gglive='+Date.now(),{cache:'no-store',credentials:'same-origin'}).then(function(r){
-      if(!r.ok) throw new Error('offline');
-      return r.text();
-    }).then(function(html){
-      var remote=remoteBuild(html);
-      if(remote&&build&&remote!==build){
-        var stamped='';
-        try{ stamped=sessionStorage.getItem('gg26:liveOnce')||''; }catch(e){}
-        if(stamped!==remote){
-          try{ sessionStorage.setItem('gg26:liveOnce', remote); }catch(e){}
-          location.replace('./?gglive='+encodeURIComponent(remote));
-          return 'reload';
-        }
-      }else{
-        try{ sessionStorage.removeItem('gg26:liveOnce'); }catch(e){}
-      }
-      return 'current';
-    });
-  }
-  if(!('serviceWorker' in navigator)) return;
-  window.shellReady=new Promise(function(resolve){
-    var done=false;
-    var timer=setTimeout(function(){ if(!done){ done=true; resolve('timeout'); } }, 12000);
-    ensureLive().then(function(why){
-      if(why==='reload'||done) return;
-      done=true; clearTimeout(timer); resolve(why);
-    }).catch(function(){
-      if(done) return;
-      done=true; clearTimeout(timer); resolve('offline');
-    });
-  });
-  navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){ return r.update(); }).catch(function(){});
-  var shellAsked=0;
-  function askAgain(){
-    var now=Date.now();
-    if(now-shellAsked<15000) return;
-    shellAsked=now;
-    ensureLive().catch(function(){});
-  }
-  window.addEventListener('pageshow',function(e){ if(e.persisted) askAgain(); });
-  document.addEventListener('visibilitychange',function(){ if(!document.hidden) askAgain(); });
-})();
+window.shellReady=Promise.resolve('current');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="description" content="Holidays Made Simple: Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
@@ -4302,13 +4252,21 @@ document.addEventListener('input', e => {
   if (n) rememberNote(n.dataset.wishnote, n.value);
 });
 document.addEventListener('click', e => {
-  const shopNav = e.target.closest('a[data-nav="shop"]');
-  if (shopNav && (current === 'shop' || location.hash === '#shop')){
-    e.preventDefault();
-    F.sec=''; F.who=''; F.gt=''; F.q=''; F.sort=''; F.bud=''; F.gd='';
-    const q = document.getElementById('q'); if (q) q.value='';
-    show('shop');
-    return;
+  const link = e.target.closest('a[href]');
+  if (link){
+    const href = link.getAttribute('href') || '';
+    if (href.charAt(0) === '#') e.preventDefault();
+    const nav = link.getAttribute('data-nav');
+    if (nav && href.charAt(0) === '#'){
+      if (nav === 'shop' && (current === 'shop' || location.hash === '#shop')){
+        F.sec=''; F.who=''; F.gt=''; F.q=''; F.sort=''; F.bud=''; F.gd='';
+        const q = document.getElementById('q'); if (q) q.value='';
+        show('shop');
+        return;
+      }
+      go(nav);
+      return;
+    }
   }
   const t = e.target.closest('[data-heart],[data-open],[data-close],[data-shop],[data-add],[data-tobuild],[data-gowho],[data-gosec],[data-secjump],[data-whojump],[data-shopback],[data-boosters],[data-anatomy],[data-steamers],[data-plush],[data-waffle],[data-bru],[data-ringana],[data-fwho],[data-fsec],[data-fgt],[data-qwho],[data-qvibe],[data-qsize],[data-qsizetoggle],[data-qsizego],[data-qbud],[data-qback],[data-qrestart],[data-qall],[data-bfor],[data-copy],[data-mode],[data-delp],[data-plist],[data-sale],[data-adm],[data-admtab],[data-admrange],[data-fgd],[data-qgd],[data-fopen],[data-fclose],[data-fclr],[data-fbud],[data-fsort],[data-clrrecent],[data-totop],[data-share],[data-sharewish],[data-wishup],[data-wishdown],[data-wishsend],[data-sw],[data-swfor],[data-swsec],[data-swclear],[data-welcome],[data-wgo],[data-install],[data-pickb],[data-picknew],[data-bpick],[data-bnew],[data-bkind],[data-bdel],[data-wwho],[data-wlist],[data-adv],[data-advrec],[data-advrecx],[data-advstyle],[data-advreveal],[data-advpeek],[data-advreset],[data-advpush],[data-salepush],[data-salepushoff],[data-advpushoff],[data-advremindoff],[data-bfill],[data-jump],[data-mpath],[data-mopt],[data-mgo],[data-mback],[data-mrestart],[data-gopen],[data-gnew],[data-gback],[data-gpick],[data-gpull],[data-gfav],[data-gfavon],[data-gflush]');
   if (!t) return;

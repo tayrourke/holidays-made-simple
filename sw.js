@@ -1,5 +1,5 @@
-/* Holidays Made Simple — a navigation waits for the live guide before the page is shown. */
-const SHELL = 'gg-shell-v7';
+/* Holidays Made Simple — pages load from the network. Do not reload or intercept navigations; that crashes iPhone Safari. */
+const SHELL = 'gg-shell-v8';
 
 function isDocument(req){
   return req.mode === 'navigate' || req.destination === 'document';
@@ -77,17 +77,8 @@ self.addEventListener('install', event => { event.waitUntil(self.skipWaiting());
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    const hadGuide = keys.some(key => key.indexOf('gg-shell') === 0);
     await Promise.all(keys.filter(key => key !== SHELL).map(key => caches.delete(key)));
     await self.clients.claim();
-    if (!hadGuide) return;
-    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    await Promise.all(clients.map(client => {
-      const target = new URL(client.url);
-      target.searchParams.set('gglive', String(Date.now()));
-      if (typeof client.navigate === 'function') return client.navigate(target.href).catch(() => client.postMessage({ type: 'newer-shell' }));
-      client.postMessage({ type: 'newer-shell' });
-    }));
   })());
 });
 
@@ -133,15 +124,10 @@ async function serveAsset(req, url){
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  if (isDocument(req)) return;
   const url = new URL(req.url);
   if (passesThrough(url)) return;
   if (!isAppShell(url, req)) return;
-  if (isDocument(req) && isGuide(url)) {
-    const job = guideJob(req);
-    event.waitUntil(job.done);
-    event.respondWith(job.response);
-    return;
-  }
   event.respondWith(serveAsset(req, url));
 });
 
