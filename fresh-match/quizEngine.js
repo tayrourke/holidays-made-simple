@@ -403,19 +403,14 @@ export function buildBody(a) {
     return out;
   }
 
-  const wantsTrio = has("lotion") && has("hands") && has("feet");
-  if (wantsTrio) {
-    out.push(item(BODY.bodySet, "Head to toe", "You want body, hands and feet — Ringana's own base-care trio, in one"));
-  } else {
-    if (has("lotion")) out.push(item(milk, "Body", skinWhy));
-    if (has("hands") || bx.includes("handsExtra")) {
-      out.push(item(BODY.handBalm, "Hands", bx.includes("handsExtra")
-        ? "Hands that take a beating — reapply after every wash"
-        : "Light enough to reapply constantly — and it works on pigment spots"));
-    }
-    if (has("feet") || bx.includes("feetExtra")) {
-      out.push(item(BODY.footBalm, "Feet", "Fast-absorbing repair for the part of you that works hardest"));
-    }
+  if (has("lotion")) out.push(item(milk, "Body", skinWhy));
+  if (has("hands") || bx.includes("handsExtra")) {
+    out.push(item(BODY.handBalm, "Hands", bx.includes("handsExtra")
+      ? "Hands that take a beating — reapply after every wash"
+      : "Light enough to reapply constantly — and it works on pigment spots"));
+  }
+  if (has("feet") || bx.includes("feetExtra")) {
+    out.push(item(BODY.footBalm, "Feet", "Fast-absorbing repair for the part of you that works hardest"));
   }
 
   if (has("wash")) {

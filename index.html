@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg37">
+<meta name="gg-build" content="gg38">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -4319,7 +4319,7 @@ function renderMatch(){
       return `<div class="group"><div class="band">${esc(labels[sec.title] || lc(sec.title))}</div><div class="hrow">${items.map(matchCard).join('')}</div></div>`;
     }).join('');
     B.innerHTML = `<div class="ptitle"><h2><span class="thin">your</span> <span class="bub">fresh match</span></h2><p>${esc(r.summary || r.hero?.subtitle || '')}</p></div>
-      <p class="mnote" style="margin-top:8px">this is a recommendation from your answers, not a prescription. send it to me before you order and i'll help you sort what to start with.</p>
+      <p class="mnote" style="margin-top:8px">this is a recommendation based on your answers only. send me a message if you want to customize your routine further.</p>
       <div class="group"><div class="band">${esc(lc(r.hero?.title || 'start here'))}</div>${r.hero?.subtitle ? `<p class="mwhy" style="margin-top:0">${esc(r.hero.subtitle)}</p>` : ''}<div class="hrow">${hero.map(matchCard).join('')}</div></div>
       ${r.insight ? `<div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">why this match</h3><p class="mwhy" style="margin-top:0">${esc(r.insight)}</p></div>` : ''}
       <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">how to start</h3>
@@ -4328,7 +4328,7 @@ function renderMatch(){
       </div>
       ${full ? `<div class="group"><div class="band">full match</div><p class="mwhy" style="margin-top:0">everything that fit your answers. start here is still the first order.</p></div>${full}` : ''}
       <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">save this match</h3><p class="why" style="margin-top:0">add these to a list. yours, or whoever you took the quiz for.</p><div class="people">${whoBtns}</div><form class="addp" id="matchSave" style="margin-top:10px"><input id="matchWho" placeholder="or type a name" aria-label="who this match is for" maxlength="24"><button class="btn small" type="submit">add</button></form></div>
-      <p class="mnote">this quiz is just a recommendation. send it to me before you order. it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
+      <p class="mnote">it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
       <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;
     bindMatchSave();
     return;
