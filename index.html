@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg35">
+<meta name="gg-build" content="gg36">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1142,7 +1142,7 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
 <!-- ADVENT -->
 <section class="view" id="v-advent" hidden>
   <div class="wrap">
-    <div class="ptitle"><h2><span class="thin">24 days of</span><span class="bub">simple swaps</span></h2><p>a new door every day, thanksgiving week through december 16th. missed one? it stays open.</p></div>
+    <div class="ptitle"><h2><span class="thin">24 days of</span><span class="bub">simple swaps</span></h2><p>a new surprise every day, thanksgiving week through december 16th. missed one? it stays open.</p></div>
     <div id="advRemind"></div>
     <div class="advhead"><span>open doors by</span><div class="modes" role="tablist" id="advStyle"></div></div>
     <div id="advTools"></div>
@@ -3342,8 +3342,15 @@ function renderAdvent(){
   const today = localDate();
   const pushOn = store.get('advPush', 0) && (typeof Notification === 'undefined' || Notification.permission === 'granted');
   const advNote = document.getElementById('advNote');
-  advNote.textContent = today < ADVENT[0].d && !advPeek() ? `door 1 opens monday, november 23rd. ${opened ? '' : 'come back thanksgiving week!'}` : `${opened} of 24 doors opened`;
-  if (pushOn){ advNote.insertAdjacentHTML('beforeend', ' · morning reminders are on. <button class="back" type="button" data-advpushoff style="margin:0">turn them off</button>'); syncPushZone(); }
+  const noteBits = [];
+  if (!(today < ADVENT[0].d && !advPeek())) noteBits.push(`${opened} of 24 doors opened`);
+  if (pushOn){
+    noteBits.push('morning reminders are on. <button class="back" type="button" data-advpushoff style="margin:0">turn them off</button>');
+    syncPushZone();
+  } else if (store.get('advRemindOff', 0)){
+    noteBits.push('<button class="back" type="button" data-advpush style="margin:0">turn on morning reminders</button>');
+  }
+  advNote.innerHTML = noteBits.join(' · ');
   const needsIcon = device() === 'ios' && !isStandalone();
   const remind = document.getElementById('advRemind');
   if (pushOn || store.get('advRemindOff', 0)) remind.innerHTML = '';
