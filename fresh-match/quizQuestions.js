@@ -158,25 +158,9 @@ export const BODY_Q = [
     ],
   },
   {
-    id: "bodyExtras",
-    single: false,
-    max: 3,
-    eyebrow: "Everyday · 3",
-    section: "Everyday",
-    q: "Anything else true for your body right now?",
-    note: "Optional — these refine your everyday match.",
-    options: [
-      { v: "legs", label: "Legs feel heavy or tired", sub: "Standing, travel, heat, end-of-day swell" },
-      { v: "afterSun", label: "I want after-sun / soft glow", sub: "Post-outdoor care + subtle tan support" },
-      { v: "scrub", label: "I like a body polish", sub: "Scrub face & body weekly-ish" },
-      { v: "handsExtra", label: "My hands take a beating", sub: "Washing, weather, work" },
-      { v: "feetExtra", label: "Feet need serious help", sub: "Cracks, dryness, sandal season" },
-    ],
-  },
-  {
     id: "hairType",
     single: true,
-    eyebrow: "Everyday · 4",
+    eyebrow: "Everyday · 3",
     section: "Everyday",
     q: "And your hair?",
     options: [
