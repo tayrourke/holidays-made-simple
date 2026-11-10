@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg15">
+<meta name="gg-build" content="gg16">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
@@ -1832,6 +1832,7 @@ function clusterKey(g){
   }
   if (group === 'Games 5+' || group === 'Games 5 + Under') return 'games';
   if (group === 'Fresh Skincare' || group === 'Ringana Fresh Skincare') return 'Fresh Skincare';
+  if (group === 'Cozy Layers' && /beanie|\bhat\b|thermal|loungewear|bathrobe|\brobe\b|pajama/.test(lc(g.n))) return 'Clothes + Shoes';
   return group;
 }
 function belongsOnShelf(g, sec){
@@ -2050,32 +2051,83 @@ function renderShop(){
   document.getElementById('results').innerHTML = matchBanner() + (groupedHTML(list) || '');
 }
 function nearKey(g){
-  const n = lc(g.n).replace(/’/g, "'");
+  const n = lc(g.n).replace(/[’‘]/g, "'");
   const rules = [
-    [/bootie|slipper/, '01-slippers'],
-    [/boot|chelsea/, '02-boots'],
-    [/sandal|shoe|sneaker|courtside|slip-?ons?|rollerblade/, '03-shoes'],
-    [/sock/, '04-socks'],
-    [/boxer|brief/, '05-underwear'],
-    [/pajama/, '06-pajamas'],
-    [/\btee\b|t-shirt/, '07-tees'],
-    [/hoodie|sweatshirt/, '08-hoodies'],
-    [/shirt|cardigan|dress|overall|legging/, '09-layers'],
-    [/pant|jogger|sweatpant|thermal/, '10-bottoms'],
-    [/beanie|\bhat\b/, '11-hats'],
-    [/\btie\b/, '12-ties'],
-    [/serum/, 'serums'],
-    [/booster/, 'boosters'],
-    [/balm/, 'balms'],
-    [/deodorant/, 'deodorant'],
-    [/necklace/, 'necklaces'],
-    [/earring/, 'earrings'],
-    [/\bring\b/, 'rings'],
-    [/bracelet/, 'bracelets'],
-    [/tumbler|\bcup\b|bottle/, 'drinkware'],
-    [/puzzle/, 'puzzles'],
-    [/bop it/, 'bop-it'],
-    [/yo-yo|yoyo/, 'yoyo']
+    [/baby booties/, 'a4-booties'],
+    [/\bboxers?\b|\bbriefs?\b/, '01-underwear'],
+    [/\bsocks?\b/, '02-socks'],
+    [/\btee\b|t-shirt/, '03-tees'],
+    [/hoodie|sweatshirt/, '04-hoodies'],
+    [/thermal|loungewear|bathrobe|\brobe\b/, '05-layers'],
+    [/\bpajamas?\b/, '05-sleep'],
+    [/\bshirts?\b|\bcardigan\b|\bdress(?:es)?\b|\boveralls?\b|\bleggings?\b/, '06-layers'],
+    [/\bpants?\b|\bjoggers?\b|\bsweatpants?\b/, '07-bottoms'],
+    [/\bbeanies?\b|\bhats?\b/, '09-hats'],
+    [/\bhair ties?\b/, '11-hair'],
+    [/\btie\b/, '10-ties'],
+    [/trail suit/, '12-outer'],
+    [/\bbooties?\b|\bslippers?\b/, '20-slippers'],
+    [/\bboots?\b|\bchelsea\b/, '21-boots'],
+    [/\bsandals?\b|\bshoes?\b|\bsneakers?\b|courtside|slip[- ]?ons?|\brollerblades?\b/, '22-shoes'],
+    [/serum/, '31-serum'],
+    [/booster/, '32-booster'],
+    [/toner/, '33-toner'],
+    [/balm/, '34-balm'],
+    [/deodorant/, '35-deodorant'],
+    [/earring/, '41-earrings'],
+    [/necklace|julie chain|charm necklace/, '42-necklaces'],
+    [/labradorite ring|liz ring|anxi ring|\bring,/, '43-rings'],
+    [/\bbracelets?\b/, '44-bracelets'],
+    [/br[uü]mate/, '51-brumate'],
+    [/tumbler|travel mug|glass cups?|\bkettle\b/, '52-cups'],
+    [/pour over|\bbrewer\b|frother/, '61-brew'],
+    [/makor coffee|moments blend/, '62-beans'],
+    [/shav|beard|\brazors?\b/, '71-shave'],
+    [/bath soak|bath bomb|bubble bath/, '72-bath'],
+    [/body wash|shower gel|shampoo|conditioner/, '73-wash'],
+    [/bath boat|motor boat/, '74-boats'],
+    [/snap circuits/, '81-snap'],
+    [/find and seek|find \+ seek/, '80-seek'],
+    [/guess in 10/, '83-guess'],
+    [/kanoodle/, '84-kanoodle'],
+    [/world'?s smallest/, '85-smallest'],
+    [/bop it/, '86-bop'],
+    [/yo-?yo/, '87-yoyo'],
+    [/zingo/, '88-zingo'],
+    [/build your own/, '89-build'],
+    [/paint by sticker|sticker by number/, '91-sticker'],
+    [/crayon|chalk/, '92-crayon'],
+    [/play dough|playdough/, '93-dough'],
+    [/finger paint|tempera|watercolor|paint by number/, '94-paint'],
+    [/flowart/, '95-flow'],
+    [/play food/, '96-playfood'],
+    [/farmer.?s market/, '97-market'],
+    [/dump truck/, '98-truck'],
+    [/\bbikes?\b|bicycle/, '99-bike'],
+    [/grow kit|seed bundle|seed bag|windowsill|gardening toy/, '9a-grow'],
+    [/hot sauces?/, 'k1-sauce'],
+    [/rattle/, 'a1-rattle'],
+    [/plush|cuddle toy|lovey|blankie/, 'a2-plush'],
+    [/\bwood (keys|cars)\b|wooden car\b/, 'a3-wood'],
+    [/glass bottles?/, 'a5-bottles'],
+    [/clutching|grasper/, 'a6-grasp'],
+    [/pillow/, 'b1-pillow'],
+    [/blanket|\bpouf\b/, 'b2-blanket'],
+    [/red light/, 'c1-redlight'],
+    [/circadian|blue light/, 'c2-light'],
+    [/castor/, 'c3-castor'],
+    [/matcha|loose leaf tea|tea pot/, 'c4-tea'],
+    [/made simple/, 'd0-simple'],
+    [/anatomy/, 'd1-anatomy'],
+    [/fanny pack/, 'e1-fanny'],
+    [/o my bag/, 'e2-omybag'],
+    [/puzzle/, 'f1-puzzle'],
+    [/magnifier|kaleidoscope|telescope|monocular/, 'f2-look'],
+    [/dollhouse|doll bunk/, 'p1-dolls'],
+    [/makeup|nail polish|manicure/, 'p2-makeup'],
+    [/fairy|(?<!music )wand|\bcape\b|\bsword\b/, 'p3-costume'],
+    [/playsilk|silk streamer/, 'p4-silk'],
+    [/trowel|hand fork|gauntlet/, 'g1-tools']
   ];
   for (const [re, key] of rules) if (re.test(n)) return key;
   return '';
