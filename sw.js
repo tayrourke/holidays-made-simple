@@ -1,5 +1,5 @@
 /* Holidays Made Simple — a navigation waits for the live guide before the page is shown. */
-const SHELL = 'gg-shell-v6';
+const SHELL = 'gg-shell-v7';
 
 function isDocument(req){
   return req.mode === 'navigate' || req.destination === 'document';
