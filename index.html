@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg28">
+<meta name="gg-build" content="gg29">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -123,9 +123,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .topnav{margin-left:auto;display:none;gap:2px}
 .topnav a{font-family:var(--label);font-size:15px;font-weight:700;text-decoration:none;padding:6px 12px;letter-spacing:.04em;text-transform:uppercase;border-bottom:2px solid transparent}
 .topnav a[aria-current="page"]{border-bottom-color:var(--berry);color:var(--berry)}
-.listbtn{margin-left:auto;display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1;text-decoration:none;font-family:var(--label);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.04em;border:1.5px solid var(--ink);padding:5px 10px 6px;background:var(--taupe)}
-.listbtn span{font-size:9px;letter-spacing:.08em}
-.listbtn b{font-weight:700}
+.listbtn{margin-left:auto;max-width:9.5em;display:inline-flex;align-items:center;text-align:center;text-decoration:none;font-family:var(--label);font-weight:700;font-size:12px;line-height:1.2;letter-spacing:0;text-transform:none;border:1.5px solid var(--ink);padding:6px 8px;background:var(--taupe)}
 .n{background:var(--berry);color:#fff;border-radius:999px;font-size:11px;min-width:18px;height:18px;display:inline-grid;place-items:center;padding:0 5px;font-family:var(--body);letter-spacing:0}
 .n[data-zero]{display:none}
 @media(min-width:820px){.topnav{display:flex}.listbtn{display:none}}
@@ -1005,7 +1003,7 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
       <a href="#codes" data-nav="codes">savings</a>
       <a href="#list" data-nav="list">my list <span class="n savedn" data-zero>0</span></a>
     </nav>
-    <a class="listbtn" href="#advent" data-nav="advent" aria-label="advent calendar"><span>advent</span><b id="adventCd">…</b></a>
+    <a class="listbtn" id="adventCd" href="#advent" data-nav="advent">advent opens in 13 days</a>
   </div>
 </header>
 
@@ -3290,7 +3288,6 @@ let advStyle = store.get('advStyle', 'unwrap');
 const localDate = () => { const n = new Date(); return n.getFullYear() + '-' + String(n.getMonth()+1).padStart(2,'0') + '-' + String(n.getDate()).padStart(2,'0'); };
 function paintAdventCountdown(){
   const el = document.getElementById('adventCd');
-  const link = document.querySelector('.listbtn');
   if (!el || !ADVENT[0]) return;
   const [y, mo, d] = ADVENT[0].d.split('-').map(Number);
   const start = new Date(y, mo - 1, d);
@@ -3298,15 +3295,16 @@ function paintAdventCountdown(){
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const days = Math.round((start - today) / 86400000);
   const ms = start - now;
-  let label = 'open';
-  if (days > 1) label = days + ' days';
+  let label = 'advent is open';
+  if (days > 1) label = 'advent opens in ' + days + ' days';
   else if (ms > 0){
     const hours = Math.floor(ms / 3600000);
     const mins = Math.floor((ms % 3600000) / 60000);
-    label = hours >= 1 ? hours + 'h' + (mins ? ' ' + mins + 'm' : '') : Math.max(mins, 1) + 'm';
+    const left = hours >= 1 ? hours + 'h' + (mins ? ' ' + mins + 'm' : '') : Math.max(mins, 1) + 'm';
+    label = 'advent opens in ' + left;
   }
   el.textContent = label;
-  if (link) link.setAttribute('aria-label', label === 'open' ? 'advent calendar, the doors are open' : 'advent calendar, opens in ' + label);
+  el.setAttribute('aria-label', label);
 }
 const advPeek = () => !!store.get('advPeek', 0);
 const advState = (a) => advOpened.includes(a.d) ? 'open' : (a.d === localDate() ? 'today' : (a.d < localDate() || advPeek() ? 'ready' : 'locked'));
