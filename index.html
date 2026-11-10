@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg23">
+<meta name="gg-build" content="gg24">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -249,7 +249,7 @@ section.view[hidden]{display:none}
 .count{font-size:13px;color:var(--muted)}
 .tip{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:12px 14px;font-size:13.5px}
 .tip img{width:34px;height:auto;flex:none}
-.shopsec,.group{content-visibility:auto;contain-intrinsic-size:auto 520px}
+.shopsec{content-visibility:auto;contain-intrinsic-size:auto 640px}
 .group{margin-top:30px}
 .group .band, .shopsec > .band{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
 @media(min-width:1150px){.group .band, .shopsec > .band{margin-inline:0}}
@@ -2000,14 +2000,7 @@ function renderShop(){
     return;
   }
   if (!F.sec && !q && !F.sort){
-    const sectionBlock = (title, items, jump, top) => {
-      if (top) holdTaySticker = true;
-      const body = groupedHTML(items, top ? {top:true} : null);
-      if (top) holdTaySticker = false;
-      if (!body) return '';
-      return `<div class="shopsec"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div>${body}</div>`;
-    };
-    const rows = [];
+    const jobs = [];
     for (const s of SECTIONS){
       if (s === 'Experiences') continue;
       let items = list.filter(g => s === 'Stocking Stuffers' ? g.s === s : belongsOnShelf(g, s));
@@ -2015,24 +2008,32 @@ function renderShop(){
         const seen = new Set(items.map(g => g.id));
         items = items.concat(socksForSection(s, '').filter(g => !seen.has(g.id)));
       }
-      rows.push(sectionBlock(SECLABEL[s], items, `data-secjump="${esc(s)}"`, s === 'My Top Picks'));
+      jobs.push({ title: SECLABEL[s], items, jump: `data-secjump="${esc(s)}"`, top: s === 'My Top Picks' });
       if (s === 'Littles'){
-        rows.push(sectionBlock('bigger kids', list.filter(g => fitsWho(g, 'big kids')), 'data-whojump="big kids"'));
-        rows.push(sectionBlock('teens', list.filter(g => fitsWho(g, 'teens')), 'data-whojump="teens"'));
+        jobs.push({ title: 'bigger kids', items: list.filter(g => fitsWho(g, 'big kids')), jump: 'data-whojump="big kids"', top: false });
+        jobs.push({ title: 'teens', items: list.filter(g => fitsWho(g, 'teens')), jump: 'data-whojump="teens"', top: false });
       }
     }
-    const paint = rows.filter(Boolean);
     const results = document.getElementById('results');
     const token = ++shopPaint;
     results.innerHTML = matchBanner();
-    let i = 0;
-    const step = () => {
-      if (token !== shopPaint || current !== 'shop' || F.sec || F.who || lc(F.q).trim() || F.sort) return;
-      results.insertAdjacentHTML('beforeend', paint[i]);
-      i += 1;
-      if (i < paint.length) requestAnimationFrame(step);
+    const alive = () => token === shopPaint && current === 'shop' && !F.sec && !F.who && !lc(F.q).trim() && !F.sort;
+    let ji = 0;
+    const nextJob = () => {
+      if (!alive()) return;
+      if (ji >= jobs.length) return;
+      const job = jobs[ji++];
+      if (job.top) holdTaySticker = true;
+      const parts = groupParts(job.items, job.top ? {top:true} : null);
+      if (job.top) holdTaySticker = false;
+      if (!parts.length) { nextJob(); return; }
+      const sec = document.createElement('div');
+      sec.className = 'shopsec';
+      sec.innerHTML = `<div class="band rowband"><span>${esc(job.title)}</span><button class="pill" type="button" ${job.jump}>see all</button></div>`;
+      results.appendChild(sec);
+      paintGroups(sec, parts, alive, nextJob);
     };
-    if (paint.length) requestAnimationFrame(step);
+    nextJob();
     return;
   }
   if (F.sec){
@@ -2041,7 +2042,11 @@ function renderShop(){
       const seen = new Set(list.map(g => g.id));
       rows = list.concat(socksForSection(F.sec, F.who).filter(g => !seen.has(g.id)));
     }
-    document.getElementById('results').innerHTML = matchBanner() + groupedHTML(rows);
+    const secName = F.sec;
+    const results = document.getElementById('results');
+    const token = ++shopPaint;
+    results.innerHTML = matchBanner();
+    paintGroups(results, groupParts(rows), () => token === shopPaint && current === 'shop' && F.sec === secName);
     return;
   }
   document.getElementById('results').innerHTML = matchBanner() + (groupedHTML(list) || '');
@@ -2136,7 +2141,7 @@ function bunchAlike(items){
     return a[1] - b[1];
   }).map(pair => pair[0]);
 }
-function groupedHTML(items, opts){
+function groupParts(items, opts){
   const picked = new Map();
   for (const g of items){
     const name = giftNameKey(g);
@@ -2157,7 +2162,8 @@ function groupedHTML(items, opts){
   const sockAt = order.indexOf('stocking stuffers');
   if (sockAt >= 0){ order.splice(sockAt, 1); order.push('stocking stuffers'); }
   if (((opts && opts.top) || F.sec === 'My Top Picks') && map.has('Top Picks')) map.set('Top Picks', orderTop(map.get('Top Picks')));
-  return order.map(key => {
+  const parts = [];
+  for (const key of order){
     let groupItems = map.get(key);
     const held = withoutWaffle(withoutRingana(groupItems));
     const bru = withoutBru(held.items);
@@ -2171,9 +2177,39 @@ function groupedHTML(items, opts){
     groupItems = bunchAlike(groupItems);
     const onTop = (opts && opts.top) || F.sec === 'My Top Picks';
     const rg = ((key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) || (key === 'Top Picks' && onTop)) ? ringanaCard(!onTop) : '';
-    if (!groupItems.length && !held.card && !bru.card && !rg && !anatomy && !plush && !showSteam) return '';
-    return `<div class="group"><div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${groupItems.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
-  }).join('');
+    const prefix = `${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}`;
+    if (!groupItems.length && !prefix) continue;
+    parts.push({ prefix, cards: groupItems.map((g,i)=>giftCard(g,i+1)) });
+  }
+  return parts;
+}
+function groupedHTML(items, opts){
+  return groupParts(items, opts).map(p => `<div class="group"><div class="grid">${p.prefix}${p.cards.join('')}</div></div>`).join('');
+}
+function paintGroups(parent, parts, alive, done){
+  let pi = 0, ci = 0, grid = null;
+  const step = () => {
+    if (!alive()) return;
+    if (pi >= parts.length) { if (done) done(); return; }
+    const part = parts[pi];
+    if (!grid) {
+      const wrap = document.createElement('div');
+      wrap.className = 'group';
+      grid = document.createElement('div');
+      grid.className = 'grid';
+      wrap.appendChild(grid);
+      parent.appendChild(wrap);
+      if (part.prefix) grid.insertAdjacentHTML('beforeend', part.prefix);
+    }
+    const slice = part.cards.slice(ci, ci + 8);
+    if (slice.length) grid.insertAdjacentHTML('beforeend', slice.join(''));
+    ci += 8;
+    if (ci >= part.cards.length) { pi += 1; ci = 0; grid = null; }
+    if (pi < parts.length) requestAnimationFrame(step);
+    else if (done) done();
+  };
+  if (!parts.length) { if (done) done(); return; }
+  requestAnimationFrame(step);
 }
 function flatGrid(items){
   const seen = new Set();
