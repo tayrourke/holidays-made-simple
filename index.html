@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg14">
+<meta name="gg-build" content="gg15">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 window.shellReady=Promise.resolve('no-sw');
@@ -2049,6 +2049,46 @@ function renderShop(){
   }
   document.getElementById('results').innerHTML = matchBanner() + (groupedHTML(list) || '');
 }
+function nearKey(g){
+  const n = lc(g.n).replace(/’/g, "'");
+  const rules = [
+    [/bootie|slipper/, '01-slippers'],
+    [/boot|chelsea/, '02-boots'],
+    [/sandal|shoe|sneaker|courtside|slip-?ons?|rollerblade/, '03-shoes'],
+    [/sock/, '04-socks'],
+    [/boxer|brief/, '05-underwear'],
+    [/pajama/, '06-pajamas'],
+    [/\btee\b|t-shirt/, '07-tees'],
+    [/hoodie|sweatshirt/, '08-hoodies'],
+    [/shirt|cardigan|dress|overall|legging/, '09-layers'],
+    [/pant|jogger|sweatpant|thermal/, '10-bottoms'],
+    [/beanie|\bhat\b/, '11-hats'],
+    [/\btie\b/, '12-ties'],
+    [/serum/, 'serums'],
+    [/booster/, 'boosters'],
+    [/balm/, 'balms'],
+    [/deodorant/, 'deodorant'],
+    [/necklace/, 'necklaces'],
+    [/earring/, 'earrings'],
+    [/\bring\b/, 'rings'],
+    [/bracelet/, 'bracelets'],
+    [/tumbler|\bcup\b|bottle/, 'drinkware'],
+    [/puzzle/, 'puzzles'],
+    [/bop it/, 'bop-it'],
+    [/yo-yo|yoyo/, 'yoyo']
+  ];
+  for (const [re, key] of rules) if (re.test(n)) return key;
+  return '';
+}
+function bunchAlike(items){
+  return items.map((g, i) => [g, i]).sort((a, b) => {
+    const ka = nearKey(a[0]), kb = nearKey(b[0]);
+    if (ka && kb && ka !== kb) return ka < kb ? -1 : 1;
+    if (ka && !kb) return -1;
+    if (!ka && kb) return 1;
+    return a[1] - b[1];
+  }).map(pair => pair[0]);
+}
 function groupedHTML(items, opts){
   const picked = new Map();
   for (const g of items){
@@ -2081,7 +2121,7 @@ function groupedHTML(items, opts){
     const showSteam = steam.length >= 2;
     groupItems = groupItems.filter(g => !ANATOMY_IDS.has(g.id) && !(plush && PLUSH_IDS.has(g.id)) && !(showSteam && STEAMER_IDS.has(g.id)));
     if (key === 'Top Picks') groupItems = dropTopBoosters(groupItems, 'My Top Picks');
-    groupItems = mixInSocks(groupItems);
+    groupItems = bunchAlike(groupItems);
     const onTop = (opts && opts.top) || F.sec === 'My Top Picks';
     const rg = ((key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) || (key === 'Top Picks' && onTop)) ? ringanaCard(!onTop) : '';
     if (!groupItems.length && !held.card && !bru.card && !rg && !anatomy && !plush && !showSteam) return '';
