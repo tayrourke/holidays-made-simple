@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg20">
+<meta name="gg-build" content="gg21">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -4008,9 +4008,9 @@ function openWelcome(step){
   } else if (step === 2){
     const d = device();
     const steps = d === 'ios'
-      ? `<ol class="wsteps"><li class="box"><span>tap the share button ${shareIcon} at the bottom of safari (or the top in chrome)</span></li><li class="box"><span>scroll down + tap <b>add to home screen</b> ${plusIcon}</span></li><li class="box"><span>tap <b>add</b>. that's it!</span></li></ol>`
+      ? `<ol class="wsteps"><li class="box"><span>tap the share button ${shareIcon} at the bottom of safari (or the top in chrome)</span></li><li class="box"><span>scroll down + tap <b>add to home screen</b> ${plusIcon}</span></li><li class="box"><span>tap <b>add</b>. close out this window and go tap into the app icon.</span></li></ol>`
       : d === 'android'
-      ? (installEvt ? `<p>one tap and it lives on your home screen like an app.</p><button class="btn" data-install>add to home screen</button>` : `<ol class="wsteps"><li class="box"><span>tap the <b>⋮</b> menu in the top corner of chrome</span></li><li class="box"><span>tap <b>add to home screen</b> or <b>install app</b></span></li><li class="box"><span>tap <b>add</b>. that's it!</span></li></ol>`)
+      ? (installEvt ? `<p>one tap and it lives on your home screen like an app.</p><button class="btn" data-install>add to home screen</button>` : `<ol class="wsteps"><li class="box"><span>tap the <b>⋮</b> menu in the top corner of chrome</span></li><li class="box"><span>tap <b>add to home screen</b> or <b>install app</b></span></li><li class="box"><span>tap <b>add</b>. close out this window and go tap into the app icon.</span></li></ol>`)
       : (installEvt ? `<p>add it to your computer like an app.</p><button class="btn" data-install>install the guide</button>` : `<ol class="wsteps"><li class="box"><span>on your phone, open this page + follow the steps there</span></li><li class="box"><span>or bookmark it here with <b>⌘D</b> (mac) or <b>ctrl+D</b> (windows)</span></li></ol>`);
     body = `<div class="art"><img src="art/year.webp" alt="" style="height:60px;align-self:center"></div>
       <h2>save it to your home screen</h2>
