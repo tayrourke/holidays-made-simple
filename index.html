@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg38">
+<meta name="gg-build" content="gg39">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -261,6 +261,10 @@ section.view[hidden]{display:none}
 .hrow::-webkit-scrollbar{display:none}
 .hrow .gift{flex:0 0 46%;max-width:210px;scroll-snap-align:start}
 .hrow .gift .t{text-wrap:balance}
+.mrows{display:grid;gap:20px;margin-top:16px}
+.mrow{display:flex;align-items:center;gap:8px}
+.mrail{flex:0 0 78px;font-family:var(--band);font-style:italic;font-weight:400;text-transform:uppercase;letter-spacing:.03em;font-size:17px;line-height:1.05;color:var(--berry)}
+.mrow .hrow{flex:1;min-width:0;margin:0;margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding:2px max(16px,env(safe-area-inset-right,0px)) 8px 0}
 .sockdoor{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;padding:16px}
 .sockdoor p{margin:4px 0 0}
 .sockdoor .btn{flex:none}
@@ -4312,11 +4316,12 @@ function renderMatch(){
     const steps = r.playbook?.week1 || [];
     const savedFor = matchSavedFor();
     const whoBtns = ['me', ...people.filter(p => p !== 'me')].map(p => `<button type="button" class="pill" data-matchfor="${esc(p)}" aria-pressed="${savedFor === p}">${esc(p)}</button>`).join('');
-    const labels = { Morning:'morning', Night:'evening', Weekly:'weekly', 'Body & personal care':'your everyday swaps' };
+    const labels = { Morning:'morning', Night:'evening', Weekly:'weekly', 'Body & personal care':'everyday<br>swaps' };
     const full = (r.ritual || []).map(sec => {
       const items = sec.items || [];
       if (!items.length) return '';
-      return `<div class="group"><div class="band">${esc(labels[sec.title] || lc(sec.title))}</div><div class="hrow">${items.map(matchCard).join('')}</div></div>`;
+      const label = labels[sec.title] || esc(lc(sec.title));
+      return `<div class="mrow"><div class="mrail">${label}</div><div class="hrow">${items.map(matchCard).join('')}</div></div>`;
     }).join('');
     B.innerHTML = `<div class="ptitle"><h2><span class="thin">your</span> <span class="bub">fresh match</span></h2><p>${esc(r.summary || r.hero?.subtitle || '')}</p></div>
       <p class="mnote" style="margin-top:8px">this is a recommendation based on your answers only. send me a message if you want to customize your routine further.</p>
@@ -4326,7 +4331,7 @@ function renderMatch(){
         <div class="playgrid"><div><b>buy first</b><ul>${hero.map(p => `<li>${matchNameBtn(p)}</li>`).join('')}</ul></div>${next.length ? `<div><b>add next</b><ul>${next.map(p => `<li>${matchNameBtn(p)}</li>`).join('')}</ul></div>` : ''}</div>
         ${steps.length ? `<b class="weeklab">week 1</b><ul class="msteps">${steps.map(s => `<li>${stepHtml(s)}</li>`).join('')}</ul>` : ''}
       </div>
-      ${full ? `<div class="group"><div class="band">full match</div><p class="mwhy" style="margin-top:0">everything that fit your answers. start here is still the first order.</p></div>${full}` : ''}
+      ${full ? `<div class="group"><div class="band">full match</div><p class="mwhy" style="margin-top:0">everything that fit your answers. start here is still the first order.</p><div class="mrows">${full}</div></div>` : ''}
       <div class="box" style="padding:16px;margin-top:22px"><h3 style="margin:0 0 6px;font-family:var(--band);font-style:italic;text-transform:uppercase">save this match</h3><p class="why" style="margin-top:0">add these to a list. yours, or whoever you took the quiz for.</p><div class="people">${whoBtns}</div><form class="addp" id="matchSave" style="margin-top:10px"><input id="matchWho" placeholder="or type a name" aria-label="who this match is for" maxlength="24"><button class="btn small" type="submit">add</button></form></div>
       <p class="mnote">it is not an official ringana site, and not medical advice. if you're pregnant, nursing, or on medication, check with your healthcare provider.</p>
       <div class="toolbar" style="justify-content:center;margin-top:22px"><button class="btn small" data-sharewish="routine">share wishlist link</button><button class="btn ghost small" data-mrestart>start over</button></div>`;
