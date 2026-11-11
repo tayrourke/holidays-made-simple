@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg45">
+<meta name="gg-build" content="gg46">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1293,7 +1293,7 @@ const TIPS = {
   'teachers + neighbors':'make 6 self care baskets for around $27 each. swap in a homemade sugar scrub or cocoa jar to save more.',
   'white elephant':'stocking stuffers make great white elephant gifts too.'
 };
-const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; return 'img/' + ((g && g.pic) || id) + '.webp'; };
+const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = file >= 'p62_117' && file <= 'p62_130' ? '?v=2' : ''; return 'img/' + file + '.webp' + cut; };
 const REDUCE = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
 const byId = Object.fromEntries(ALL_ITEMS.map(g => [g.id, g]));
 const lc = s => (s||'').toLowerCase();
@@ -1526,6 +1526,7 @@ const COLOR_FLASH = [
 ];
 function colorFlashFor(items){
   let cards = '';
+  const parts = [];
   const drop = new Set();
   for (const set of COLOR_FLASH){
     const present = set.ids.filter(id => items.some(g => g.id === id) && byId[id]);
@@ -1537,9 +1538,17 @@ function colorFlashFor(items){
     const showPick = !holdTaySticker && F.sec !== 'My Top Picks' && present.some(id => tayPick(byId[id]));
     const pick = showPick ? `<span class="tnote">tay's pick ♥</span>` : '';
     const sock = present.every(id => byId[id].s === 'Stocking Stuffers') ? ' sock' : '';
-    cards += `<div class="gift${sock}" data-colors="${set.id}" role="button" tabindex="0" aria-label="${esc(set.title)}"><div class="im slides">${pick}${slideFrame(present)}</div><div class="t"><div>${esc(set.title)}${same && price ? ` · ${esc(price)}` : ''}</div></div></div>`;
+    const html = `<div class="gift${sock}" data-colors="${set.id}" role="button" tabindex="0" aria-label="${esc(set.title)}"><div class="im slides">${pick}${slideFrame(present)}</div><div class="t"><div>${esc(set.title)}${same && price ? ` · ${esc(price)}` : ''}</div></div></div>`;
+    parts.push(html);
+    cards += html;
   }
-  return {cards, items: items.filter(g => !drop.has(g.id))};
+  return {cards, parts, items: items.filter(g => !drop.has(g.id))};
+}
+function shopPreviewColors(colored, sec, who){
+  const want = who === 'teens' ? 'jewel' : (sec === 'Women' ? 'makeup' : '');
+  if (!want) return '';
+  const html = colored.parts.find(card => card.indexOf(`data-colors="${want}"`) >= 0);
+  return html || '';
 }
 function openColors(key){
   const set = COLOR_FLASH.find(s => s.id === key);
@@ -2057,7 +2066,7 @@ function renderShop(){
     const rg = (!F.sec || F.sec==='My Top Picks' || F.sec==='Women') ? ringanaCard(F.sec !== 'My Top Picks') : '';
     const anat = showAnat ? anatomyCard() : '';
     const plush = showPlush ? plushCard() : '';
-    document.getElementById('results').innerHTML = matchBanner() + `<div class="group"><div class="band">${ttl}</div><div class="grid">${colored.cards}${held.card}${bru.card}${rg}${anat}${plush}${sorted.map((g,i)=>giftCard(g,i+1,{sub:true})).join('')}</div></div>`;
+    document.getElementById('results').innerHTML = matchBanner() + `<div class="group"><div class="band">${ttl}</div><div class="grid">${held.card}${bru.card}${rg}${anat}${plush}${sorted.map((g,i)=>giftCard(g,i+1,{sub:true})).join('')}${colored.cards}</div></div>`;
     return;
   }
   if (F.who && !F.sec){
@@ -2121,7 +2130,8 @@ function renderShop(){
       holdTaySticker = onTopRow;
       const cards = mixed.map((g,i)=>giftCard(g,i+1,{sub:true})).join('');
       holdTaySticker = false;
-      return `<div class="group"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div><div class="hrow">${colored.cards}${held.card}${bru.card}${rg}${first}${cards}</div></div>`;
+      const featured = shopPreviewColors(colored, sec, who);
+      return `<div class="group"><div class="band rowband"><span>${esc(title)}</span><button class="pill" type="button" ${jump}>see all</button></div><div class="hrow">${featured}${held.card}${bru.card}${rg}${first}${cards}</div></div>`;
     };
     const whoRow = (title, who) => {
       const picked = new Map();
@@ -2290,14 +2300,14 @@ function groupParts(items, opts){
     groupItems = bunchAlike(groupItems);
     const onTop = (opts && opts.top) || F.sec === 'My Top Picks';
     const rg = ((key === 'Fresh Skincare' && (!F.who || F.who === 'her' || F.who === 'teens')) || (key === 'Top Picks' && onTop)) ? ringanaCard(!onTop) : '';
-    const prefix = `${colored.cards}${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}`;
-    if (!groupItems.length && !prefix) continue;
-    parts.push({ prefix, cards: groupItems.map((g,i)=>giftCard(g,i+1)) });
+    const prefix = `${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}`;
+    if (!groupItems.length && !prefix && !colored.cards) continue;
+    parts.push({ prefix, cards: groupItems.map((g,i)=>giftCard(g,i+1)), tail: colored.cards });
   }
   return parts;
 }
 function groupedHTML(items, opts){
-  return groupParts(items, opts).map(p => `<div class="group"><div class="grid">${p.prefix}${p.cards.join('')}</div></div>`).join('');
+  return groupParts(items, opts).map(p => `<div class="group"><div class="grid">${p.prefix}${p.cards.join('')}${p.tail || ''}</div></div>`).join('');
 }
 function paintGroups(parent, parts, alive, done){
   let pi = 0, ci = 0, grid = null;
@@ -2317,7 +2327,7 @@ function paintGroups(parent, parts, alive, done){
     const slice = part.cards.slice(ci, ci + 8);
     if (slice.length) grid.insertAdjacentHTML('beforeend', slice.join(''));
     ci += 8;
-    if (ci >= part.cards.length) { pi += 1; ci = 0; grid = null; }
+    if (ci >= part.cards.length) { if (part.tail) grid.insertAdjacentHTML('beforeend', part.tail); pi += 1; ci = 0; grid = null; }
     if (pi < parts.length) requestAnimationFrame(step);
     else if (done) done();
   };
@@ -2339,7 +2349,7 @@ function flatGrid(items){
   rest = colored.items;
   const rg = (F.sec === 'Women' || F.sec === 'My Top Picks') ? ringanaCard(F.sec !== 'My Top Picks') : '';
   if (F.sec === 'My Top Picks') rest = orderTop(rest);
-  return `<div class="group"><div class="grid">${colored.cards}${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${rest.map((g,i)=>giftCard(g,i+1)).join('')}</div></div>`;
+  return `<div class="group"><div class="grid">${held.card}${bru.card}${rg}${anatomy ? anatomyCard() : ''}${plush ? plushCard() : ''}${showSteam ? steamerCard() : ''}${rest.map((g,i)=>giftCard(g,i+1)).join('')}${colored.cards}</div></div>`;
 }
 const TOP_FRONT = ['p62_110','p15_00','p15_03','p62_111','p15_01','p16_00'];
 function orderTop(items){
