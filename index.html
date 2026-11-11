@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg47">
+<meta name="gg-build" content="gg48">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1269,7 +1269,7 @@ const CODES = [{"b":"Attitude","c":"TOXINFREETAY","s":"15%","u":"https://shrsl.c
 
 const WHO = [['her','her'],['him','him'],['teens','teen'],['big kids','big kid'],['little kids','little kid'],['baby','baby'],['family','the family'],['home','the home'],['teachers + neighbors','teachers + neighbors'],['white elephant','white elephant']];
 const SECTIONS = ['My Top Picks','Experiences','White Elephant','Stocking Stuffers','Women','Men','Littles','Home','Books','Big Ticket'];
-const SECLABEL = {'My Top Picks':'my top picks','Holiday Fun':'holiday fun','Holiday Treats':'holiday treats','Holiday Scents':'holiday scents','Gift Baskets':'gift baskets','Experiences':'experiences','White Elephant':'white elephant','Stocking Stuffers':'stocking stuffers','Women':'for the women','Men':'for the men','Littles':'for the littles','Home':'for the house','Books':'adult books','Big Ticket':'big ticket'};
+const SECLABEL = {'My Top Picks':'my top picks','Holiday Fun':'holiday fun','Holiday Treats':'holiday treats','Holiday Scents':'holiday scents','Gift Baskets':'gift baskets','Experiences':'experiences','White Elephant':'white elephant','Stocking Stuffers':'stocking stuffers','Women':'for the women','Men':'for the men','Littles':'for the littles','Home':'for the house','Books':'books','Big Ticket':'big ticket'};
 const BOOSTERS = [['p16_04','Ringana fresh lifting booster'],['p16_05','Ringana fresh clarifying booster'],['p62_57','Ringana fresh glow booster']];
 const BOOSTER_TOP = new Set(['p16_04','p16_05']);
 const RINGANA_FAVES = ['p16_03','p16_04','p16_05','p62_57','p62_16','p62_17','p62_13'];
@@ -1293,7 +1293,7 @@ const TIPS = {
   'teachers + neighbors':'make 6 self care baskets for around $27 each. swap in a homemade sugar scrub or cocoa jar to save more.',
   'white elephant':'stocking stuffers make great white elephant gifts too.'
 };
-const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = file >= 'p62_117' && file <= 'p62_130' ? '?v=3' : ''; return 'img/' + file + '.webp' + cut; };
+const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = (file >= 'p62_117' && file <= 'p62_130') ? '?v=3' : (/^p62_(18|19|20|55|56|74)$/.test(file) ? '?v=2' : ''); return 'img/' + file + '.webp' + cut; };
 const REDUCE = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
 const byId = Object.fromEntries(ALL_ITEMS.map(g => [g.id, g]));
 const lc = s => (s||'').toLowerCase();
