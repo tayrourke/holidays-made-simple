@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg46">
+<meta name="gg-build" content="gg47">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1293,7 +1293,7 @@ const TIPS = {
   'teachers + neighbors':'make 6 self care baskets for around $27 each. swap in a homemade sugar scrub or cocoa jar to save more.',
   'white elephant':'stocking stuffers make great white elephant gifts too.'
 };
-const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = file >= 'p62_117' && file <= 'p62_130' ? '?v=2' : ''; return 'img/' + file + '.webp' + cut; };
+const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = file >= 'p62_117' && file <= 'p62_130' ? '?v=3' : ''; return 'img/' + file + '.webp' + cut; };
 const REDUCE = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
 const byId = Object.fromEntries(ALL_ITEMS.map(g => [g.id, g]));
 const lc = s => (s||'').toLowerCase();
