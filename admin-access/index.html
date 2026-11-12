@@ -43,6 +43,9 @@
   .tabs[hidden]{display:none}
   .tabs button{flex:1 1 auto;background:#fff;color:var(--ink);border:1.5px solid var(--ink);padding:10px 8px;font-size:12px}
   .tabs button[aria-selected="true"]{background:var(--ink);color:#fff}
+  .reviewnote{display:grid;gap:4px;width:100%;margin:0 0 12px;padding:14px;text-align:left;background:#fff;border:1.5px solid var(--berry);color:var(--ink);box-shadow:4px 4px 0 rgba(162,4,42,.18)}
+  .reviewnote b{font-size:18px;line-height:1.15}
+  .reviewnote span{font-weight:500;font-size:14px;color:var(--muted)}
   .tools{display:grid;gap:8px;margin-bottom:10px}
   #list{display:grid;gap:8px;padding-bottom:88px}
   .row{display:flex;gap:8px;align-items:center;background:#fff;border:1.5px solid var(--ink);padding:8px}
@@ -311,6 +314,7 @@ async function showDesk(){
   const pending = Object.keys(read('giftEdits', {})).length + read('giftAdds', []).length;
   try { await flushPending(); }
   catch (e) { if (pending) toast('edits on this phone have not reached the guide yet.'); }
+  await loadDrafts();
   render();
 }
 function lockDesk(){
@@ -441,13 +445,80 @@ function tapRows(type){
   return rows;
 }
 function total(type){ return tapRows(type).reduce((sum, r) => sum + r.n, 0); }
+function statName(row){
+  const g = state.items.find(x => x.id === row.item);
+  return (g && g.n) || row.name || row.item || '';
+}
 function statsHtml(){
   const pills = [[1, 'today'], [7, '7 days'], [30, '30 days'], [0, 'all time']].map(([n, label]) => `<button type="button" data-range="${n}" aria-pressed="${state.range === n}">${label}</button>`).join('');
-  const kpis = [['shop clicks', total('shop')], ['views', total('view')], ['saves', total('save')], ['advent opens', total('advent')], ['sale clicks', total('sale')]];
-  const top = tapRows('shop').slice(0, 8);
-  const sales = tapRows('sale').slice(0, 8);
-  const list = rows => rows.length ? rows.map(r => `<div class="stat"><b>${esc(lc(r.name))}</b><span>${r.n}</span></div>`).join('') : '<p class="fine">nothing in this range yet.</p>';
-  return `<p class="fine">counted on this phone. older clicks are under all time.</p><div class="pills">${pills}</div><div class="kpis">${kpis.map(([label, n]) => `<div class="kpi"><b>${n}</b><span>${label}</span></div>`).join('')}</div><p class="fine" style="margin-top:14px">most shopped</p>${list(top)}<p class="fine" style="margin-top:14px">holiday sales</p>${list(sales)}`;
+  if (!deskSecret()) return `<p class="fine">type the dashboard password above. then this shows clicks from everyone who opened the guide.</p><div class="pills">${pills}</div>`;
+  const s = state.stats;
+  if (!s) return `<p class="fine">loading everyone's clicks…</p><div class="pills">${pills}</div>`;
+  if (s.error) return `<p class="err">those clicks are not coming through yet.</p><div class="pills">${pills}</div>`;
+  const kpis = [['people', s.visitors || 0], ['shop clicks', s.shop || 0], ['views', s.view || 0], ['saves', s.save || 0], ['advent opens', s.advent || 0], ['sale clicks', s.sale || 0]];
+  const list = rows => (rows && rows.length) ? rows.map(r => `<div class="stat"><b>${esc(lc(statName(r)))}</b><span>${r.n}</span></div>`).join('') : '<p class="fine">nothing in this range yet.</p>';
+  return `<p class="fine">everyone who opened the guide. counts start from now.</p><div class="pills">${pills}</div><div class="kpis">${kpis.map(([label, n]) => `<div class="kpi"><b>${n}</b><span>${label}</span></div>`).join('')}</div><p class="fine" style="margin-top:14px">most shopped</p>${list(s.shopTop)}<p class="fine" style="margin-top:14px">holiday sales</p>${list(s.saleTop)}`;
+}
+async function loadStats(){
+  if (state.tab !== 'stats' || !deskSecret()) return;
+  const range = state.range;
+  try {
+    const cfg = await pushConf();
+    const res = await fetch(cfg.url + '/rest/v1/rpc/guide_click_stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+      body: JSON.stringify({ p_pass: deskSecret(), p_days: range })
+    });
+    if (!res.ok) throw new Error('stats');
+    const data = await res.json();
+    if (state.tab !== 'stats' || state.range !== range) return;
+    state.stats = data || {};
+  } catch (e) {
+    if (state.tab !== 'stats' || state.range !== range) return;
+    state.stats = { error: true };
+  }
+  const panel = document.getElementById('panel');
+  if (panel && state.tab === 'stats') panel.innerHTML = reachHtml() + reviewBanner() + statsHtml();
+}
+function waitingDrafts(){
+  const done = read('saleDraftsDone', []);
+  return (state.drafts || []).filter(d => d && d.id && !done.includes(d.id));
+}
+function markSalesTab(){
+  const n = waitingDrafts().length;
+  const btn = document.querySelector('[data-tab="sales"]');
+  if (btn) btn.textContent = n ? 'sales · ' + n : 'sales';
+  document.title = n ? (n === 1 ? 'a sale is waiting · dashboard' : n + ' sales are waiting · dashboard') : 'Dashboard';
+}
+function reviewBanner(){
+  if (state.tab === 'sales') return '';
+  const waiting = waitingDrafts();
+  if (!waiting.length) return '';
+  const brands = waiting.map(d => d.brand).filter(Boolean).slice(0, 3).join(', ');
+  const n = waiting.length;
+  return `<button type="button" class="reviewnote" data-gotosales><b>${n === 1 ? 'a sale is waiting for you' : n + ' sales are waiting for you'}</b><span>${esc(brands)}. edit the blurb, then publish.</span></button>`;
+}
+let draftWatch = false;
+async function loadDrafts(){
+  let next = [];
+  try {
+    const res = await fetch('/scripts/sale-drafts.json?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) next = data;
+    }
+  } catch (e) {}
+  const watching = draftWatch;
+  const before = waitingDrafts().length;
+  state.drafts = next;
+  const after = waitingDrafts().length;
+  draftWatch = true;
+  markSalesTab();
+  if (watching && after > before && document.documentElement.classList.contains('desk') && !state.editing) {
+    toast(after === 1 ? 'a sale is waiting for you' : after + ' sales are waiting for you');
+    if (state.tab === 'sales') paintSales();
+    else render();
+  }
 }
 function linkJobs(){
   const q = (state.lq || '').trim().toLowerCase();
@@ -595,15 +666,8 @@ async function loadSalesDesk(){
     }
   } catch (e) {}
   state.sales = rows;
-  state.drafts = [];
-  try {
-    const draftRes = await fetch('/scripts/sale-drafts.json', { cache: 'no-store' });
-    if (draftRes.ok) {
-      const data = await draftRes.json();
-      state.drafts = Array.isArray(data) ? data : [];
-    }
-  } catch (e) {}
-  paintSales();
+  await loadDrafts();
+  if (state.tab === 'sales') paintSales();
 }
 function paintSales(){
   const box = document.getElementById('panel');
@@ -641,6 +705,7 @@ function paintSales(){
       <button type="button" data-draftpub="${esc(d.id)}">publish</button>
     </form>`).join('');
   box.innerHTML = reach + reviews + (form || `<p class="fine">add a sale here, with the shop link, the code, what the code saves, and “link saves” when the link itself is the discount. gift shop links stay on the links tab.</p><button type="button" data-salenew>add a sale</button><div style="margin-top:12px">${list}</div>`);
+  markSalesTab();
   const f = document.getElementById('saleForm');
   if (f) f.onsubmit = saveSaleDesk;
 }
@@ -802,12 +867,12 @@ function render(){
   if (state.loadErr) { panel.innerHTML = `<p class="err">${esc(state.loadErr)}</p>`; return; }
   if (!state.raw) { panel.innerHTML = '<p class="fine">loading gifts…</p>'; return; }
   if (editing) { panel.innerHTML = reach + (state.editKind === 'link' ? linkEditorHtml() : editorHtml()); window.scrollTo(0, 0); return; }
-  if (state.tab === 'links') { panel.innerHTML = reach + linksHtml(); paintLinks(); return; }
-  if (state.tab === 'stats') { panel.innerHTML = reach + statsHtml(); return; }
-  if (state.tab === 'advent') { panel.innerHTML = reach + adventHtml(); return; }
-  if (state.tab === 'requests') { panel.innerHTML = reach + requestsHtml(); loadRequests(); return; }
+  if (state.tab === 'links') { panel.innerHTML = reach + reviewBanner() + linksHtml(); paintLinks(); return; }
+  if (state.tab === 'stats') { state.stats = null; panel.innerHTML = reach + reviewBanner() + statsHtml(); loadStats(); return; }
+  if (state.tab === 'advent') { panel.innerHTML = reach + reviewBanner() + adventHtml(); return; }
+  if (state.tab === 'requests') { panel.innerHTML = reach + reviewBanner() + requestsHtml(); loadRequests(); return; }
   if (state.tab === 'sales') { panel.innerHTML = reach + '<p class="fine">loading sales…</p>'; loadSalesDesk(); return; }
-  panel.innerHTML = reach + giftsHtml();
+  panel.innerHTML = reach + reviewBanner() + giftsHtml();
   paintList();
 }
 function nextId(){
@@ -1099,12 +1164,14 @@ document.getElementById('deskForm').onsubmit = async (e) => {
   showDesk();
 };
 document.getElementById('lockBtn').onclick = lockDesk;
+setInterval(() => { if (document.documentElement.classList.contains('desk')) loadDrafts(); }, 60000);
 document.getElementById('plus').onclick = () => openEditor('new', 'full');
 document.getElementById('app').addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) { state.tab = tab.dataset.tab; state.editing = null; state.editKind = ''; if (state.tab !== 'sales') state.saleEdit = null; render(); return; }
   if (e.target.closest('[data-advpeek]')) { write('advPeek', read('advPeek', 0) ? 0 : 1); render(); return; }
   if (e.target.closest('[data-advreset]')) { write('advOpened', []); render(); return; }
+  if (e.target.closest('[data-gotosales]')) { state.tab = 'sales'; state.editing = null; state.saleEdit = null; render(); return; }
   const draftPub = e.target.closest('[data-draftpub]');
   if (draftPub) { publishDraft(draftPub.dataset.draftpub); return; }
   if (e.target.closest('[data-salenew]')) { state.saleEdit = 'new'; paintSales(); return; }

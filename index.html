@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg49">
+<meta name="gg-build" content="gg50">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -1397,8 +1397,19 @@ function track(type, id, name){
     c[k] = {n: prev + 1, name: (cur && cur.name) || nm, days};
     store.set('taps', c);
   }catch(e){}
-  if (!LIVE) return;
-  sbReady.then(s => { if (s) s.from('events').insert({type, item: String(id).slice(0,120), name: String(nm).slice(0,160), visitor}).then(()=>{}, ()=>{}); });
+  if (PUSH.URL && PUSH.ANON){
+    fetch(PUSH.URL + '/rest/v1/rpc/guide_event_add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: PUSH.ANON, Authorization: 'Bearer ' + PUSH.ANON },
+      body: JSON.stringify({
+        p_type: String(type).slice(0, 40),
+        p_item: String(id).slice(0, 120),
+        p_name: String(nm).slice(0, 160),
+        p_visitor: String(visitor).slice(0, 40)
+      }),
+      keepalive: true
+    }).then(()=>{}, ()=>{});
+  }
 }
 (() => { if (!sessionStorage.getItem?.('gg26v')) { try{ sessionStorage.setItem('gg26v','1'); }catch(e){} track('visit','app','app open'); } })();
 
