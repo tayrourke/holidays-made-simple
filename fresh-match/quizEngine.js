@@ -843,9 +843,9 @@ export function buildHero(ans, path, face, body, supp) {
       if (p.id === "volumeShampoo" || p.id === "shampoo") score = 55;
       if (p.id === "handBalm") score = 50;
       if (p.id === "footBalm") score = 52;
-      /* Pages exist. They are not orderable yet, so they stay in the routine
+      /* Cooling leg spray is not orderable yet, so it stays in the routine
          and off the first-order shortlist. */
-      if (p.id === "deodorant" || p.id === "lightLegs" || p.id === "hairTreatment") score = Math.min(score, 36);
+      if (p.id === "lightLegs") score = Math.min(score, 36);
       bump(p, Math.round(score * bodyScale), p.why);
     });
   }
