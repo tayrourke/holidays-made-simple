@@ -6,6 +6,9 @@ on:
     - cron: "0 16 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -13,3 +16,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: look for holiday sale launches
         run: python3 scripts/watch-sales.py
+      - name: send new drafts to the dashboard
+        run: |
+          if git diff --quiet -- scripts/sale-drafts.json; then
+            echo "no new drafts"
+          else
+            git add scripts/sale-drafts.json
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Hold a new sale on the dashboard until it is published."
+            git push
+          fi

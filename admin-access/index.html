@@ -595,6 +595,14 @@ async function loadSalesDesk(){
     }
   } catch (e) {}
   state.sales = rows;
+  state.drafts = [];
+  try {
+    const draftRes = await fetch('/scripts/sale-drafts.json', { cache: 'no-store' });
+    if (draftRes.ok) {
+      const data = await draftRes.json();
+      state.drafts = Array.isArray(data) ? data : [];
+    }
+  } catch (e) {}
   paintSales();
 }
 function paintSales(){
@@ -621,7 +629,18 @@ function paintSales(){
       <div class="savebar"><button type="submit">save sale</button></div>
     </form>` : '';
   const list = state.sales.map(s => `<div class="door"><div class="name">${esc(s.brand || '')}</div><div class="sub">${esc(s.headline || '')}${s.active === false ? ' · hidden' : ''}</div><button type="button" class="ghost" data-saleedit="${esc(s.id)}" style="margin-top:8px">edit</button></div>`).join('');
-  box.innerHTML = reach + (form || `<p class="fine">add a sale here, with the shop link, the code, what the code saves, and “link saves” when the link itself is the discount. gift shop links stay on the links tab.</p><button type="button" data-salenew>add a sale</button><div style="margin-top:12px">${list}</div>`);
+  const done = read('saleDraftsDone', []);
+  const waiting = (state.drafts || []).filter(d => d && d.id && !done.includes(d.id));
+  const reviews = waiting.map(d => `<form class="card" data-draft="${esc(d.id)}">
+      <p class="fine">waiting for you. this stays off the sales page until you publish it.</p>
+      <div class="name">${esc(d.brand || '')}</div>
+      <label>description<textarea id="dHead-${esc(d.id)}" maxlength="180">${esc(d.headline || '')}</textarea></label>
+      <label>note<textarea id="dNote-${esc(d.id)}" maxlength="240">${esc(d.note || '')}</textarea></label>
+      <label>shop link<input id="dUrl-${esc(d.id)}" inputmode="url" autocapitalize="off" value="${esc(d.url || '')}"></label>
+      <p class="err" id="dErr-${esc(d.id)}" role="status"></p>
+      <button type="button" data-draftpub="${esc(d.id)}">publish</button>
+    </form>`).join('');
+  box.innerHTML = reach + reviews + (form || `<p class="fine">add a sale here, with the shop link, the code, what the code saves, and “link saves” when the link itself is the discount. gift shop links stay on the links tab.</p><button type="button" data-salenew>add a sale</button><div style="margin-top:12px">${list}</div>`);
   const f = document.getElementById('saleForm');
   if (f) f.onsubmit = saveSaleDesk;
 }
@@ -669,6 +688,34 @@ async function saveSaleDesk(ev){
     loadSalesDesk();
   } catch (e) {
     fail('that needs the sales setup run once in supabase. the sales already on the page stay up until then.');
+  }
+}
+async function publishDraft(id){
+  const fail = msg => { const el = document.getElementById('dErr-' + id); if (el) el.textContent = msg; };
+  const val = key => { const el = document.getElementById(key + '-' + id); return el ? (el.value || '').trim() : ''; };
+  const brand = ((state.drafts || []).find(d => d.id === id) || {}).brand || '';
+  const headline = val('dHead');
+  const note = val('dNote');
+  const url = val('dUrl');
+  if (!brand || !headline) return fail('add the description');
+  if (!/^https:\/\//.test(url)) return fail('the link needs to start with https://');
+  if (/[<>]/.test(brand + headline + note)) return fail('leave the < symbol out');
+  const secret = deskSecret();
+  if (!secret) return fail('type the dashboard password above, then publish.');
+  try {
+    const cfg = await pushConf();
+    const res = await fetch(cfg.url + '/rest/v1/rpc/guide_sales_save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: 'Bearer ' + cfg.anon },
+      body: JSON.stringify({ p_pass: secret, p_id: id, p_body: saleBody({ brand, headline, url, note, active: true }) })
+    });
+    if (!res.ok) throw new Error('save');
+    const done = read('saleDraftsDone', []);
+    if (!done.includes(id)) write('saleDraftsDone', done.concat(id));
+    toast('published on the sales page');
+    loadSalesDesk();
+  } catch (e) {
+    fail('that needs the sales setup run once in supabase.');
   }
 }
 function adventHtml(){
@@ -1058,6 +1105,8 @@ document.getElementById('app').addEventListener('click', (e) => {
   if (tab) { state.tab = tab.dataset.tab; state.editing = null; state.editKind = ''; if (state.tab !== 'sales') state.saleEdit = null; render(); return; }
   if (e.target.closest('[data-advpeek]')) { write('advPeek', read('advPeek', 0) ? 0 : 1); render(); return; }
   if (e.target.closest('[data-advreset]')) { write('advOpened', []); render(); return; }
+  const draftPub = e.target.closest('[data-draftpub]');
+  if (draftPub) { publishDraft(draftPub.dataset.draftpub); return; }
   if (e.target.closest('[data-salenew]')) { state.saleEdit = 'new'; paintSales(); return; }
   const saleEdit = e.target.closest('[data-saleedit]');
   if (saleEdit) { state.saleEdit = saleEdit.dataset.saleedit; paintSales(); return; }

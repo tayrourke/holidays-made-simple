@@ -3,9 +3,10 @@
 
 Each morning the GitHub Action compares what the page says now with
 scripts/sale-baseline.json. A brand that newly announces a holiday sale,
-or posts a new percent or dollar offer, fails the run so it shows up.
-A wording tweak on a sale already on file does not. Everyday newsletter
-discounts do not.
+or posts a new percent or dollar offer, is written to
+scripts/sale-drafts.json for the phone dashboard. Nothing goes live
+until it is published there. A wording tweak on a sale already on file
+does not. Everyday newsletter discounts do not.
 
 Amazon and ShopMy links are not in this list. Those pages block a
 morning check, and they are not the brand's own sale announcement.
@@ -22,6 +23,7 @@ from pathlib import Path
 UA = "Mozilla/5.0 (compatible; HolidaysMadeSimple/1.0; sales-watch)"
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE = ROOT / "scripts" / "sale-baseline.json"
+DRAFTS = ROOT / "scripts" / "sale-drafts.json"
 HOLIDAY = re.compile(
     r".{0,50}(?:black friday|cyber monday|cyber week|holiday sale|biggest sale|sale is live|sitewide).{0,70}",
     re.I,
@@ -117,6 +119,47 @@ def lumebox_note():
     return ""
 
 
+def draft_id(name):
+    base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return ("watch-" + base)[:41].strip("-") or "watch-sale"
+
+
+def load_drafts():
+    if not DRAFTS.exists():
+        return []
+    try:
+        data = json.loads(DRAFTS.read_text())
+    except Exception:
+        return []
+    return data if isinstance(data, list) else []
+
+
+def save_drafts(found):
+    drafts = load_drafts()
+    by_id = {row.get("id"): row for row in drafts if isinstance(row, dict) and row.get("id")}
+    changed = False
+    for item in found:
+        detail = re.sub(r"[<>]", "", item["detail"])[:180].strip()
+        if not detail:
+            continue
+        row = {
+            "id": draft_id(item["brand"]),
+            "brand": item["brand"][:80],
+            "url": item["url"],
+            "headline": detail,
+            "note": "found on the morning check. edit the blurb, then publish.",
+            "detail": detail,
+        }
+        prev = by_id.get(row["id"])
+        if prev and prev.get("detail") == detail and prev.get("url") == row["url"]:
+            continue
+        by_id[row["id"]] = row
+        changed = True
+    if changed:
+        DRAFTS.write_text(json.dumps(list(by_id.values()), indent=2, ensure_ascii=False) + "\n")
+    return changed
+
+
 def main():
     baseline_mode = "--baseline" in sys.argv
     baseline = {}
@@ -139,14 +182,14 @@ def main():
         if not baseline_mode and ((lines and not previous) or new_facts):
             detail = added[0] if added else lines[0]
             extra = f" ({', '.join(sorted(new_facts))})" if new_facts else ""
-            changes.append(f"{name} sale announcement: {detail}{extra}")
+            changes.append({"brand": name, "url": url, "detail": f"{detail}{extra}"})
         status = lines[0] if lines else "no holiday sale announced"
         print(f"{name}: {status}")
     try:
         note = lumebox_note()
         reached += 1
         if note:
-            changes.append(note)
+            changes.append({"brand": "Lumebox", "url": "https://thelumebox.com/products/lumebox-2-0-new", "detail": note})
             print(note)
         else:
             print("Lumebox 2.0 price: $315.00 from $629.00")
@@ -157,8 +200,13 @@ def main():
         print(f"recorded {len(current)} brands in {BASELINE.name}")
         return 0
     if changes:
-        print("\n".join(changes))
-        return 1
+        for item in changes:
+            print(f"{item['brand']} sale announcement: {item['detail']}")
+        if save_drafts(changes):
+            print("saved a draft for the dashboard. it stays off the sales page until you publish it.")
+        else:
+            print("that draft is already waiting on the dashboard.")
+        return 0
     if not reached:
         print("could not reach the brand sites. no launch recorded.")
         return 0
