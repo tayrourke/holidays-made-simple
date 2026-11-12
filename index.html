@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg50">
+<meta name="gg-build" content="gg51">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -16,6 +16,13 @@ document.addEventListener('click', function(e){
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(function(r){ return r.update(); }).catch(function(){});
 }
+(function(){
+  var build = (document.querySelector('meta[name="gg-build"]') || {}).content || 'gg';
+  var files = ['icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png','manifest.webmanifest'];
+  window.iconsReady = Promise.all(files.map(function(file){
+    return fetch(file + '?v=' + encodeURIComponent(build), { cache: 'reload' }).catch(function(){});
+  }));
+})();
 setTimeout(function(){
   var boot=document.getElementById('boot');
   if(!boot) return;
@@ -41,9 +48,9 @@ setTimeout(function(){
 <meta name="twitter:description" content="Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
 <meta name="twitter:image" content="https://gifts.swapsmadesimple.com/og.jpg?v=4">
 <link rel="image_src" href="https://gifts.swapsmadesimple.com/og.jpg?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=4">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=4">
-<link rel="icon" type="image/png" href="icons/icon-192.png?v=4">
+<link rel="manifest" href="manifest.webmanifest?v=gg51">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg51">
+<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg51">
 <meta name="theme-color" content="#EBE6DE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -4887,11 +4894,17 @@ const firstHash = location.hash.slice(1);
 const beginGuide = () => { show(firstHash || 'home'); };
 function wait(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
 function refreshAppIcons(){
-  const urls = ['icons/icon-192.png?v=4','icons/icon-512.png?v=4','icons/apple-touch-icon.png?v=4','manifest.webmanifest?v=4'];
-  return Promise.all(urls.map(u => fetch(u, { cache: 'reload' }).catch(() => {})));
+  const build = (document.querySelector('meta[name="gg-build"]') || {}).content || 'gg';
+  const files = ['icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png','manifest.webmanifest'];
+  document.querySelectorAll('link[rel="icon"],link[rel="apple-touch-icon"],link[rel="manifest"]').forEach(link => {
+    const path = (link.getAttribute('href') || '').split('?')[0];
+    if (path) link.setAttribute('href', path + '?v=' + encodeURIComponent(build));
+  });
+  if (window.iconsReady) return window.iconsReady;
+  return Promise.all(files.map(file => fetch(file + '?v=' + encodeURIComponent(build), { cache: 'reload' }).catch(() => {})));
 }
 const catalogReady = Promise.race([loadPublishedGifts(), wait(3500)]);
-const iconsReady = Promise.race([refreshAppIcons(), wait(2500)]);
+const iconsReady = Promise.race([refreshAppIcons(), wait(4000)]);
 let replay = false;
 try { replay = sessionStorage.getItem('gg26:shellOnce') === '1'; } catch (e) {}
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
