@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg53">
+<meta name="gg-build" content="gg54">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -48,9 +48,9 @@ setTimeout(function(){
 <meta name="twitter:description" content="Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
 <meta name="twitter:image" content="https://gifts.swapsmadesimple.com/og.jpg?v=4">
 <link rel="image_src" href="https://gifts.swapsmadesimple.com/og.jpg?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=gg53">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg53">
-<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg53">
+<link rel="manifest" href="manifest.webmanifest?v=gg54">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg54">
+<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg54">
 <meta name="theme-color" content="#EBE6DE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2859,7 +2859,6 @@ function saleCard(s){
       <a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a>
     </div>`;
   return `<div class="sale box ${s.featured?'feat':''}">
-    ${s.featured?'<span class="tab pin">tay\'s pick</span>':''}
     ${pic}<div class="copy">${body}</div>
   </div>`;
 }
@@ -2874,7 +2873,7 @@ async function renderSales(){
     B.innerHTML = ping + `<div class="salesempty box"><img src="art/giftbox.webp" alt=""><h3>sales are coming!</h3><p>many companies don't release their deals until closer to black friday + cyber monday. as brands share their sales, they'll land right here.</p><p>follow along on the 'gram <a href="http://instagram.com/toxinfreetay" target="_blank" rel="noopener">@toxinfreetay</a> so you don't miss anything.</p></div>` + later;
     return;
   }
-  B.innerHTML = ping + `<p class="count" style="text-align:center">${live.length} ${live.length===1?'sale':'sales'} live right now</p><div class="sales">${live.map(saleCard).join('')}</div>` + later;
+  B.innerHTML = ping + `<div class="sales">${live.map(saleCard).join('')}</div>` + later;
 }
 function salePingBox(){
   const on = store.get('salePush', 0) && (typeof Notification === 'undefined' || Notification.permission === 'granted');
