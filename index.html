@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg51">
+<meta name="gg-build" content="gg52">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -48,9 +48,9 @@ setTimeout(function(){
 <meta name="twitter:description" content="Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
 <meta name="twitter:image" content="https://gifts.swapsmadesimple.com/og.jpg?v=4">
 <link rel="image_src" href="https://gifts.swapsmadesimple.com/og.jpg?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=gg51">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg51">
-<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg51">
+<link rel="manifest" href="manifest.webmanifest?v=gg52">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg52">
+<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg52">
 <meta name="theme-color" content="#EBE6DE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1423,6 +1423,7 @@ function track(type, id, name){
 /* ===== holiday sales data ===== */
 let SALES = null;   // null = loading
 const GUIDE_SALES = [
+  { id:'waffle-home-26', brand:'Waffle', headline:'screen free kid\'s phone $30 off.', kicker:'keep the connection without the concerns. my top gift pick for kids this year!', url:'https://go.shopmy.us/p-102854882', gift:'p62_103', featured:true, active:true },
   { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'through december 7. robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', gift:'p56_00', active:true },
   { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', gift:'p58_08', active:true },
   { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', ends:'2026-11-10', gift:'p56_09', active:true },
@@ -2856,7 +2857,7 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const live = SALES.filter(isLive).slice().sort((a,b) => (a.id==='lumebox-holiday-26'?0:1) - (b.id==='lumebox-holiday-26'?0:1) || (b.featured?1:0) - (a.featured?1:0));
+  const live = SALES.filter(isLive).slice().sort((a,b) => (a.id==='waffle-home-26'?0:1) - (b.id==='waffle-home-26'?0:1) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && !s.hold && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
   const later = upcoming.length ? `<p class="count" style="text-align:center;margin-top:22px">coming up</p><div class="sales">${upcoming.map(saleCard).join('')}</div>` : '';
   const ping = salePingBox();
