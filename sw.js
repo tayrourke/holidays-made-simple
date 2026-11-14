@@ -30,8 +30,8 @@ self.addEventListener('push', event => {
     const tag = data.tag || 'guide-door';
     await self.registration.showNotification(title, {
       body,
-      icon: './icons/icon-192.png?v=gg52',
-      badge: './icons/icon-192.png?v=gg52',
+      icon: './icons/icon-192.png?v=gg53',
+      badge: './icons/icon-192.png?v=gg53',
       tag,
       renotify: true,
       data: { url }
