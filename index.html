@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg56">
+<meta name="gg-build" content="gg57">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -48,9 +48,9 @@ setTimeout(function(){
 <meta name="twitter:description" content="Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
 <meta name="twitter:image" content="https://gifts.swapsmadesimple.com/og.jpg?v=4">
 <link rel="image_src" href="https://gifts.swapsmadesimple.com/og.jpg?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=gg56">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg56">
-<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg56">
+<link rel="manifest" href="manifest.webmanifest?v=gg57">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg57">
+<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg57">
 <meta name="theme-color" content="#EBE6DE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1432,10 +1432,10 @@ function track(type, id, name){
 let SALES = null;   // null = loading
 const GUIDE_SALES = [
   { id:'waffle-home-26', brand:'Waffle', headline:'screen free kid\'s phone $30 off.', kicker:'keep the connection without the concerns. my top gift pick for kids this year!', url:'https://go.shopmy.us/p-102854882', gift:'p62_103', featured:true, ends:'2026-12-02', active:true },
-  { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'through december 7. robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', gift:'p56_00', active:true },
+  { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', gift:'p56_00', active:true },
   { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', gift:'p58_08', active:true },
   { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', ends:'2026-11-10', gift:'p56_09', active:true },
-  { id:'jaspr-holiday-26', brand:'Jaspr', headline:'air scrubber $350 off.', note:'for the rest of the year. I love how sensitive this filter is and the display makes it super easy to know my air quality.', url:'https://bit.ly/49Is4P8', ends:'2026-12-31', gift:'p56_04', active:true },
+  { id:'jaspr-holiday-26', brand:'Jaspr', headline:'air scrubber $350 off.', note:'I love how sensitive this filter is and the display makes it super easy to know my air quality.', url:'https://bit.ly/49Is4P8', ends:'2026-12-31', gift:'p56_04', active:true },
   { id:'boncharge-bf-26', brand:'Boncharge', headline:'boncharge’s biggest sale of the year is open', note:'red light masks, the cap, blankets, and sleep tools. the discount is not posted yet.', url:'https://boncharge.com/pages/black-friday-2026?rfsn=6797088.ea750a', starts:'2026-11-12', gift:'p35_15', active:true },
   { id:'bearaby-bf-26', brand:'Bearaby', headline:'up to 30% off, sitewide', note:'their biggest sale of the year. blankets, pillows, and sleep masks are marked down now.', url:'https://bearaby.com/pages/black-friday-weighted-blanket', linkSave:'up to 30%', gift:'p30_01', active:true },
   { id:'anxi-early-26', brand:'Anxi Ring', headline:'$10 off 1 ring, $25 off 2, $40 off 3+', note:'early black friday, no code needed. free shipping on orders of $70+.', url:'https://anxiring.com/', linkSave:'up to $40 off', gift:'p62_46', active:true },
@@ -2833,6 +2833,19 @@ function dropPastStart(text){
     .replace(/\s+([,.])/g, '$1')
     .trim();
 }
+function dropEndMention(text){
+  if (!text) return '';
+  const month = 'january|february|march|april|may|june|july|august|september|october|november|december';
+  return String(text)
+    .replace(new RegExp('\\bfor the rest of the (?:year|season)\\b\\.?', 'gi'), ' ')
+    .replace(new RegExp('\\b(?:through|thru|until|til|till|ends|ending|runs through|running through|that runs through)\\s+(?:on\\s+)?(?:' + month + ')\\s+\\d{1,2}(?:st|nd|rd|th)?(?=\\s*[.,]|\\s*$)', 'gi'), ' ')
+    .replace(new RegExp('\\b(?:' + month + ')\\s+\\d{1,2}(?:st|nd|rd|th)?\\s+through\\s+(?:(?:' + month + ')\\s+)?\\d{1,2}(?:st|nd|rd|th)?(?=\\s*[.,]|\\s*$)', 'gi'), ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,.])/g, '$1')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^[.,\s]+/, '')
+    .trim();
+}
 function salePicSrc(s){
   if (s.gift && byId[s.gift]) return img(s.gift);
   return s.pic || '';
@@ -2848,12 +2861,13 @@ function saleCard(s){
   const when = end;
   const link = s.linkSave ? `<p class="linksaves">link saves ${esc(s.linkSave)}</p>` : '';
   const code = s.code ? `<p class="salecode"><button type="button" data-copy="${esc(s.code)}" data-salecode="${esc(s.id)}">code <b>${esc(s.code)}</b>${s.save ? ` saves ${esc(s.save)}` : ''}</button></p>` : '';
-  const headline = dropPastStart(s.headline);
-  const note = dropPastStart(s.note);
+  const headline = end ? dropEndMention(dropPastStart(s.headline)) : dropPastStart(s.headline);
+  const note = end ? dropEndMention(dropPastStart(s.note)) : dropPastStart(s.note);
+  const kicker = end ? dropEndMention(s.kicker) : (s.kicker || '');
   const body = `<div class="top"><span class="brand">${esc(s.brand)}</span>${when?`<span class="ends ${soon?'soon':''}">${esc(when)}</span>`:''}</div>
     <p class="deal">${esc(headline||'')}</p>
     ${(s.gift && byId[s.gift] && byId[s.gift].was) ? `<p class="saleprice">${priceMark(byId[s.gift])}</p>` : ''}
-    ${s.kicker?`<p class="kicker">${esc(s.kicker)}</p>`:''}
+    ${kicker?`<p class="kicker">${esc(kicker)}</p>`:''}
     ${note?`<p class="note">${esc(note)}</p>`:''}
     ${link}
     ${code}
