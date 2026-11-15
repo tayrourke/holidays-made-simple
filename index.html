@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="gg-build" content="gg58">
+<meta name="gg-build" content="gg59">
 <script>
 if(location.hash==='#admin')location.replace('/admin-access/');
 if(location.search.indexOf('gglive=')!==-1&&history.replaceState)history.replaceState(null,'',location.pathname+location.hash);
@@ -48,9 +48,9 @@ setTimeout(function(){
 <meta name="twitter:description" content="Taylor's 2026 guide to cleaner gifts, holiday sales, stocking stuffers, gift baskets and traditions.">
 <meta name="twitter:image" content="https://gifts.swapsmadesimple.com/og.jpg?v=4">
 <link rel="image_src" href="https://gifts.swapsmadesimple.com/og.jpg?v=4">
-<link rel="manifest" href="manifest.webmanifest?v=gg58">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg58">
-<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg58">
+<link rel="manifest" href="manifest.webmanifest?v=gg59">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=gg59">
+<link rel="icon" type="image/png" href="icons/icon-192.png?v=gg59">
 <meta name="theme-color" content="#EBE6DE">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1307,7 +1307,7 @@ const TIPS = {
   'teachers + neighbors':'make 6 self care baskets for around $27 each. swap in a homemade sugar scrub or cocoa jar to save more.',
   'white elephant':'stocking stuffers make great white elephant gifts too.'
 };
-const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = (file === 'p28_12' || file === 'p22_04' || file === 'p22_11' || file === 'p62_119' || file === 'p62_120' || file === 'p62_121') ? '?v=4' : ((file >= 'p62_117' && file <= 'p62_130') ? '?v=3' : (/^p62_(18|19|20|55|56|74)$/.test(file) ? '?v=2' : '')); return 'img/' + file + '.webp' + cut; };
+const img = id => { const g = byId[id]; if (g && g.remote) return g.remote; const file = (g && g.pic) || id; const cut = file === 'p28_12' ? '?v=5' : (file === 'p22_04' || file === 'p22_11' || file === 'p62_119' || file === 'p62_120' || file === 'p62_121') ? '?v=4' : (file >= 'p62_117' && file <= 'p62_130') ? '?v=3' : (/^p62_(18|19|20|55|56|74)$/.test(file) ? '?v=2' : ''); return 'img/' + file + '.webp' + cut; };
 const REDUCE = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } })();
 const byId = Object.fromEntries(ALL_ITEMS.map(g => [g.id, g]));
 const lc = s => (s||'').toLowerCase();
