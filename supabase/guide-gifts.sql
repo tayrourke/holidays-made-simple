@@ -57,7 +57,7 @@ begin
      is distinct from '462421efb3acba669660241bba7a12524a3aa3df951002d3bae1fd83258eea45' then
     raise exception 'Invalid password';
   end if;
-  if gift_id !~ '^p[0-9]{2}_[0-9]{2}$' then
+  if gift_id !~ '^p[0-9]{2}_[0-9]{2,3}$' then
     raise exception 'Invalid gift';
   end if;
   if length(n) < 1 or length(n) > 160 or n ~ '[<>]' then

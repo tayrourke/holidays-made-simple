@@ -246,12 +246,22 @@ function parseDoors(html){
   const start = html.indexOf('const ADVENT = [');
   if (start < 0) return [];
   const end = html.indexOf('\n];', start);
-  const chunk = html.slice(start, end > start ? end : start + 80000);
-  const doors = [];
-  const re = /d:'(\d{4}-\d{2}-\d{2})'[\s\S]*?title:'((?:\\'|[^'])*)'/g;
-  let m;
-  while ((m = re.exec(chunk)) && doors.length < 24) doors.push({ d: m[1], title: m[2].replace(/\\'/g, "'") });
-  return doors;
+  const chunk = html.slice(start, end > start ? end : start + 120000);
+  return chunk.split(/\{\s*d:'/).slice(1).slice(0, 24).map(part => {
+    const d = (part.match(/^(\d{4}-\d{2}-\d{2})/) || [])[1] || '';
+    const title = ((part.match(/title:'((?:\\'|[^'])*)'/) || [])[1] || '').replace(/\\'/g, "'");
+    const needs = ((part.match(/needs:'((?:\\'|[^'])*)'/) || [])[1] || '').replace(/\\'/g, "'");
+    return { d, title, needs };
+  });
+}
+function parseSales(html){
+  const start = html.indexOf('const GUIDE_SALES = [');
+  if (start < 0) return [];
+  const end = html.indexOf('\n];', start);
+  if (end < 0) return [];
+  const chunk = html.slice(start + 'const GUIDE_SALES = '.length, end + 2);
+  try { return Function('return ' + chunk)(); }
+  catch (e) { return []; }
 }
 function applyPatch(g, e){
   if (!e) return;
@@ -297,6 +307,7 @@ async function loadCatalog(){
   state.raw = parseItems(html);
   state.broken = parseBroken(html);
   state.base = new Set(state.raw.map(g => g.id));
+  state.fileSales = parseSales(html);
   await loadServer();
   state.items = merge(state.raw);
   state.doors = parseDoors(html);
@@ -648,7 +659,8 @@ function saleBody(s){
 async function loadSalesDesk(){
   const box = document.getElementById('panel');
   if (!box || state.tab !== 'sales') return;
-  let rows = STARTER_SALES.map(s => ({ ...s }));
+  const fileSales = (state.fileSales && state.fileSales.length ? state.fileSales : STARTER_SALES).map(s => ({ ...s }));
+  let rows = fileSales;
   state.salesLive = false;
   try {
     const cfg = await pushConf();
@@ -660,7 +672,9 @@ async function loadSalesDesk(){
     if (res.ok){
       const data = await res.json();
       if (Array.isArray(data) && data.length){
-        rows = data.map(r => ({ ...(r.body || {}), id: r.id }));
+        const remote = data.map(r => ({ ...(r.body || {}), id: r.id }));
+        const have = new Set(remote.map(s => s.id));
+        rows = remote.concat(fileSales.filter(s => s.id && !have.has(s.id)));
         state.salesLive = true;
       }
     }
@@ -789,13 +803,15 @@ function adventHtml(){
   const preview = `<div class="card"><p class="fine" style="margin:0">preview the advent on this phone. visitors still see each door locked until its date.</p><div class="savebar"><button type="button" data-advpeek>${peek ? 'doors are unlocked here' : 'unlock all doors'}</button><a class="ghost" href="/#advent" style="display:grid;place-items:center;text-decoration:none;font-weight:700">open the advent</a></div><button type="button" class="ghost" data-advreset>reset opened doors</button></div>`;
   const counts = {};
   for (const r of tapRows('advent')) counts[r.id] = r.n;
-  const doors = state.doors.length ? state.doors : Array.from({ length: 24 }, (_, i) => ({ d: '', title: 'door ' + (i + 1) }));
+  const doors = state.doors.length ? state.doors : Array.from({ length: 24 }, (_, i) => ({ d: '', title: 'door ' + (i + 1), needs: '' }));
+  const unfinished = doors.filter(door => door.needs);
+  const warn = unfinished.length ? `<div class="card"><p class="fine" style="margin:0">these doors still need something from you before they feel finished.</p>${unfinished.map(door => `<div class="door"><div class="name">${esc(lc(door.title))}</div><div class="sub">${esc(door.needs)}</div></div>`).join('')}</div>` : '';
   const body = doors.map((door, i) => {
     const n = counts['day-' + (i + 1)] || 0;
     const did = opened.has(door.d);
-    return `<div class="door"><div class="sub">${door.d ? pretty(door.d) : 'door ' + (i + 1)}${did ? ' · <span class="tag">opened</span>' : ''}${n ? ' · ' + n + (n === 1 ? ' open' : ' opens') : ''}</div><div class="name">${esc(lc(door.title))}</div></div>`;
+    return `<div class="door"><div class="sub">${door.d ? pretty(door.d) : 'door ' + (i + 1)}${did ? ' · <span class="tag">opened</span>' : ''}${door.needs ? ' · <span class="tag">needs you</span>' : ''}${n ? ' · ' + n + (n === 1 ? ' open' : ' opens') : ''}</div><div class="name">${esc(lc(door.title))}</div></div>`;
   }).join('');
-  return preview + `<p class="fine">counted on this phone. ${opened.size} door${opened.size === 1 ? '' : 's'} opened here.</p>${body}`;
+  return preview + warn + `<p class="fine">${doors.length} doors, november 23 through december 16. opens counted on this phone: ${opened.size}.</p>${body}`;
 }
 function deskSecret(){
   try { return sessionStorage.getItem('gg26:deskSecret') || ''; } catch (e) { return ''; }
