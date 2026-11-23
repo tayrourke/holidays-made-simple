@@ -39,6 +39,7 @@ type Payload = {
   url?: string;
   tag?: string;
   tz?: string;
+  sales?: boolean;
 };
 
 Deno.serve(async (req) => {
@@ -72,6 +73,7 @@ Deno.serve(async (req) => {
 
   let subsQuery = db.from("guide_push_subscriptions").select("endpoint, p256dh, auth");
   if (payload.tz) subsQuery = subsQuery.eq("tz", payload.tz);
+  if (payload.sales) subsQuery = subsQuery.eq("sales", true);
   const { data: subs, error: subErr } = await subsQuery;
   if (subErr) {
     console.error("guide-send-push subs:", subErr);

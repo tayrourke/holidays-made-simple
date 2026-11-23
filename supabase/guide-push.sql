@@ -31,6 +31,9 @@ create table if not exists public.guide_push_subscriptions (
 alter table public.guide_push_subscriptions
   add column if not exists tz text not null default 'America/Los_Angeles';
 
+alter table public.guide_push_subscriptions
+  add column if not exists sales boolean not null default false;
+
 alter table public.guide_push_subscriptions enable row level security;
 revoke all on table public.guide_push_subscriptions from public, anon, authenticated;
 grant all on table public.guide_push_subscriptions to service_role;
@@ -94,12 +97,14 @@ as $$
 $$;
 
 drop function if exists public.guide_push_subscribe(text, text, text);
+drop function if exists public.guide_push_subscribe(text, text, text, text);
 
 create or replace function public.guide_push_subscribe(
   p_endpoint text,
   p_p256dh text,
   p_auth text,
-  p_tz text default 'America/Los_Angeles'
+  p_tz text default 'America/Los_Angeles',
+  p_sales boolean default false
 )
 returns uuid
 language plpgsql
@@ -126,12 +131,13 @@ begin
   exception when others then
     zone := 'America/Los_Angeles';
   end;
-  insert into public.guide_push_subscriptions as s (endpoint, p256dh, auth, tz)
-  values (ep, trim(p_p256dh), trim(p_auth), zone)
+  insert into public.guide_push_subscriptions as s (endpoint, p256dh, auth, tz, sales)
+  values (ep, trim(p_p256dh), trim(p_auth), zone, coalesce(p_sales, false))
   on conflict (endpoint) do update
     set p256dh = excluded.p256dh,
         auth = excluded.auth,
         tz = excluded.tz,
+        sales = s.sales or excluded.sales,
         updated_at = now()
   returning s.id into rid;
   return rid;
@@ -150,9 +156,9 @@ begin
 end;
 $$;
 
-revoke all on function public.guide_push_subscribe(text, text, text, text) from public;
+revoke all on function public.guide_push_subscribe(text, text, text, text, boolean) from public;
 revoke all on function public.guide_push_unsubscribe(text) from public;
-grant execute on function public.guide_push_subscribe(text, text, text, text) to anon, authenticated;
+grant execute on function public.guide_push_subscribe(text, text, text, text, boolean) to anon, authenticated;
 grant execute on function public.guide_push_unsubscribe(text) to anon, authenticated;
 
 -- 8am in each phone's time zone. No door that local day: skip that phone.
@@ -233,4 +239,93 @@ select cron.schedule(
   'guide-morning-door',
   '0 * * * *',
   $$select public.guide_dispatch_morning();$$
+);
+
+-- Sale alerts. One ping per deal, only to phones that asked for sale alerts.
+-- The page hides the deal until the same start time.
+create table if not exists public.guide_sale_pings (
+  event_key text primary key,
+  starts_at timestamptz not null,
+  title text not null,
+  body text not null
+);
+
+alter table public.guide_sale_pings enable row level security;
+revoke all on table public.guide_sale_pings from public, anon, authenticated;
+grant all on table public.guide_sale_pings to service_role;
+
+insert into public.guide_sale_pings (event_key, starts_at, title, body) values
+  ('sale:rowe-bf-26', '2026-11-25 17:00:00-06', 'rowe casa is 25% off', 'sitewide now, with a free gift on bigger orders.'),
+  ('sale:healthyhome-bf-26', '2026-11-26 00:00:00-08', 'the healthy home is 25% off', 'sitewide through monday night.'),
+  ('sale:rowe-cm-26', '2026-11-30 00:00:00-06', 'rowe casa cyber monday is on', 'up to 28% off through tuesday.')
+on conflict (event_key) do update
+  set starts_at = excluded.starts_at, title = excluded.title, body = excluded.body;
+
+create or replace function public.guide_dispatch_sales()
+returns void
+language plpgsql
+security definer
+set search_path = public, net
+as $$
+declare
+  cfg record;
+  push_secret text;
+  ping record;
+begin
+  select * into cfg from public.hearthkeep_push_config where id = 1;
+  if cfg is null or length(trim(coalesce(cfg.supabase_url, ''))) < 12 or length(trim(coalesce(cfg.anon_key, ''))) < 20 then
+    raise warning 'guide sale push: hearthkeep_push_config is empty';
+    return;
+  end if;
+  select s.secret into push_secret from public.hearthkeep_push_dispatch_secret s where s.id = 1;
+  if push_secret is null or length(push_secret) < 16 then
+    raise warning 'guide sale push: missing dispatch secret';
+    return;
+  end if;
+  for ping in
+    select p.event_key, p.title, p.body
+    from public.guide_sale_pings p
+    where p.starts_at <= now()
+      and not exists (
+        select 1 from public.guide_push_deliveries d where d.event_key = p.event_key
+      )
+  loop
+    perform net.http_post(
+      url := rtrim(trim(cfg.supabase_url), '/') || '/functions/v1/guide-send-push',
+      body := jsonb_build_object(
+        'event', 'guide',
+        'event_key', ping.event_key,
+        'sales', true,
+        'title', ping.title,
+        'body', ping.body,
+        'url', './#sales',
+        'tag', ping.event_key
+      ),
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || trim(cfg.anon_key),
+        'apikey', trim(cfg.anon_key),
+        'x-push-secret', push_secret
+      )
+    );
+  end loop;
+exception when others then
+  raise warning 'guide sale push http: %', sqlerrm;
+end;
+$$;
+
+revoke all on function public.guide_dispatch_sales() from public, anon, authenticated;
+grant execute on function public.guide_dispatch_sales() to service_role;
+
+do $$
+begin
+  perform cron.unschedule('guide-sale-pings');
+exception when others then
+  null;
+end $$;
+
+select cron.schedule(
+  'guide-sale-pings',
+  '* * * * *',
+  $$select public.guide_dispatch_sales();$$
 );
