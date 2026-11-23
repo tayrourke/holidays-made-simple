@@ -588,17 +588,24 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .sale.week{grid-column:1/-1;width:min(680px,100%);justify-self:center;grid-template-columns:minmax(0,1fr);background:#fff;border-width:2px}
 .sale.week .setline{display:grid;grid-template-columns:156px minmax(0,1fr);gap:14px;align-items:center}
 .sale.week .setline .salepic{width:156px;height:132px;border-radius:18px;padding:4px}
-.sale.week .split{display:grid;gap:10px;padding-top:4px;border-top:1px solid rgba(20,16,16,.18)}
-.sale.week .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.sale.week figure{margin:0;display:grid;justify-items:center;gap:8px;text-align:center;min-width:0}
-.sale.week figure img{width:96px;height:96px;border-radius:50%;object-fit:contain;background:#fff;border:1.5px solid var(--ink);padding:4px;box-sizing:border-box}
-.sale.week figcaption{display:grid;gap:3px;min-width:0}
+.sale.week .split{padding-top:2px;border-top:1px solid rgba(20,16,16,.18)}
+.sale.week .nowrow{display:grid;grid-template-columns:max-content minmax(0,1fr) minmax(0,1fr);gap:4px 10px;align-items:center}
+.sale.week .nowlab{display:grid;gap:3px;align-content:center;justify-items:start}
+.sale.week .nowlab .brand{font-size:12px;white-space:nowrap}
+.sale.week .nowlab .off{margin:0;font-family:var(--label);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--berry);line-height:1.1;white-space:nowrap}
+.sale.week .nowlab .when{font-size:12px;line-height:1.2;white-space:nowrap}
+.sale.week figure{margin:0;display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.sale.week figure img{width:68px;height:68px;border-radius:50%;object-fit:contain;background:#fff;border:1.5px solid var(--ink);padding:3px;box-sizing:border-box}
+.sale.week figcaption{display:grid;gap:2px;min-width:0}
 .sale.week figcaption b{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
-.sale.week figcaption span{font-size:13px;line-height:1.35}
+.sale.week figcaption span{font-size:12px;line-height:1.3}
+.sale.week .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sale.week .acts .btn{font-size:13px;padding:11px 8px;min-width:0}
 @media(max-width:420px){
   .sale.week .setline{grid-template-columns:124px minmax(0,1fr);gap:10px}
   .sale.week .setline .salepic{width:124px;height:108px}
-  .sale.week figure img{width:84px;height:84px}
+  .sale.week .nowrow{gap:4px 8px}
+  .sale.week figure img{width:60px;height:60px}
 }
 .sale .salepic{width:104px;height:104px;border-radius:50%;object-fit:contain;background:#fff;border:1.5px solid var(--ink);padding:10px;box-sizing:border-box}
 .sale.quiet{text-align:left;justify-items:stretch;text-decoration:none;color:inherit}
@@ -1459,7 +1466,7 @@ const GUIDE_SALES = [
   { id:'rowe-sitewide-26', brand:'Rowe Casa Organics', headline:'25% off sitewide, with a free gift on bigger orders', note:'november 23 through 29.', url:'https://www.rowecasaorganics.com/?sca_ref=3265168.het9Q7nqM3', starts:'2026-11-23', ends:'2026-11-29', gift:'p10_04', active:true, hold:true },
   { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'15% off filtration systems', note:'that runs through november 23. november 24 through december 1 goes to 25% off filtration systems.', url:'https://www.clearlyfiltered.com/?rfsn=6673587.3fae40', starts:'2026-11-12', gift:'p53_09', active:true },
   { id:'ji-bf-26', brand:'Just Ingredients', headline:'black friday offers are coming', note:'they are taking signups now. the public discount is not posted yet.', url:'https://justingredients.us/TOXINFREETAY', soon:true, gift:'p10_01', active:true },
-  { id:'ringana-bf-26', brand:'Ringana', headline:'skin care sets are 20% off retail.', note:'a set is already 10% off. fresh week takes another 10%.', url:'https://taylor.ringana.us/offers/?lang=en', ends:'2026-11-30', gift:'p16_03', active:true },
+  { id:'ringana-bf-26', brand:'Ringana', headline:'fresh skincare sets are 20% off.', note:'a set is already 10% off. fresh week takes another 10%.', url:'https://taylor.ringana.us/offers/?lang=en', ends:'2026-11-30', gift:'p16_03', active:true },
   { id:'quinn-giving-26', brand:'Q for Quinn', headline:'up to 40% off select styles', note:'organic cotton and merino. every order donates five extra school meals. orders of $300+ save another 15%.', url:'https://go.shopmy.us/p-84988754', linkSave:'up to 40%', ends:'2026-12-13', gift:'p32_08', active:true },
   { id:'cookware-bf-26', brand:'360 Cookware', headline:'up to 36% off', note:'stainless cookware and bakeware, made in wisconsin.', url:'https://www.360cookware.com/TOXINFREETAY', code:'BF2026', save:'up to 36%', ends:'2026-11-30', gift:'p56_03', active:true },
   { id:'ora-bf-26', brand:'Ora', headline:'20% off sitewide', note:'the frequency sound machine, plus the rest of the site.', url:'https://soundofora.com/?sca_ref=7183438.q9zIpMDJz4x', code:'BLACKFRIDAY', save:'20%', gift:'p29_09', active:true },
@@ -2925,10 +2932,9 @@ function freshWeekCard(s){
   const weekWhen = estWhen(FRESH_WEEK_END, now);
   const weekSoon = /today|tomorrow|in [1-3] days/.test(weekWhen);
   const win = block ? estWhen(block.end, now) : '';
-  const winSoon = /today|tomorrow|in [1-3] days/.test(win);
   const pair = block ? block.items.map(item => `<figure><img src="${esc(item.img)}" alt="${esc(item.name)}"><figcaption><b>${esc(item.name)}</b><span>${esc(item.line)}</span></figcaption></figure>`).join('') : '';
-  const split = pair ? `<div class="split"><div class="top"><span class="brand">right now</span><span class="ends ${winSoon ? 'soon' : ''}">${esc(win)}</span></div><div class="pair">${pair}</div></div>` : '';
-  return `<div class="sale box week"><div class="copy"><div class="top"><span class="brand">${esc(s.brand)}</span><span class="ends ${weekSoon ? 'soon' : ''}">${esc(weekWhen)}</span></div><p class="deal">${esc(s.headline || '')}</p><div class="setline"><img class="salepic" src="${esc(FRESH_SET_IMG)}" alt="ringana skin care set"><p class="note">${esc(s.note || '')}</p></div>${split}<div class="row"><a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a></div></div></div>`;
+  const split = pair ? `<div class="split"><div class="nowrow"><div class="nowlab"><span class="brand">right now</span><b class="off">20% off</b><span class="when">${esc(win)}</span></div>${pair}</div></div>` : '';
+  return `<div class="sale box week"><div class="copy"><div class="top"><span class="brand">${esc(s.brand)}</span><span class="ends ${weekSoon ? 'soon' : ''}">${esc(weekWhen)}</span></div><p class="deal">${esc(s.headline || '')}</p><div class="setline"><img class="salepic" src="${esc(FRESH_SET_IMG)}" alt="ringana skin care set"><p class="note">${esc(s.note || '')}</p></div>${split}<div class="acts"><a class="btn ghost" href="#match">get a routine</a><a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a></div></div></div>`;
 }
 function saleCard(s){
   if (s.id === 'ringana-bf-26' && freshWeekOpen()) return freshWeekCard(s);
