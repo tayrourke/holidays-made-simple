@@ -585,6 +585,21 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 .sale{position:relative;display:grid;grid-template-columns:104px minmax(0,1fr);gap:8px 14px;align-items:start;padding:14px 16px;min-width:0}
 .sale:not(:has(.salepic)){grid-template-columns:minmax(0,1fr)}
 .sale.feat{background:#fff;border-width:2px}
+.sale.week{grid-column:1/-1;width:min(680px,100%);justify-self:center;grid-template-columns:minmax(0,1fr);background:#fff;border-width:2px}
+.sale.week .setline{display:grid;grid-template-columns:156px minmax(0,1fr);gap:14px;align-items:center}
+.sale.week .setline .salepic{width:156px;height:132px;border-radius:18px;padding:4px}
+.sale.week .split{display:grid;gap:10px;padding-top:4px;border-top:1px solid rgba(20,16,16,.18)}
+.sale.week .pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sale.week figure{margin:0;display:grid;justify-items:center;gap:8px;text-align:center;min-width:0}
+.sale.week figure img{width:96px;height:96px;border-radius:50%;object-fit:contain;background:#fff;border:1.5px solid var(--ink);padding:4px;box-sizing:border-box}
+.sale.week figcaption{display:grid;gap:3px;min-width:0}
+.sale.week figcaption b{font-family:var(--label);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.sale.week figcaption span{font-size:13px;line-height:1.35}
+@media(max-width:420px){
+  .sale.week .setline{grid-template-columns:124px minmax(0,1fr);gap:10px}
+  .sale.week .setline .salepic{width:124px;height:108px}
+  .sale.week figure img{width:84px;height:84px}
+}
 .sale .salepic{width:104px;height:104px;border-radius:50%;object-fit:contain;background:#fff;border:1.5px solid var(--ink);padding:10px;box-sizing:border-box}
 .sale.quiet{text-align:left;justify-items:stretch;text-decoration:none;color:inherit}
 .sale.quiet .brand{font-size:18px}
@@ -1444,7 +1459,7 @@ const GUIDE_SALES = [
   { id:'rowe-sitewide-26', brand:'Rowe Casa Organics', headline:'25% off sitewide, with a free gift on bigger orders', note:'november 23 through 29.', url:'https://www.rowecasaorganics.com/?sca_ref=3265168.het9Q7nqM3', starts:'2026-11-23', ends:'2026-11-29', gift:'p10_04', active:true, hold:true },
   { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'15% off filtration systems', note:'that runs through november 23. november 24 through december 1 goes to 25% off filtration systems.', url:'https://www.clearlyfiltered.com/?rfsn=6673587.3fae40', starts:'2026-11-12', gift:'p53_09', active:true },
   { id:'ji-bf-26', brand:'Just Ingredients', headline:'black friday offers are coming', note:'they are taking signups now. the public discount is not posted yet.', url:'https://justingredients.us/TOXINFREETAY', soon:true, gift:'p10_01', active:true },
-  { id:'ringana-bf-26', brand:'Ringana', headline:'the fresh skincare sale is coming', note:'dates are not posted yet. the shop is open in the meantime.', url:'https://taylor.ringana.us', soon:true, gift:'p16_03', active:true },
+  { id:'ringana-bf-26', brand:'Ringana', headline:'skin care sets are 20% off retail.', note:'a set is already 10% off. fresh week takes another 10%.', url:'https://taylor.ringana.us/offers/?lang=en', ends:'2026-11-30', gift:'p16_03', active:true },
   { id:'quinn-giving-26', brand:'Q for Quinn', headline:'up to 40% off select styles', note:'organic cotton and merino. every order donates five extra school meals. orders of $300+ save another 15%.', url:'https://go.shopmy.us/p-84988754', linkSave:'up to 40%', ends:'2026-12-13', gift:'p32_08', active:true },
   { id:'cookware-bf-26', brand:'360 Cookware', headline:'up to 36% off', note:'stainless cookware and bakeware, made in wisconsin.', url:'https://www.360cookware.com/TOXINFREETAY', code:'BF2026', save:'up to 36%', ends:'2026-11-30', gift:'p56_03', active:true },
   { id:'ora-bf-26', brand:'Ora', headline:'20% off sitewide', note:'the frequency sound machine, plus the rest of the site.', url:'https://soundofora.com/?sca_ref=7183438.q9zIpMDJz4x', code:'BLACKFRIDAY', save:'20%', gift:'p29_09', active:true },
@@ -1460,7 +1475,8 @@ function withLumabox(list){
     const i = next.findIndex(s => s.id === extra.id);
     if (i < 0) next.push({ ...extra });
     else {
-      if (extra.gift) next[i].gift = extra.gift;
+      if (extra.id === 'ringana-bf-26') next[i] = { ...next[i], ...extra, soon:false, hold:false, active:true };
+      else if (extra.gift) next[i].gift = extra.gift;
       if (extra.id === 'waffle-home-26' && extra.ends) next[i].ends = extra.ends;
       if (extra.id === 'lumebox-holiday-26') next[i] = { ...next[i], ...extra, url: next[i].url || extra.url };
     }
@@ -2859,7 +2875,63 @@ function salePicSrc(s){
   return s.pic || '';
 }
 const comingSoon = s => (s.starts && s.starts > today()) || !!s.soon;
+/* Fresh week windows are Eastern. On a shared day the pair that ends at 11:59pm stays up. */
+const FRESH_WEEK_END = '2026-11-30T23:59:59-05:00';
+const FRESH_SET_IMG = 'img/rg-set-light.webp?v=2';
+const FRESH_BLOCKS = [
+  { start:'2026-11-23T00:00:00-05:00', end:'2026-11-24T23:59:59-05:00', items:[
+    { name:'glow booster', line:'stable vitamin c for brighter, more even-looking skin.', img:'img/rg-glow.webp?v=2' },
+    { name:'lifting booster', line:'firming peptides to help smooth fine lines.', img:'img/rg-lifting.webp?v=2' }
+  ]},
+  { start:'2026-11-24T00:00:00-05:00', end:'2026-11-26T23:59:59-05:00', items:[
+    { name:'hand balm', line:'rich plant oils for dry, winter hands.', img:'img/rg-hand-balm.webp?v=2' },
+    { name:'caps move', line:'botanical support for joint comfort and mobility.', img:'img/rg-caps-move.webp?v=2' }
+  ]},
+  { start:'2026-11-26T00:00:00-05:00', end:'2026-11-28T23:59:59-05:00', items:[
+    { name:'overnight retinal cream', line:'nighttime care for a firmer, smoother look.', img:'img/rg-overnight.webp?v=2' },
+    { name:'skin perfecting cream', line:'helps skin look lifted and more refined.', img:'img/rg-perfecting.webp?v=2' }
+  ]},
+  { start:'2026-11-28T00:00:00-05:00', end:'2026-11-30T23:59:59-05:00', items:[
+    { name:'volume shampoo', line:'extra body and bounce.', img:'img/rg-volume.webp?v=2' },
+    { name:'eye serum', line:'a light gel for tired-looking eyes.', img:'img/rg-eye-serum.webp?v=2' }
+  ]}
+];
+function estDay(date){
+  const parts = new Intl.DateTimeFormat('en-US', { timeZone:'America/New_York', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(date);
+  const get = type => parts.find(p => p.type === type).value;
+  return get('year') + '-' + get('month') + '-' + get('day');
+}
+function freshWeekOpen(now){
+  const t = (now || new Date()).getTime();
+  return t >= Date.parse('2026-11-23T00:00:00-05:00') && t <= Date.parse(FRESH_WEEK_END);
+}
+function freshBlock(now){
+  const t = (now || new Date()).getTime();
+  const live = FRESH_BLOCKS.filter(b => t >= Date.parse(b.start) && t <= Date.parse(b.end));
+  live.sort((a, b) => Date.parse(a.end) - Date.parse(b.end));
+  return live[0] || null;
+}
+function estWhen(endIso, now){
+  const n = now || new Date();
+  const d = Math.round((Date.parse(estDay(new Date(endIso)) + 'T00:00:00Z') - Date.parse(estDay(n) + 'T00:00:00Z')) / 864e5);
+  if (d <= 0) return 'ends today';
+  if (d === 1) return 'ends tomorrow';
+  if (d <= 7) return 'ends in ' + d + ' days';
+  return 'thru ' + new Date(endIso).toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/New_York' }).toLowerCase();
+}
+function freshWeekCard(s){
+  const now = new Date();
+  const block = freshBlock(now);
+  const weekWhen = estWhen(FRESH_WEEK_END, now);
+  const weekSoon = /today|tomorrow|in [1-3] days/.test(weekWhen);
+  const win = block ? estWhen(block.end, now) : '';
+  const winSoon = /today|tomorrow|in [1-3] days/.test(win);
+  const pair = block ? block.items.map(item => `<figure><img src="${esc(item.img)}" alt="${esc(item.name)}"><figcaption><b>${esc(item.name)}</b><span>${esc(item.line)}</span></figcaption></figure>`).join('') : '';
+  const split = pair ? `<div class="split"><div class="top"><span class="brand">right now</span><span class="ends ${winSoon ? 'soon' : ''}">${esc(win)}</span></div><div class="pair">${pair}</div></div>` : '';
+  return `<div class="sale box week"><div class="copy"><div class="top"><span class="brand">${esc(s.brand)}</span><span class="ends ${weekSoon ? 'soon' : ''}">${esc(weekWhen)}</span></div><p class="deal">${esc(s.headline || '')}</p><div class="setline"><img class="salepic" src="${esc(FRESH_SET_IMG)}" alt="ringana skin care set"><p class="note">${esc(s.note || '')}</p></div>${split}<div class="row"><a class="btn" href="${esc(s.url)}" target="_blank" rel="noopener sponsored" data-sale="${esc(s.id)}" data-salename="${esc(s.brand)}">shop the sale ↗</a></div></div></div>`;
+}
 function saleCard(s){
+  if (s.id === 'ringana-bf-26' && freshWeekOpen()) return freshWeekCard(s);
   const src = salePicSrc(s);
   const pic = src ? `<img class="salepic" src="${esc(src)}" alt="">` : '';
   if (comingSoon(s)){
@@ -2889,7 +2961,8 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const live = SALES.filter(isLive).slice().sort((a,b) => (a.id==='waffle-home-26'?0:1) - (b.id==='waffle-home-26'?0:1) || (b.featured?1:0) - (a.featured?1:0));
+  const saleRank = id => id === 'ringana-bf-26' ? 0 : id === 'waffle-home-26' ? 1 : 2;
+  const live = SALES.filter(s => s.id === 'ringana-bf-26' ? freshWeekOpen() : isLive(s)).slice().sort((a,b) => saleRank(a.id) - saleRank(b.id) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && !s.hold && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
   const later = upcoming.length ? `<p class="count" style="text-align:center;margin-top:22px">coming up</p><div class="sales">${upcoming.map(saleCard).join('')}</div>` : '';
   const ping = salePingBox();
