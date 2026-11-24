@@ -1472,8 +1472,9 @@ const GUIDE_SALES = [
       { start:'2026-11-30T00:00:00-06:00', end:'2026-12-01T23:59:59-06:00', headline:'up to 28% off', note:'24% under $200, 26% from $200, and 28% from $300. new customers still get 26% off with my code.', code:'TOXINFREETAY', save:'26% for new customers', ping:'rowe casa cyber monday is on', pingBody:'up to 28% off through tuesday.' }
     ] },
   { id:'healthyhome-bf-26', brand:'The Healthy Home', headline:'25% off sitewide', note:'the whole shop. blackfriday is the same 25% off.', url:'https://thehealthyhome.shop/products/the-circadian-starter-kit?dt_id=3205608%3Bap%3A2927004', code:'TOXINFREETAY', save:'25%', open:'2026-11-26T00:00:00-08:00', close:'2026-12-01T00:00:00-08:00', ends:'2026-11-30', gift:'p56_17', active:true, ping:'the healthy home is 25% off', pingBody:'sitewide through monday night.' },
-  { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'15% off filtration systems', note:'that runs through november 23. november 24 through december 1 goes to 25% off filtration systems.', url:'https://www.clearlyfiltered.com/?rfsn=6673587.3fae40', starts:'2026-11-12', gift:'p53_09', active:true },
-  { id:'ji-bf-26', brand:'Just Ingredients', headline:'black friday offers are coming', note:'they are taking signups now. the public discount is not posted yet.', url:'https://justingredients.us/TOXINFREETAY', soon:true, gift:'p10_01', active:true },
+  { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'25% off filtration systems.', note:'it applies on its own, and it stacks with the subscription price.', url:'https://www.clearlyfiltered.com/pages/promotion-details?rfsn=6673587.3fae40', ends:'2026-12-01', gift:'p53_09', active:true },
+  { id:'ji-bf-26', brand:'Just Ingredients', headline:'20% off sitewide.', note:'no code needed. it is already taken off at checkout.', url:'https://justingredients.us/TOXINFREETAY', ends:'2026-11-30', gift:'p10_01', active:true },
+  { id:'esas-bf-26', brand:'ESAS', headline:'20% off sitewide.', note:'it applies at checkout. orders of $200 come with a holiday discovery kit, and shipping is free over $75.', url:'https://www.esasnyc.com/TOXINFREETAY', pic:'img/esas-iris.webp', active:true },
   { id:'ringana-bf-26', brand:'Ringana', headline:'fresh skincare sets are 20% off.', note:'a set is already 10% off. fresh week takes another 10%.', url:'https://taylor.ringana.us/offers/?lang=en', ends:'2026-11-30', gift:'p16_03', active:true },
   { id:'quinn-giving-26', brand:'Q for Quinn', headline:'up to 40% off select styles', note:'organic cotton and merino. every order donates five extra school meals. orders of $300+ save another 15%.', url:'https://go.shopmy.us/p-84988754', linkSave:'up to 40%', ends:'2026-12-13', gift:'p32_08', active:true },
   { id:'cookware-bf-26', brand:'360 Cookware', headline:'up to 36% off', note:'stainless cookware and bakeware, made in wisconsin.', url:'https://www.360cookware.com/TOXINFREETAY', code:'BF2026', save:'up to 36%', ends:'2026-11-30', gift:'p56_03', active:true },
@@ -1483,7 +1484,7 @@ const GUIDE_SALES = [
   { id:'thoson-bf-26', brand:'Thoson', headline:'the rookie magtrack is $69, down from $139', note:'early black friday, up to 60% off across the sets.', url:'https://go.shopmy.us/p-105902194', gift:'p62_139', active:true }
 ];
 const today = () => new Date().toISOString().slice(0,10);
-const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26']);
+const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26', 'clearly-bf-26', 'ji-bf-26', 'esas-bf-26']);
 const isLive = s => {
   if (s.active === false || s.soon || s.hold) return false;
   const now = Date.now();
@@ -3058,7 +3059,7 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const saleOrder = ['ringana-bf-26','waffle-home-26','drowsy-bf-26','cookware-bf-26','boncharge-bf-26','jaspr-holiday-26','aizome-bf-26','clearly-bf-26','quinn-giving-26'];
+  const saleOrder = ['ringana-bf-26','esas-bf-26','ji-bf-26','rowe-sitewide-26','waffle-home-26','gibbon-bf-26','thoson-bf-26','drowsy-bf-26','bearaby-bf-26','avocado-holiday-26','ora-bf-26','boncharge-bf-26','cookware-bf-26','manukora-bf-26','jaspr-holiday-26','clearly-bf-26','healthyhome-bf-26','aizome-bf-26','quinn-giving-26','anxi-early-26'];
   const saleRank = id => { const i = saleOrder.indexOf(id); return i < 0 ? 50 : i; };
   const live = SALES.filter(s => s.id === 'ringana-bf-26' ? freshWeekOpen() : isLive(s)).map(saleView).slice().sort((a,b) => saleRank(a.id) - saleRank(b.id) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && !s.hold && !s.open && !s.close && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
