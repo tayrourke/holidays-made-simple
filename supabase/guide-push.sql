@@ -63,7 +63,7 @@ insert into public.guide_door_pings (day, n, title) values
   ('2026-11-23', 1, 'the thanksgiving recipes I make every year'),
   ('2026-11-24', 2, 'all my codes, in one place'),
   ('2026-11-25', 3, 'thankful place cards'),
-  ('2026-11-26', 4, 'pack the leftovers the simple way'),
+  ('2026-11-26', 4, 'start a new tradition'),
   ('2026-11-27', 5, 'it''s officially black friday'),
   ('2026-11-28', 6, 'swap your holiday candles'),
   ('2026-11-29', 7, 'set up a story advent'),
