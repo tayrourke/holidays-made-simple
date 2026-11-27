@@ -91,6 +91,7 @@ img{max-width:100%}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Dancing+Script:wght@600;700&family=Caveat:wght@500;700&family=Arimo:ital,wght@1,400;1,500&family=Arsenal:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titan+One&family=Dancing+Script:wght@600;700&family=Caveat:wght@500;700&family=Arimo:ital,wght@1,400;1,500&family=Arsenal:ital,wght@0,400;0,700;1,400&family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap"></noscript>
 </head><body>
+<canvas class="snow" id="snow" aria-hidden="true"></canvas>
 
 <div id="boot" role="status" aria-label="loading the newest guide">
   <div class="bootin">
@@ -115,6 +116,7 @@ img{max-width:100%}
   --berry:#A2042A;        /* the pdf's cranberry */
   --berry-deep:#7E0320;
   --gold:#B98B3E;
+  --pine:#1C4A38;         /* a little evergreen, behind the trees */
   --ink:#141010;
   --muted:#6F6259;
   --hair:#141010;
@@ -188,13 +190,14 @@ section.view[hidden]{display:none}
 .cover .gg{display:block;font-family:var(--band);font-style:italic;font-size:clamp(40px,11vw,92px);letter-spacing:.02em;text-transform:uppercase;line-height:1;text-shadow:3px 4px 0 rgba(20,16,16,.14);margin-top:2px}
 .cover .intro{max-width:40ch;margin:18px auto 0;font-size:14.5px;text-wrap:balance}
 .cover .disclaimer{max-width:42ch;margin:10px auto 0;font-size:12px;line-height:1.45;color:var(--muted);text-wrap:balance}
-.scene{position:relative;margin-top:22px}
+.scene{position:relative;margin-top:22px;background:linear-gradient(180deg,var(--pine) 0%,var(--pine) 62%,var(--berry) 100%)}
+.scene::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background-image:radial-gradient(circle,rgba(255,252,247,.92) 1.15px,transparent 1.35px),radial-gradient(circle,rgba(255,252,247,.55) .85px,transparent 1.05px);background-size:128px 148px,84px 102px;background-position:18px 24px,62px 78px;-webkit-mask-image:linear-gradient(#000 0 68%,transparent 96%);mask-image:linear-gradient(#000 0 68%,transparent 96%)}
 .sceneframe{position:relative;width:min(760px,100%);margin:0 auto;z-index:1}
 .scene img{width:100%;margin:0;display:block;position:relative;z-index:1}
-.treenote{position:absolute;z-index:2;right:6%;bottom:31%;width:min(210px,42%);margin:0;padding:7px 8px;background:rgba(235,230,222,.94);border:1.5px solid var(--ink);text-align:center;font-size:11px;line-height:1.3;color:var(--ink);text-wrap:balance}
+.treenote{position:absolute;z-index:3;right:6%;bottom:31%;width:min(210px,42%);margin:0;padding:7px 8px;background:rgba(235,230,222,.94);border:1.5px solid var(--ink);text-align:center;font-size:11px;line-height:1.3;color:var(--ink);text-wrap:balance}
 @media(max-width:640px){.treenote{left:50%;right:auto;bottom:8px;transform:translateX(-50%);width:min(300px,86%);font-size:11.5px}}
 .treenote b{display:block;font-family:var(--label);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:11px;margin-bottom:3px}
-.scene::after{content:"";position:absolute;left:0;right:0;bottom:0;height:36%;background:var(--berry);z-index:0}
+.scene::after{content:none}
 .scenewrap{margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)))}
 
 .who{background:var(--berry);color:#fff;padding:6px 0 28px}
@@ -713,7 +716,8 @@ a.boostrow{text-decoration:none;color:inherit;cursor:pointer}
 }
 @media (prefers-reduced-motion:no-preference) and (min-width:780px){.sheet{animation-name:sheetin}}
 .fly{position:fixed;z-index:80;pointer-events:none;object-fit:contain;will-change:transform}
-.snow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1}
+.snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:22}
+@media (prefers-reduced-motion:reduce){.snow{display:none}}
 /* tay's notes */
 .tnote{position:absolute;left:-4px;top:4px;z-index:2;background:#FFFBF2;color:var(--berry);font-family:var(--hand);font-weight:700;font-size:16px;line-height:1;padding:4px 9px 3px;transform:rotate(-6deg);box-shadow:0 2px 5px rgba(20,16,16,.14);white-space:nowrap}
 .soonchip{position:absolute;left:6px;bottom:8px;z-index:3;background:var(--ink);color:var(--paper);font-family:var(--label);font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:lowercase;padding:4px 8px;white-space:nowrap}
@@ -1074,7 +1078,6 @@ button,a,.gift,.pill,.whobtn,.door,.sec,.opt,.mopt,.sizerow,.tabsbar a{-webkit-t
 <section class="view" id="v-home">
   <div class="wrap">
     <div class="cover">
-      <canvas class="snow" id="snow" aria-hidden="true"></canvas>
       <img class="year" src="art/year.webp" alt="2026">
       <h1><span class="tf">HOLIDAYS</span><span class="gg">made simple</span></h1>
       <p class="intro">hundreds of cleaner gifts for everyone on your list, plus stocking stuffers, gift baskets, traditions + treats. tap any gift to shop it.</p>
@@ -1455,13 +1458,13 @@ let SALES = null;   // null = loading
 const GUIDE_SALES = [
   { id:'waffle-home-26', brand:'Waffle', headline:'screen free kid\'s phone $30 off.', kicker:'keep the connection without the concerns. my top gift pick for kids this year!', url:'https://go.shopmy.us/p-102854882', gift:'p62_103', featured:true, ends:'2026-12-02', active:true },
   { id:'drowsy-bf-26', brand:'Drowsy', headline:'silk eye masks are 30% off.', note:'the whole shop is 30% off. some bundles go up to 50% off.', url:'https://us.drowsysleepco.com/collections/silk-sleep-masks-black-friday', pic:'img/drowsy-mask.webp', open:'2026-11-23T03:04:00-08:00', close:'2026-11-27T21:00:00-08:00', ends:'2026-11-27', active:true },
-  { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-12-07', gift:'p56_00', active:true },
-  { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'a free woodland treasure with bigger orders', note:'a stacking tree or acorn puzzle with orders of $140, and more choices at $180. ends november 11.', url:'https://www.bellalunatoys.com/', code:'TOXINFREETAY', save:'5%', ends:'2026-11-11', gift:'p58_08', active:true },
+  { id:'avocado-holiday-26', brand:'Avocado', headline:'up to 20% off mattresses, pillows + bedding', note:'robes, pajamas, and loungewear are 50% off while they last. a few styles are left out.', url:'https://avocadomattress.n5ka.net/DVB7ro', linkSave:'up to 20%', ends:'2026-11-28', gift:'p56_00', active:true },
+  { id:'bella-holiday-26', brand:'Bella Luna Toys', headline:'up to $80 off', note:'it comes off in the cart. bigger orders save more.', url:'https://www.bellalunatoys.com/?p=', ends:'2026-11-30', pic:'img/bella-truck.webp', active:true },
   { id:'lumebox-holiday-26', brand:'Lumebox', headline:'lumebox 2.0 is $315, down from $629', kicker:'the best price they offer all year.', note:'red light can help support skin, fine lines and tone, workout recovery, sore muscles and joints, and blood flow.', url:'https://thelumebox.com/products/lumebox-2-0-new', linkSave:'50%', ends:'2026-11-10', gift:'p56_09', active:true },
   { id:'jaspr-holiday-26', brand:'Jaspr', headline:'air scrubber $350 off.', note:'I love how sensitive this filter is and the display makes it super easy to know my air quality.', url:'https://bit.ly/49Is4P8', ends:'2026-12-31', gift:'p56_04', active:true },
   { id:'boncharge-bf-26', brand:'Boncharge', headline:'boncharge’s biggest sale of the year is open', note:'red light masks, the cap, blankets, and sleep tools. the discount is not posted yet.', url:'https://boncharge.com/pages/black-friday-2026?rfsn=6797088.ea750a', starts:'2026-11-12', gift:'p35_15', active:true },
   { id:'bearaby-bf-26', brand:'Bearaby', headline:'up to 30% off, sitewide', note:'their biggest sale of the year. blankets, pillows, and sleep masks are marked down now.', url:'https://bearaby.com/pages/black-friday-weighted-blanket', linkSave:'up to 30%', gift:'p30_01', active:true },
-  { id:'anxi-early-26', brand:'Anxi Ring', headline:'$10 off 1 ring, $25 off 2, $40 off 3+', note:'early black friday, no code needed. free shipping on orders of $70+.', url:'https://anxiring.com/', linkSave:'up to $40 off', gift:'p62_46', active:true },
+  { id:'anxi-early-26', brand:'Anxi Ring', headline:'30% off everything.', note:'no code needed. free shipping on $70+, and a $25 gift card at $120.', url:'https://anxiring.com/', gift:'p62_46', active:true },
   { id:'aizome-bf-26', brand:'Aizome', headline:'the robe is $160, down from $189', note:'the matcha loungewear set is $135, down from $159. black friday deals are open.', url:'https://aizome-textiles.com/?ref=TOXINFREETAY', gift:'p30_16', active:true },
   { id:'rowe-holiday-26', brand:'Rowe Casa Organics', headline:'10% off $100, 15% off $150, and 20% off $200', note:'that tier has ended.', url:'https://www.rowecasaorganics.com/?sca_ref=3265168.het9Q7nqM3', starts:'2026-11-11', ends:'2026-11-22', gift:'p10_04', active:false },
   { id:'rowe-sitewide-26', brand:'Rowe Casa Organics', url:'https://www.rowecasaorganics.com/?sca_ref=3265168.het9Q7nqM3', gift:'p10_04', active:true,
@@ -1475,16 +1478,25 @@ const GUIDE_SALES = [
   { id:'clearly-bf-26', brand:'Clearly Filtered', headline:'25% off filtration systems.', note:'it applies on its own, and it stacks with the subscription price.', url:'https://www.clearlyfiltered.com/pages/promotion-details?rfsn=6673587.3fae40', ends:'2026-12-01', gift:'p53_09', active:true },
   { id:'ji-bf-26', brand:'Just Ingredients', headline:'20% off sitewide.', note:'no code needed. it is already taken off at checkout.', url:'https://justingredients.us/TOXINFREETAY', ends:'2026-11-30', gift:'p10_01', active:true },
   { id:'esas-bf-26', brand:'ESAS', headline:'20% off sitewide.', note:'it applies at checkout. orders of $200 come with a holiday discovery kit, and shipping is free over $75.', url:'https://www.esasnyc.com/TOXINFREETAY', pic:'img/esas-iris.webp', active:true },
+  { id:'lacoochee-bf-26', brand:'La Coochie', headline:'bras and underwear are 20% off.', note:'the whole shop is 20% off. no code needed.', url:'https://www.lacoochie.com/TOXINFREETAY?utm_source=shopmy', pic:'img/lacoochee-set.webp', active:true },
+  { id:'rise-bf-26', brand:'Rise Centered', headline:'15% off the salt clocks.', note:'the original sunrise alarm, pink or white. the marble lights are left out.', url:'https://risecentered.com/products/the-original-sunrise-alarm-clock?sca_ref=9606596.pbnWgpjxJAggDL', code:'SHOPSMALL', save:'15%', gift:'p15_00', active:true },
   { id:'ringana-bf-26', brand:'Ringana', headline:'fresh skincare sets are 20% off.', note:'a set is already 10% off. fresh week takes another 10%.', url:'https://taylor.ringana.us/offers/?lang=en', ends:'2026-11-30', gift:'p16_03', active:true },
   { id:'quinn-giving-26', brand:'Q for Quinn', headline:'up to 40% off select styles', note:'organic cotton and merino. every order donates five extra school meals. orders of $300+ save another 15%.', url:'https://go.shopmy.us/p-84988754', linkSave:'up to 40%', ends:'2026-12-13', gift:'p32_08', active:true },
   { id:'cookware-bf-26', brand:'360 Cookware', headline:'up to 36% off', note:'stainless cookware and bakeware, made in wisconsin.', url:'https://www.360cookware.com/TOXINFREETAY', code:'BF2026', save:'up to 36%', ends:'2026-11-30', gift:'p56_03', active:true },
   { id:'ora-bf-26', brand:'Ora', headline:'20% off sitewide', note:'the frequency sound machine, plus the rest of the site.', url:'https://soundofora.com/?sca_ref=7183438.q9zIpMDJz4x', code:'BLACKFRIDAY', save:'20%', gift:'p29_09', active:true },
   { id:'manukora-bf-26', brand:'Manukora', headline:'the starter kit is $99, a $269 value', note:'the jar, an MGO 1200+ mini, five sticks, a wooden spoon, the guidebook, and a call with their nutritionist. blends are 35% off too, jars and daily packets.', url:'https://manukora.com/TOXINFREETAY', code:'TOXINFREETAY', gift:'p62_136', active:true },
   { id:'gibbon-bf-26', brand:'Gibbon', headline:'the slackboard plus is $160.99, down from $229.99', note:'this board is 30% off. the rest of the site is up to 40% off.', url:'https://go.shopmy.us/p-105809114', gift:'p62_137', active:true },
-  { id:'thoson-bf-26', brand:'Thoson', headline:'the rookie magtrack is $69, down from $139', note:'early black friday, up to 60% off across the sets.', url:'https://go.shopmy.us/p-105902194', gift:'p62_139', active:true }
+  { id:'thoson-bf-26', brand:'Thoson', headline:'the rookie magtrack is $69, down from $139', note:'early black friday, up to 60% off across the sets.', url:'https://go.shopmy.us/p-105902194', gift:'p62_139', active:true },
+  { id:'groceries-bf-26', brand:'Groceries Apparel', headline:'30% off sitewide.', note:'no code needed. it is already taken off at checkout.', url:'https://groceriesapparel.com/toxinfreetay', pic:'img/groceries-crop.webp', active:true },
+  { id:'promix-bf-26', brand:'Promix', headline:'up to 34% off, sitewide', note:'their biggest sale of the year. protein, debloat, and the rest of the shop.', url:'https://promixnutrition.com/TOXINFREETAY', pic:'img/promix-stick.webp', active:true },
+  { id:'cured-bf-26', brand:'Cured Nutrition', headline:'up to 60% off', note:'sleep, stress, and the rest of the shop.', url:'https://curednutrition.com/', pic:'img/cured-gummies.webp', active:true },
+  { id:'eastperry-bf-26', brand:'East Perry', headline:'up to 25% off, sitewide', note:'a free hot water bottle warmer at $350, and a free sheepskin at $400.', url:'https://eastperry.com/?sca_ref=5520210.DKePku8ThQ', gift:'p15_03', active:true },
+  { id:'omybag-bf-26', brand:'O My Bag', headline:'up to 50% off bags and accessories', note:'an extra 10% comes off at checkout.', url:'https://omybagamsterdam.com/en-us/?aff=206', gift:'p62_80', active:true },
+  { id:'obasan-bf-26', brand:'Obasan', headline:'20% off organic bedding.', note:'sheets, pillows, and duvets. mattresses stay full price.', url:'https://collabs.shop/q8t3iy', ends:'2026-12-01', pic:'img/obasan-pillow.webp', active:true },
+  { id:'drgreen-bf-26', brand:'Dr. Green Life', headline:'up to 50% off', note:'the mega immunity bundle is $262.89, down from $525.79.', url:'https://drgreenlifeorganics.com/', pic:'img/drgreen-bottle.webp', active:true }
 ];
 const today = () => new Date().toISOString().slice(0,10);
-const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26', 'clearly-bf-26', 'ji-bf-26', 'esas-bf-26']);
+const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26', 'clearly-bf-26', 'ji-bf-26', 'esas-bf-26', 'lacoochee-bf-26', 'rise-bf-26', 'bella-holiday-26', 'avocado-holiday-26', 'anxi-early-26', 'groceries-bf-26', 'promix-bf-26', 'cured-bf-26', 'eastperry-bf-26', 'omybag-bf-26', 'obasan-bf-26', 'drgreen-bf-26']);
 const isLive = s => {
   if (s.active === false || s.soon || s.hold) return false;
   const now = Date.now();
@@ -3059,7 +3071,7 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const saleOrder = ['ringana-bf-26','esas-bf-26','ji-bf-26','rowe-sitewide-26','waffle-home-26','gibbon-bf-26','thoson-bf-26','drowsy-bf-26','bearaby-bf-26','avocado-holiday-26','ora-bf-26','boncharge-bf-26','cookware-bf-26','manukora-bf-26','jaspr-holiday-26','clearly-bf-26','healthyhome-bf-26','aizome-bf-26','quinn-giving-26','anxi-early-26'];
+  const saleOrder = ['ringana-bf-26','esas-bf-26','ji-bf-26','rowe-sitewide-26','waffle-home-26','gibbon-bf-26','thoson-bf-26','bella-holiday-26','drowsy-bf-26','bearaby-bf-26','avocado-holiday-26','obasan-bf-26','eastperry-bf-26','ora-bf-26','rise-bf-26','boncharge-bf-26','cookware-bf-26','manukora-bf-26','promix-bf-26','cured-bf-26','drgreen-bf-26','jaspr-holiday-26','clearly-bf-26','healthyhome-bf-26','aizome-bf-26','groceries-bf-26','lacoochee-bf-26','quinn-giving-26','omybag-bf-26','anxi-early-26'];
   const saleRank = id => { const i = saleOrder.indexOf(id); return i < 0 ? 50 : i; };
   const live = SALES.filter(s => s.id === 'ringana-bf-26' ? freshWeekOpen() : isLive(s)).map(saleView).slice().sort((a,b) => saleRank(a.id) - saleRank(b.id) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && !s.hold && !s.open && !s.close && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
@@ -3948,34 +3960,61 @@ function swDecide(dir, el){
 }
 function swAdvance(){ sw.i++; swDraw(); }
 
-/* ===== falling glitter on the cover ===== */
+/* ===== snow, across the guide ===== */
 let snowRun = false;
 function startSnow(){
   const cv = document.getElementById('snow'); if (!cv || REDUCE || snowRun) return;
   const ctx = cv.getContext('2d'); if (!ctx) return;
   snowRun = true;
   let W = 0, H = 0, dots = [];
-  const size = () => { const r = cv.getBoundingClientRect(); const d = Math.min(2, window.devicePixelRatio||1); W = r.width; H = r.height; cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0);
-    const n = Math.round(Math.min(70, W*H/9000)); while (dots.length < n) dots.push(mk(true)); dots.length = n; };
-  const mk = (any) => ({ x: Math.random()*W, y: any ? Math.random()*H : -6, r: .6 + Math.random()*2.1, s: .15 + Math.random()*.45, w: Math.random()*6.28, ws: .004 + Math.random()*.01, a: .35 + Math.random()*.6 });
-  const cols = ['185,139,62','214,178,107','240,214,150','162,4,42'];
-  dots.forEach((d,i) => d.c = cols[i%4]);
-  size(); addEventListener('resize', size);
+  const cols = ['255,252,247','255,252,247','255,252,247','232,214,166'];
+  const mk = (any) => ({ x: Math.random()*W, y: any ? Math.random()*H : -10, r: Math.random() < .22 ? 2.4 + Math.random()*1.8 : 1.05 + Math.random()*1.45, s: .45 + Math.random()*1.15, w: Math.random()*6.28, ws: .004 + Math.random()*.012, rot: Math.random()*6.28, rs: (Math.random()-.5)*.01, a: .62 + Math.random()*.34, c: cols[Math.floor(Math.random()*cols.length)] });
+  const size = () => {
+    const r = cv.getBoundingClientRect(); const d = Math.min(2, window.devicePixelRatio||1);
+    W = r.width; H = r.height; cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0);
+    const n = Math.round(Math.min(130, Math.max(64, W*H/8000)));
+    while (dots.length < n) dots.push(mk(true));
+    dots.length = n;
+  };
+  const onResize = () => { if (snowRun) size(); };
+  size(); addEventListener('resize', onResize);
+  const draw = d => {
+    const tw = .6 + .4*Math.sin(d.w*2.2);
+    const a = d.a * tw;
+    ctx.save();
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.rot);
+    ctx.fillStyle = `rgba(20,36,30,${(a*.2).toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(.7, 1.2, d.r + .45, 0, 6.283); ctx.fill();
+    ctx.fillStyle = `rgba(${d.c},${a.toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(0, 0, d.r, 0, 6.283); ctx.fill();
+    if (d.r > 2){
+      ctx.strokeStyle = `rgba(${d.c},${(a*.95).toFixed(3)})`;
+      ctx.lineWidth = Math.max(.7, d.r*.16);
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++){
+        const ang = i * Math.PI / 3;
+        ctx.moveTo(Math.cos(ang)*d.r*.35, Math.sin(ang)*d.r*.35);
+        ctx.lineTo(Math.cos(ang)*d.r*2.1, Math.sin(ang)*d.r*2.1);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  };
   const tick = () => {
-    if (current !== 'home' || document.hidden){ snowRun = false; return; }
+    if (document.hidden){ snowRun = false; removeEventListener('resize', onResize); return; }
     ctx.clearRect(0,0,W,H);
     for (const d of dots){
-      d.y += d.s; d.w += d.ws; d.x += Math.sin(d.w)*.35;
-      if (d.y > H + 6){ Object.assign(d, mk(false)); }
-      if (!d.c) d.c = cols[Math.floor(Math.random()*3)];
-      const tw = .55 + .45*Math.sin(d.w*3);
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.283); ctx.fillStyle = `rgba(${d.c},${(d.a*tw).toFixed(2)})`; ctx.fill();
+      d.y += d.s; d.w += d.ws; d.rot += d.rs; d.x += Math.sin(d.w)*.4;
+      if (d.y > H + 8) Object.assign(d, mk(false));
+      draw(d);
     }
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
-document.addEventListener('visibilitychange', () => { if (!document.hidden && current === 'home') startSnow(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) startSnow(); });
 
 /* ===== wishlist links ===== */
 let wishPayload = null;
@@ -4744,7 +4783,8 @@ function show(v){
   VIEWS.forEach(x => document.getElementById('v-'+x).hidden = x !== v);
   const sec = document.getElementById('v-'+v); sec.classList.remove('enter'); void sec.offsetWidth; sec.classList.add('enter');
   document.querySelectorAll('[data-nav]').forEach(a => { if (a.dataset.nav===v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
-  ({home:()=>{renderHome(); renderSalesBanner(); renderAdvStrip(); startSnow();}, advent:renderAdvent, shop:renderShop, sales:renderSales, list:renderList, quiz:renderQuiz, build:renderBuild, swipe:renderSwipe, traditions:renderTrad, codes:renderCodes, admin:renderAdmin, match:renderMatch, yoto:renderYoto, wish:renderWish})[v]();
+  ({home:()=>{renderHome(); renderSalesBanner(); renderAdvStrip();}, advent:renderAdvent, shop:renderShop, sales:renderSales, list:renderList, quiz:renderQuiz, build:renderBuild, swipe:renderSwipe, traditions:renderTrad, codes:renderCodes, admin:renderAdmin, match:renderMatch, yoto:renderYoto, wish:renderWish})[v]();
+  startSnow();
   window.scrollTo(0,0);
   document.documentElement.scrollTop = 0;
   schedulePin();
