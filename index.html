@@ -1493,10 +1493,13 @@ const GUIDE_SALES = [
   { id:'eastperry-bf-26', brand:'East Perry', headline:'up to 25% off, sitewide', note:'a free hot water bottle warmer at $350, and a free sheepskin at $400.', url:'https://eastperry.com/?sca_ref=5520210.DKePku8ThQ', gift:'p15_03', active:true },
   { id:'omybag-bf-26', brand:'O My Bag', headline:'up to 50% off bags and accessories', note:'an extra 10% comes off at checkout.', url:'https://omybagamsterdam.com/en-us/?aff=206', gift:'p62_80', active:true },
   { id:'obasan-bf-26', brand:'Obasan', headline:'20% off organic bedding.', note:'sheets, pillows, and duvets. mattresses stay full price.', url:'https://collabs.shop/q8t3iy', ends:'2026-12-01', pic:'img/obasan-pillow.webp', active:true },
-  { id:'drgreen-bf-26', brand:'Dr. Green Life', headline:'up to 50% off', note:'the mega immunity bundle is $262.89, down from $525.79.', url:'https://drgreenlifeorganics.com/', pic:'img/drgreen-bottle.webp', active:true }
+  { id:'drgreen-bf-26', brand:'Dr. Green Life', headline:'up to 50% off', note:'the mega immunity bundle is $262.89, down from $525.79.', url:'https://drgreenlifeorganics.com/', pic:'img/drgreen-bottle.webp', active:true },
+  { id:'ollois-bf-26', brand:'Ollois', headline:'25% off sitewide.', note:'kits, single tubes, cell salts, and the new sevene combinations.', url:'https://ollois.com/', code:'BF26', save:'25%', pic:'img/ollois-rest.webp', active:true },
+  { id:'sloth-bf-26', brand:'Natural Sloth', headline:'25% off sitewide.', note:'no code needed. it comes off at checkout. bundles and subscriptions are left out.', url:'https://naturalsloth.com/?sca_ref=3009144.aG7fXNJpBZ', ends:'2026-11-30', close:'2026-11-30T23:59:59-06:00', pic:'img/sloth-candle.webp', active:true },
+  { id:'o3-bf-26', brand:'O3 Waterworks', headline:'50% off sitewide.', note:'I have been using this machine for a year now, which means I haven\'t used any laundry detergent in a year. today only. the plus system is still in stock. the original system and the spray bottles are sold out.', url:'https://o3waterworks.com/', code:'BF50', save:'50%', close:'2026-11-27T23:59:59-08:00', pic:'img/o3-system.webp', active:true }
 ];
 const today = () => new Date().toISOString().slice(0,10);
-const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26', 'clearly-bf-26', 'ji-bf-26', 'esas-bf-26', 'lacoochee-bf-26', 'rise-bf-26', 'bella-holiday-26', 'avocado-holiday-26', 'anxi-early-26', 'groceries-bf-26', 'promix-bf-26', 'cured-bf-26', 'eastperry-bf-26', 'omybag-bf-26', 'obasan-bf-26', 'drgreen-bf-26']);
+const LOCAL_SALE = new Set(['ringana-bf-26', 'rowe-sitewide-26', 'rowe-holiday-26', 'healthyhome-bf-26', 'drowsy-bf-26', 'clearly-bf-26', 'ji-bf-26', 'esas-bf-26', 'lacoochee-bf-26', 'rise-bf-26', 'bella-holiday-26', 'avocado-holiday-26', 'anxi-early-26', 'groceries-bf-26', 'promix-bf-26', 'cured-bf-26', 'eastperry-bf-26', 'omybag-bf-26', 'obasan-bf-26', 'drgreen-bf-26', 'ollois-bf-26', 'sloth-bf-26', 'o3-bf-26']);
 const isLive = s => {
   if (s.active === false || s.soon || s.hold) return false;
   const now = Date.now();
@@ -3071,7 +3074,7 @@ function saleCard(s){
 async function renderSales(){
   const B = document.getElementById('salesBody');
   if (SALES === null){ B.innerHTML = '<p class="empty">loading sales…</p>'; await loadSales(); if (current !== 'sales') return; }
-  const saleOrder = ['ringana-bf-26','esas-bf-26','ji-bf-26','rowe-sitewide-26','waffle-home-26','gibbon-bf-26','thoson-bf-26','bella-holiday-26','drowsy-bf-26','bearaby-bf-26','avocado-holiday-26','obasan-bf-26','eastperry-bf-26','ora-bf-26','rise-bf-26','boncharge-bf-26','cookware-bf-26','manukora-bf-26','promix-bf-26','cured-bf-26','drgreen-bf-26','jaspr-holiday-26','clearly-bf-26','healthyhome-bf-26','aizome-bf-26','groceries-bf-26','lacoochee-bf-26','quinn-giving-26','omybag-bf-26','anxi-early-26'];
+  const saleOrder = ['ringana-bf-26','esas-bf-26','ji-bf-26','rowe-sitewide-26','waffle-home-26','gibbon-bf-26','thoson-bf-26','bella-holiday-26','drowsy-bf-26','bearaby-bf-26','avocado-holiday-26','obasan-bf-26','eastperry-bf-26','ora-bf-26','rise-bf-26','boncharge-bf-26','cookware-bf-26','manukora-bf-26','promix-bf-26','cured-bf-26','drgreen-bf-26','ollois-bf-26','jaspr-holiday-26','clearly-bf-26','healthyhome-bf-26','o3-bf-26','sloth-bf-26','aizome-bf-26','groceries-bf-26','lacoochee-bf-26','quinn-giving-26','omybag-bf-26','anxi-early-26'];
   const saleRank = id => { const i = saleOrder.indexOf(id); return i < 0 ? 50 : i; };
   const live = SALES.filter(s => s.id === 'ringana-bf-26' ? freshWeekOpen() : isLive(s)).map(saleView).slice().sort((a,b) => saleRank(a.id) - saleRank(b.id) || (b.featured?1:0) - (a.featured?1:0));
   const upcoming = SALES.filter(s => s.active !== false && !s.hold && !s.open && !s.close && ((s.starts && s.starts > today()) || s.soon)).slice().sort((a,b) => (a.id==='ringana-bf-26'?0:1) - (b.id==='ringana-bf-26'?0:1));
